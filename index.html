@@ -76,8 +76,22 @@
             background: linear-gradient(135deg, #5ac8fa 0%, #007aff 100%);
         }
         
+        .btn-photo {
+            background: linear-gradient(135deg, #ffd166 0%, #ff9e6d 100%);
+        }
+        
+        .btn-chat {
+            background: linear-gradient(135deg, #9d4edd 0%, #560bad 100%);
+        }
+        
         .btn-secondary {
             background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-small {
+            padding: 12px 20px;
+            font-size: 16px;
+            margin: 8px 0;
         }
         
         .profile-info {
@@ -101,6 +115,31 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+        
+        .photo-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+        }
+        
+        .status-approved {
+            background: rgba(76, 217, 100, 0.2);
+            border: 1px solid rgba(76, 217, 100, 0.5);
+        }
+        
+        .status-none {
+            background: rgba(108, 117, 125, 0.2);
+            border: 1px solid rgba(108, 117, 125, 0.5);
         }
         
         .features {
@@ -182,6 +221,13 @@
             font-size: 16px;
         }
         
+        .additional-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
         .welcome-message {
             font-size: 18px;
             margin: 20px 0;
@@ -200,6 +246,24 @@
             font-size: 24px;
             margin-right: 8px;
         }
+        
+        .notification {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.5);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
     </style>
 </head>
 <body>
@@ -207,6 +271,12 @@
         <div class="logo">❤️</div>
         <h1 id="page-title">Match Россия</h1>
         <p class="subtitle" id="page-subtitle">Знакомства по всей России с геолокацией</p>
+        
+        <!-- Уведомление о необходимости фото -->
+        <div id="photo-notification" style="display: none;" class="notification">
+            <span class="emoji">📸</span>
+            <span>Загрузите фото для полного доступа к знакомствам!</span>
+        </div>
         
         <!-- Профиль пользователя (показывается если есть) -->
         <div id="profile-container"></div>
@@ -218,7 +288,7 @@
             </button>
         </div>
         
-        <!-- Статистика (показывается если есть профиль) -->
+        <!-- Статистика и основные кнопки (показывается если есть профиль) -->
         <div id="stats-container" style="display: none;">
             <div class="stats">
                 <div class="stat-item">
@@ -235,12 +305,29 @@
                 </div>
             </div>
             
+            <!-- Основные кнопки действий -->
             <div class="action-buttons">
                 <button class="btn btn-swipe" onclick="goToSwipes()">
                     🔥 Начать знакомства
                 </button>
                 <button class="btn btn-profile" onclick="editProfile()">
                     👤 Мой профиль
+                </button>
+            </div>
+            
+            <!-- Дополнительные функции -->
+            <div class="additional-buttons">
+                <button class="btn btn-photo btn-small" onclick="goToUploadPhoto()">
+                    📸 Загрузить фото
+                </button>
+                <button class="btn btn-chat btn-small" onclick="goToChatDemo()">
+                    💬 Демо чата
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="showAllFeatures()">
+                    🚀 Все функции
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="inviteFriend()">
+                    📢 Пригласить друга
                 </button>
             </div>
         </div>
@@ -280,16 +367,13 @@
             </div>
         </div>
         
-        <!-- Дополнительные кнопки -->
-        <div style="margin-top: 25px;">
+        <!-- Дополнительные кнопки для незарегистрированных -->
+        <div id="guest-buttons" style="margin-top: 25px;">
             <button class="btn btn-secondary" onclick="showRules()">
                 📋 Правила
             </button>
-            <button class="btn btn-secondary" onclick="inviteFriend()">
-                📢 Пригласить друга
-            </button>
-            <button class="btn btn-secondary" onclick="goToUploadPhoto()" style="margin-top: 10px;">
-                📸 Загрузить фото
+            <button class="btn btn-secondary" onclick="showFeatures()">
+                🎯 Возможности
             </button>
         </div>
     </div>
@@ -301,6 +385,7 @@
         // Глобальные переменные
         let userProfile = null;
         let telegramUser = null;
+        let photoStatus = 'none'; // 'none', 'pending', 'approved'
         
         // Основная функция инициализации
         function initApp() {
@@ -317,6 +402,9 @@
             
             // Загружаем сохраненный профиль
             loadUserProfile();
+            
+            // Загружаем статус фото
+            loadPhotoStatus();
             
             // Настраиваем главную кнопку Telegram
             setupMainButton();
@@ -339,6 +427,13 @@
             }
         }
         
+        // Загрузка статуса фото
+        function loadPhotoStatus() {
+            const status = localStorage.getItem('photo_status');
+            photoStatus = status || 'none';
+            console.log('Статус фото:', photoStatus);
+        }
+        
         // Сохранение профиля в localStorage
         function saveUserProfile(profile) {
             userProfile = profile;
@@ -351,8 +446,13 @@
             if (!tg || !tg.MainButton) return;
             
             if (userProfile) {
-                tg.MainButton.setText('🔥 Начать знакомства');
-                tg.MainButton.onClick(goToSwipes);
+                if (photoStatus === 'approved') {
+                    tg.MainButton.setText('🔥 Начать знакомства');
+                    tg.MainButton.onClick(goToSwipes);
+                } else {
+                    tg.MainButton.setText('📸 Загрузить фото');
+                    tg.MainButton.onClick(goToUploadPhoto);
+                }
             } else {
                 tg.MainButton.setText('📝 Зарегистрироваться');
                 tg.MainButton.onClick(goToRegistration);
@@ -365,9 +465,11 @@
             const profileContainer = document.getElementById('profile-container');
             const statsContainer = document.getElementById('stats-container');
             const actionButtons = document.getElementById('action-buttons');
+            const guestButtons = document.getElementById('guest-buttons');
             const pageTitle = document.getElementById('page-title');
             const pageSubtitle = document.getElementById('page-subtitle');
             const registerBtn = document.getElementById('register-btn');
+            const photoNotification = document.getElementById('photo-notification');
             
             if (userProfile) {
                 // Показываем приветствие
@@ -375,18 +477,48 @@
                 pageSubtitle.innerHTML = `Готов к новым знакомствам в ${userProfile.city}`;
                 
                 // Показываем информацию профиля
+                let photoStatusHTML = '';
+                if (photoStatus === 'pending') {
+                    photoStatusHTML = `
+                        <div class="photo-status status-pending">
+                            <span class="emoji">⏳</span>
+                            <span>Фото на модерации (1-24 часа)</span>
+                        </div>
+                    `;
+                    // Показываем уведомление
+                    photoNotification.style.display = 'flex';
+                } else if (photoStatus === 'approved') {
+                    photoStatusHTML = `
+                        <div class="photo-status status-approved">
+                            <span class="emoji">✅</span>
+                            <span>Фото подтверждено</span>
+                        </div>
+                    `;
+                } else {
+                    photoStatusHTML = `
+                        <div class="photo-status status-none">
+                            <span class="emoji">📸</span>
+                            <span>Фото не загружено</span>
+                        </div>
+                    `;
+                    // Показываем уведомление
+                    photoNotification.style.display = 'flex';
+                }
+                
                 profileContainer.innerHTML = `
                     <div class="profile-info">
                         <h3><span class="emoji">👤</span> Ваш профиль</h3>
                         <p><span class="emoji">🎂</span> ${userProfile.age} лет</p>
                         <p><span class="emoji">📍</span> ${userProfile.city}</p>
                         <p><span class="emoji">${userProfile.gender === 'male' ? '♂️' : '♀️'}</span> ${userProfile.gender === 'male' ? 'Мужской' : 'Женский'}</p>
+                        ${photoStatusHTML}
                     </div>
                 `;
                 
                 // Показываем статистику и кнопки
                 statsContainer.style.display = 'block';
                 actionButtons.style.display = 'none';
+                guestButtons.style.display = 'none';
                 
                 // Обновляем статистику
                 updateStats();
@@ -400,6 +532,8 @@
                 profileContainer.innerHTML = '';
                 statsContainer.style.display = 'none';
                 actionButtons.style.display = 'block';
+                guestButtons.style.display = 'block';
+                photoNotification.style.display = 'none';
                 
                 // Стандартные заголовки
                 pageTitle.innerHTML = 'Match Россия';
@@ -416,11 +550,18 @@
             // Здесь будет реальная статистика из бэкенда
             // Пока демо-данные
             document.getElementById('likes-count').textContent = '15';
-            document.getElementById('matches-count').textContent = '0';
-            document.getElementById('views-count').textContent = '0';
+            
+            // Получаем количество мэтчей из localStorage
+            const matches = JSON.parse(localStorage.getItem('match_matches') || '[]');
+            document.getElementById('matches-count').textContent = matches.length;
+            
+            // Просмотры (демо)
+            const views = parseInt(localStorage.getItem('profile_views') || '0');
+            document.getElementById('views-count').textContent = views;
         }
         
-        // Навигационные функции
+        // ========== НАВИГАЦИОННЫЕ ФУНКЦИИ ==========
+        
         function goToRegistration() {
             window.location.href = 'registration.html';
         }
@@ -429,6 +570,13 @@
             if (!userProfile) {
                 showAlert('Сначала создайте профиль!');
                 goToRegistration();
+                return;
+            }
+            
+            // Проверяем статус фото
+            if (photoStatus !== 'approved') {
+                showAlert('Для начала знакомств нужно загрузить и подтвердить фото!');
+                goToUploadPhoto();
                 return;
             }
             
@@ -445,6 +593,55 @@
                 })
                 .catch(() => {
                     showAlert('Свайпы в разработке. Скоро будет доступно!');
+                });
+        }
+        
+        function goToUploadPhoto() {
+            if (!userProfile) {
+                showAlert('Сначала создайте профиль!');
+                goToRegistration();
+                return;
+            }
+            
+            // Сохраняем статус фото как "ожидает загрузки"
+            localStorage.setItem('photo_status', 'pending');
+            photoStatus = 'pending';
+            
+            window.location.href = 'upload-photo.html';
+        }
+        
+        function goToChatDemo() {
+            if (!userProfile) {
+                showAlert('Сначала создайте профиль!');
+                goToRegistration();
+                return;
+            }
+            
+            // Создаем демо-мэтчи если их нет
+            const matches = JSON.parse(localStorage.getItem('match_matches') || '[]');
+            if (matches.length === 0) {
+                const demoMatches = [
+                    { id: 1, name: 'Анна', age: 25, city: 'Москва', lastMessage: 'Привет! Как дела?' },
+                    { id: 2, name: 'Максим', age: 28, city: 'Санкт-Петербург', lastMessage: 'Привет! Вижу мы оба любим спорт' }
+                ];
+                localStorage.setItem('match_matches', JSON.stringify(demoMatches));
+            }
+            
+            window.location.href = 'chat.html';
+        }
+        
+        function showAllFeatures() {
+            // Проверяем существование файла features.html
+            fetch('features.html')
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = 'features.html';
+                    } else {
+                        showAlert('Все функции приложения:\n\n1. 📝 Регистрация профиля\n2. 📸 Загрузка фото\n3. 🔥 Свайпы знакомств\n4. 💬 Чат с мэтчами\n5. 👤 Редактирование профиля\n6. 📢 Приглашение друзей');
+                    }
+                })
+                .catch(() => {
+                    showAlert('Страница функций скоро будет доступна!');
                 });
         }
         
@@ -474,6 +671,22 @@
             showAlert(rules);
         }
         
+        function showFeatures() {
+            const features = `
+🎯 Возможности Match:
+
+• Регистрация с выбором города
+• Загрузка фото с модерацией
+• Свайпы анкет (как в Tinder)
+• Чат при взаимном лайке
+• Геолокационный поиск
+• 15 лайков в день бесплатно
+• Приглашение друзей за бонусы
+• Безопасная ручная модерация
+            `;
+            showAlert(features);
+        }
+        
         function inviteFriend() {
             const referralCode = userProfile ? userProfile.id || '12345' : 'join';
             const link = `https://t.me/SiaMatchBot?start=ref_${referralCode}`;
@@ -490,8 +703,13 @@ ${link}
             showAlert(message);
             
             // Копирование ссылки в буфер (если поддерживается)
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(link);
+            if (navigator.clipboard && tg && tg.showConfirm) {
+                tg.showConfirm('Скопировать ссылку в буфер обмена?', (confirmed) => {
+                    if (confirmed) {
+                        navigator.clipboard.writeText(link);
+                        tg.showAlert('Ссылка скопирована!');
+                    }
+                });
             }
         }
         
@@ -524,8 +742,12 @@ ${link}
         // Глобальный экспорт функций для HTML
         window.goToRegistration = goToRegistration;
         window.goToSwipes = goToSwipes;
+        window.goToUploadPhoto = goToUploadPhoto;
+        window.goToChatDemo = goToChatDemo;
+        window.showAllFeatures = showAllFeatures;
         window.editProfile = editProfile;
         window.showRules = showRules;
+        window.showFeatures = showFeatures;
         window.inviteFriend = inviteFriend;
     </script>
 </body>
