@@ -1,1 +1,66 @@
-
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Админ-панель - Match</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .user-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .approve-btn { background: #4cd964; color: white; }
+        .reject-btn { background: #ff6b6b; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Модерация фото</h1>
+    <div id="pending-users">
+        <!-- Сюда JavaScript подгрузит пользователей -->
+    </div>
+    
+    <script>
+        // Простая авторизация
+        const password = prompt('Введите пароль админа:');
+        if (password !== 'admin123') {
+            document.body.innerHTML = '<h2>Доступ запрещен</h2>';
+        } else {
+            loadPendingUsers();
+        }
+        
+        async function loadPendingUsers() {
+            // Здесь будет запрос к API
+            const users = [
+                { id: 1, name: 'Иван', photo: 'url...' },
+                { id: 2, name: 'Мария', photo: 'url...' }
+            ];
+            
+            const container = document.getElementById('pending-users');
+            users.forEach(user => {
+                container.innerHTML += `
+                    <div class="user-card">
+                        <h3>${user.name}</h3>
+                        <img src="${user.photo}" width="100">
+                        <button class="approve-btn" onclick="approve(${user.id})">✅ Одобрить</button>
+                        <button class="reject-btn" onclick="reject(${user.id})">❌ Отклонить</button>
+                    </div>
+                `;
+            });
+        }
+        
+        function approve(userId) {
+            alert(`Пользователь ${userId} одобрен`);
+            // Отправить на сервер
+        }
+        
+        function reject(userId) {
+            const reason = prompt('Причина отказа:');
+            if (reason) {
+                alert(`Пользователь ${userId} отклонен: ${reason}`);
+                // Отправить на сервер
+            }
+        }
+    </script>
+</body>
+</html>
