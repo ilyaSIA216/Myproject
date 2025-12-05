@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Чат - Match Россия</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f2f5;
+            height: 100vh;
+        }
+        .chat-container {
+            max-width: 500px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 70%;
+        }
+        .message-them {
+            background: white;
+            align-self: flex-start;
+        }
+        .message-you {
+            background: #4cd964;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .chat-input {
+            padding: 15px;
+            background: white;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+        }
+        .chat-input button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <button onclick="goBack()" style="background: none; border: none; color: white; font-size: 20px; margin-right: 10px;">←</button>
+            <div>
+                <h3 style="margin: 0;">Анна, 25</h3>
+                <p style="margin: 0; opacity: 0.8;">Онлайн</p>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message message-them">Привет! Как дела?</div>
+            <div class="message message-you">Привет! Отлично, а у тебя?</div>
+            <div class="message message-them">Тоже хорошо! Вижу ты из Москвы?</div>
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Напишите сообщение...">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+    
+    <script>
+        const tg = Telegram.WebApp;
+        tg.expand();
+        
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                const messagesDiv = document.getElementById('chat-messages');
+                const newMessage = document.createElement('div');
+                newMessage.className = 'message message-you';
+                newMessage.textContent = message;
+                messagesDiv.appendChild(newMessage);
+                
+                input.value = '';
+                
+                // Прокрутка вниз
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                
+                // Здесь будет отправка на сервер
+                console.log('Отправлено:', message);
+            }
+        }
+        
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+        
+        // Enter для отправки
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        tg.MainButton.setText('На главную');
+        tg.MainButton.onClick(goBack);
+        tg.MainButton.show();
+    </script>
+</body>
+</html>
