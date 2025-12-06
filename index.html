@@ -34,6 +34,12 @@
         .logo {
             font-size: 60px;
             margin: 10px 0;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
         
         h1 {
@@ -264,300 +270,456 @@
             50% { opacity: 1; }
             100% { opacity: 0.8; }
         }
+        
+        /* Telegram WebApp стили */
+        .telegram-warning {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .telegram-btn {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">❤️</div>
-        <h1 id="page-title">Match Россия</h1>
-        <p class="subtitle" id="page-subtitle">Знакомства по всей России с геолокацией</p>
-        
-        <!-- Уведомление о необходимости фото -->
-        <div id="photo-notification" style="display: none;" class="notification">
-            <span class="emoji">📸</span>
-            <span>Загрузите фото для полного доступа к знакомствам!</span>
-        </div>
-        
-        <!-- Профиль пользователя (показывается если есть) -->
-        <div id="profile-container"></div>
-        
-        <!-- Кнопки действий -->
-        <div id="action-buttons">
-            <button class="btn" onclick="goToRegistration()" id="register-btn">
-                📝 Начать регистрацию
-            </button>
-        </div>
-        
-        <!-- Статистика и основные кнопки (показывается если есть профиль) -->
-        <div id="stats-container" style="display: none;">
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="stat-value" id="likes-count">15</span>
-                    <span class="stat-label">Лайков сегодня</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="matches-count">0</span>
-                    <span class="stat-label">Мэтчи</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="views-count">0</span>
-                    <span class="stat-label">Просмотры</span>
-                </div>
-            </div>
-            
-            <!-- Основные кнопки действий -->
-            <div class="action-buttons">
-                <button class="btn btn-swipe" onclick="goToSwipes()">
-                    🔥 Начать знакомства
-                </button>
-                <button class="btn btn-profile" onclick="editProfile()">
-                    👤 Мой профиль
-                </button>
-            </div>
-            
-            <!-- Дополнительные функции -->
-            <div class="additional-buttons">
-                <button class="btn btn-photo btn-small" onclick="goToUploadPhoto()">
-                    📸 Загрузить фото
-                </button>
-                <button class="btn btn-chat btn-small" onclick="goToChatDemo()">
-                    💬 Демо чата
-                </button>
-                <button class="btn btn-secondary btn-small" onclick="showAllFeatures()">
-                    🚀 Все функции
-                </button>
-                <button class="btn btn-secondary btn-small" onclick="inviteFriend()">
-                    📢 Пригласить друга
-                </button>
-            </div>
-        </div>
-        
-        <!-- Особенности приложения -->
-        <div class="features">
-            <div class="feature">
-                <div class="feature-icon">📍</div>
-                <div class="feature-text">
-                    <strong>Ищите людей рядом</strong>
-                    <span>По городу или всей России. Настраивайте радиус поиска от 5 до 500 км.</span>
-                </div>
-            </div>
-            
-            <div class="feature">
-                <div class="feature-icon">🛡️</div>
-                <div class="feature-text">
-                    <strong>Безопасная модерация</strong>
-                    <span>Все фото проверяются вручную. Только реальные люди и настоящие фото.</span>
-                </div>
-            </div>
-            
-            <div class="feature">
-                <div class="feature-icon">❤️</div>
-                <div class="feature-text">
-                    <strong>15 лайков в день бесплатно</strong>
-                    <span>+10 лайков за каждого приглашенного друга. Честно и без скрытых платежей.</span>
-                </div>
-            </div>
-            
-            <div class="feature">
-                <div class="feature-icon">💬</div>
-                <div class="feature-text">
-                    <strong>Мгновенный чат</strong>
-                    <span>При взаимном лайке начинается чат. Общайтесь безопасно внутри приложения.</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Дополнительные кнопки для незарегистрированных -->
-        <div id="guest-buttons" style="margin-top: 25px;">
-            <button class="btn btn-secondary" onclick="showRules()">
-                📋 Правила
-            </button>
-            <button class="btn btn-secondary" onclick="showFeatures()">
-                🎯 Возможности
-            </button>
-        </div>
+    <div id="app-container">
+        <!-- Контент загрузится динамически -->
     </div>
     
     <script>
-        // Инициализация Telegram WebApp
+        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
         const tg = window.Telegram.WebApp;
-        
-        // Глобальные переменные
         let userProfile = null;
         let telegramUser = null;
-        let photoStatus = 'none'; // 'none', 'pending', 'approved'
+        let photoStatus = 'none';
         
-        // Основная функция инициализации
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        
         function initApp() {
-            // Расширяем на весь экран
-            if (tg && tg.expand) {
-                tg.expand();
+            const container = document.getElementById('app-container');
+            
+            // Проверяем, что мы в Telegram WebApp
+            if (!tg || !tg.initDataUnsafe) {
+                showTelegramWarning(container);
+                return;
             }
             
-            // Получаем данные пользователя Telegram
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                telegramUser = tg.initDataUnsafe.user;
-                console.log('Telegram пользователь:', telegramUser);
-            }
+            // Мы в Telegram - инициализируем приложение
+            tg.expand(); // Раскрываем на весь экран
+            tg.enableClosingConfirmation(); // Запрос при закрытии
             
-            // Загружаем сохраненный профиль
+            telegramUser = tg.initDataUnsafe.user;
+            console.log('Telegram пользователь:', telegramUser);
+            
+            // Загружаем профиль
             loadUserProfile();
             
-            // Загружаем статус фото
-            loadPhotoStatus();
+            // Показываем интерфейс
+            showLoading(container, 'Загружаем ваш профиль...');
             
-            // Настраиваем главную кнопку Telegram
-            setupMainButton();
-            
-            // Обновляем интерфейс
-            updateUI();
+            // Даем время на анимацию загрузки
+            setTimeout(() => {
+                renderMainInterface(container);
+            }, 1000);
         }
         
-        // Загрузка профиля из localStorage
+        // ========== ЗАГРУЗКА ПРОФИЛЯ ==========
+        
         function loadUserProfile() {
+            // Сначала пробуем из localStorage
             const savedProfile = localStorage.getItem('match_profile');
             if (savedProfile) {
                 try {
                     userProfile = JSON.parse(savedProfile);
-                    console.log('Загружен профиль:', userProfile);
+                    console.log('Загружен профиль из localStorage:', userProfile);
                 } catch (e) {
                     console.error('Ошибка загрузки профиля:', e);
                     userProfile = null;
                 }
             }
-        }
-        
-        // Загрузка статуса фото
-        function loadPhotoStatus() {
+            
+            // Если профиля нет в localStorage, создаем из Telegram
+            if (!userProfile && telegramUser) {
+                userProfile = {
+                    id: telegramUser.id,
+                    telegramId: telegramUser.id,
+                    username: telegramUser.username,
+                    firstName: telegramUser.first_name,
+                    lastName: telegramUser.last_name || '',
+                    photoUrl: telegramUser.photo_url || null,
+                    age: null,
+                    gender: null,
+                    city: null,
+                    bio: null,
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Сохраняем временный профиль
+                saveProfileToStorage();
+            }
+            
+            // Загружаем статус фото
             const status = localStorage.getItem('photo_status');
             photoStatus = status || 'none';
-            console.log('Статус фото:', photoStatus);
         }
         
-        // Сохранение профиля в localStorage
-        function saveUserProfile(profile) {
-            userProfile = profile;
-            localStorage.setItem('match_profile', JSON.stringify(profile));
-            updateUI();
-        }
-        
-        // Настройка главной кнопки Telegram
-        function setupMainButton() {
-            if (!tg || !tg.MainButton) return;
-            
+        function saveProfileToStorage() {
             if (userProfile) {
-                if (photoStatus === 'approved') {
-                    tg.MainButton.setText('🔥 Начать знакомства');
-                    tg.MainButton.onClick(goToSwipes);
-                } else {
-                    tg.MainButton.setText('📸 Загрузить фото');
-                    tg.MainButton.onClick(goToUploadPhoto);
-                }
-            } else {
-                tg.MainButton.setText('📝 Зарегистрироваться');
-                tg.MainButton.onClick(goToRegistration);
+                localStorage.setItem('match_profile', JSON.stringify(userProfile));
             }
-            tg.MainButton.show();
         }
         
-        // Обновление интерфейса
-        function updateUI() {
-            const profileContainer = document.getElementById('profile-container');
-            const statsContainer = document.getElementById('stats-container');
-            const actionButtons = document.getElementById('action-buttons');
-            const guestButtons = document.getElementById('guest-buttons');
-            const pageTitle = document.getElementById('page-title');
-            const pageSubtitle = document.getElementById('page-subtitle');
-            const registerBtn = document.getElementById('register-btn');
-            const photoNotification = document.getElementById('photo-notification');
+        function savePhotoStatus(status) {
+            photoStatus = status;
+            localStorage.setItem('photo_status', status);
+        }
+        
+        // ========== РЕНДЕРИНГ ИНТЕРФЕЙСА ==========
+        
+        function showTelegramWarning(container) {
+            container.innerHTML = `
+                <div class="container">
+                    <div class="logo">⚠️</div>
+                    <h1>Требуется Telegram</h1>
+                    <p class="subtitle">Это приложение работает только внутри Telegram</p>
+                    
+                    <div class="telegram-warning">
+                        <p>Откройте приложение через бота:</p>
+                        <p style="font-weight: bold; font-size: 18px; margin: 10px 0;">@SiaMatchBot</p>
+                        
+                        <button class="telegram-btn" onclick="window.location.href='https://t.me/SiaMatchBot'">
+                            <span>📱</span>
+                            <span>Открыть в Telegram</span>
+                        </button>
+                    </div>
+                    
+                    <div class="features">
+                        <div class="feature">
+                            <div class="feature-icon">❤️</div>
+                            <div class="feature-text">
+                                <strong>Знакомства по всей России</strong>
+                                <span>Свайпайте анкеты, находите мэтчи</span>
+                            </div>
+                        </div>
+                        
+                        <div class="feature">
+                            <div class="feature-icon">📍</div>
+                            <div class="feature-text">
+                                <strong>Поиск по геолокации</strong>
+                                <span>Находите людей в вашем городе</span>
+                            </div>
+                        </div>
+                        
+                        <div class="feature">
+                            <div class="feature-icon">💬</div>
+                            <div class="feature-text">
+                                <strong>Мгновенный чат</strong>
+                                <span>Общайтесь с мэтчами прямо в приложении</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showLoading(container, message = 'Загрузка...') {
+            container.innerHTML = `
+                <div class="container">
+                    <div class="loading">
+                        <div class="loader"></div>
+                        <p>${message}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderMainInterface(container) {
+            if (!telegramUser) {
+                showTelegramWarning(container);
+                return;
+            }
             
-            if (userProfile) {
-                // Показываем приветствие
-                pageTitle.innerHTML = `Привет, ${userProfile.name}!`;
-                pageSubtitle.innerHTML = `Готов к новым знакомствам в ${userProfile.city}`;
-                
-                // Показываем информацию профиля
-                let photoStatusHTML = '';
-                if (photoStatus === 'pending') {
-                    photoStatusHTML = `
-                        <div class="photo-status status-pending">
-                            <span class="emoji">⏳</span>
-                            <span>Фото на модерации (1-24 часа)</span>
-                        </div>
-                    `;
-                    // Показываем уведомление
-                    photoNotification.style.display = 'flex';
-                } else if (photoStatus === 'approved') {
-                    photoStatusHTML = `
-                        <div class="photo-status status-approved">
-                            <span class="emoji">✅</span>
-                            <span>Фото подтверждено</span>
-                        </div>
-                    `;
-                } else {
-                    photoStatusHTML = `
-                        <div class="photo-status status-none">
+            const isProfileComplete = userProfile && 
+                                     userProfile.age && 
+                                     userProfile.gender && 
+                                     userProfile.city;
+            
+            const photoStatusHTML = getPhotoStatusHTML();
+            const profileHTML = getProfileHTML();
+            const actionButtonsHTML = getActionButtonsHTML(isProfileComplete);
+            const statsHTML = getStatsHTML();
+            
+            container.innerHTML = `
+                <div class="container">
+                    <div class="logo">❤️</div>
+                    <h1>${userProfile?.firstName ? `Привет, ${userProfile.firstName}!` : 'Match Россия'}</h1>
+                    <p class="subtitle">${getSubtitle(isProfileComplete)}</p>
+                    
+                    <!-- Уведомление о необходимости фото -->
+                    ${photoStatus !== 'approved' ? `
+                        <div class="notification">
                             <span class="emoji">📸</span>
-                            <span>Фото не загружено</span>
+                            <span>${getPhotoNotificationText()}</span>
                         </div>
-                    `;
-                    // Показываем уведомление
-                    photoNotification.style.display = 'flex';
-                }
-                
-                profileContainer.innerHTML = `
-                    <div class="profile-info">
-                        <h3><span class="emoji">👤</span> Ваш профиль</h3>
-                        <p><span class="emoji">🎂</span> ${userProfile.age} лет</p>
-                        <p><span class="emoji">📍</span> ${userProfile.city}</p>
-                        <p><span class="emoji">${userProfile.gender === 'male' ? '♂️' : '♀️'}</span> ${userProfile.gender === 'male' ? 'Мужской' : 'Женский'}</p>
-                        ${photoStatusHTML}
+                    ` : ''}
+                    
+                    <!-- Профиль пользователя -->
+                    ${profileHTML}
+                    
+                    <!-- Статистика (только для завершенных профилей) -->
+                    ${isProfileComplete ? statsHTML : ''}
+                    
+                    <!-- Кнопки действий -->
+                    ${actionButtonsHTML}
+                    
+                    <!-- Особенности приложения -->
+                    <div class="features" id="features-section">
+                        ${getFeaturesHTML()}
+                    </div>
+                    
+                    <!-- Кнопки для незавершенного профиля -->
+                    ${!isProfileComplete ? `
+                        <div id="guest-buttons" style="margin-top: 25px;">
+                            <button class="btn btn-secondary" onclick="showRules()">
+                                📋 Правила
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFeatures()">
+                                🎯 Возможности
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Настраиваем кнопку Telegram
+            setupTelegramButton(isProfileComplete);
+        }
+        
+        function getPhotoStatusHTML() {
+            if (photoStatus === 'pending') {
+                return `
+                    <div class="photo-status status-pending">
+                        <span class="emoji">⏳</span>
+                        <span>Фото на модерации (1-24 часа)</span>
                     </div>
                 `;
-                
-                // Показываем статистику и кнопки
-                statsContainer.style.display = 'block';
-                actionButtons.style.display = 'none';
-                guestButtons.style.display = 'none';
-                
-                // Обновляем статистику
-                updateStats();
-                
-                // Меняем текст кнопки регистрации
-                registerBtn.innerHTML = '✏️ Редактировать профиль';
-                registerBtn.onclick = editProfile;
-                
+            } else if (photoStatus === 'approved') {
+                return `
+                    <div class="photo-status status-approved">
+                        <span class="emoji">✅</span>
+                        <span>Фото подтверждено</span>
+                    </div>
+                `;
             } else {
-                // Скрываем профиль и статистику
-                profileContainer.innerHTML = '';
-                statsContainer.style.display = 'none';
-                actionButtons.style.display = 'block';
-                guestButtons.style.display = 'block';
-                photoNotification.style.display = 'none';
-                
-                // Стандартные заголовки
-                pageTitle.innerHTML = 'Match Россия';
-                pageSubtitle.innerHTML = 'Знакомства по всей России с геолокацией';
-                
-                // Стандартная кнопка
-                registerBtn.innerHTML = '📝 Начать регистрацию';
-                registerBtn.onclick = goToRegistration;
+                return `
+                    <div class="photo-status status-none">
+                        <span class="emoji">📸</span>
+                        <span>Фото не загружено</span>
+                    </div>
+                `;
             }
         }
         
-        // Обновление статистики
-        function updateStats() {
-            // Здесь будет реальная статистика из бэкенда
-            // Пока демо-данные
-            document.getElementById('likes-count').textContent = '15';
+        function getProfileHTML() {
+            if (!userProfile) return '';
             
-            // Получаем количество мэтчей из localStorage
+            return `
+                <div class="profile-info">
+                    <h3><span class="emoji">👤</span> Ваш профиль</h3>
+                    ${userProfile.age ? `<p><span class="emoji">🎂</span> ${userProfile.age} лет</p>` : ''}
+                    ${userProfile.city ? `<p><span class="emoji">📍</span> ${userProfile.city}</p>` : ''}
+                    ${userProfile.gender ? `<p><span class="emoji">${userProfile.gender === 'male' ? '♂️' : '♀️'}</span> ${userProfile.gender === 'male' ? 'Мужской' : 'Женский'}</p>` : ''}
+                    ${getPhotoStatusHTML()}
+                </div>
+            `;
+        }
+        
+        function getSubtitle(isProfileComplete) {
+            if (!isProfileComplete) {
+                return 'Завершите регистрацию для начала знакомств';
+            }
+            
+            if (photoStatus !== 'approved') {
+                return 'Загрузите фото для доступа к знакомствам';
+            }
+            
+            return userProfile.city ? 
+                `Ищет знакомства в ${userProfile.city}` : 
+                'Знакомства по всей России с геолокацией';
+        }
+        
+        function getPhotoNotificationText() {
+            switch(photoStatus) {
+                case 'none': return 'Загрузите фото для полного доступа к знакомствам!';
+                case 'pending': return 'Фото на модерации. Ожидайте подтверждения.';
+                case 'approved': return '';
+                default: return 'Загрузите фото для доступа';
+            }
+        }
+        
+        function getActionButtonsHTML(isProfileComplete) {
+            if (!isProfileComplete) {
+                return `
+                    <div id="action-buttons">
+                        <button class="btn" onclick="goToRegistration()">
+                            📝 ${userProfile ? 'Завершить регистрацию' : 'Начать регистрацию'}
+                        </button>
+                    </div>
+                `;
+            }
+            
+            if (photoStatus !== 'approved') {
+                return `
+                    <div class="action-buttons">
+                        <button class="btn btn-photo" onclick="goToUploadPhoto()">
+                            📸 ${photoStatus === 'pending' ? 'Проверить статус' : 'Загрузить фото'}
+                        </button>
+                        <button class="btn btn-secondary" onclick="editProfile()">
+                            ✏️ Редактировать профиль
+                        </button>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="action-buttons">
+                    <button class="btn btn-swipe" onclick="goToSwipes()">
+                        🔥 Начать знакомства
+                    </button>
+                    <button class="btn btn-profile" onclick="editProfile()">
+                        👤 Мой профиль
+                    </button>
+                </div>
+                
+                <div class="additional-buttons">
+                    <button class="btn btn-photo btn-small" onclick="goToUploadPhoto()">
+                        📸 Загрузить фото
+                    </button>
+                    <button class="btn btn-chat btn-small" onclick="goToChatDemo()">
+                        💬 Демо чата
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="showAllFeatures()">
+                        🚀 Все функции
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="inviteFriend()">
+                        📢 Пригласить друга
+                    </button>
+                </div>
+            `;
+        }
+        
+        function getStatsHTML() {
+            // Получаем данные из localStorage
             const matches = JSON.parse(localStorage.getItem('match_matches') || '[]');
-            document.getElementById('matches-count').textContent = matches.length;
+            const likesRemaining = parseInt(localStorage.getItem('likes_remaining') || '15');
+            const profileViews = parseInt(localStorage.getItem('profile_views') || '0');
             
-            // Просмотры (демо)
-            const views = parseInt(localStorage.getItem('profile_views') || '0');
-            document.getElementById('views-count').textContent = views;
+            return `
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="likes-count">${likesRemaining}</span>
+                        <span class="stat-label">Лайков сегодня</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="matches-count">${matches.length}</span>
+                        <span class="stat-label">Мэтчи</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="views-count">${profileViews}</span>
+                        <span class="stat-label">Просмотры</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getFeaturesHTML() {
+            return `
+                <div class="feature">
+                    <div class="feature-icon">📍</div>
+                    <div class="feature-text">
+                        <strong>Ищите людей рядом</strong>
+                        <span>По городу или всей России. Настраивайте радиус поиска от 5 до 500 км.</span>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-text">
+                        <strong>Безопасная модерация</strong>
+                        <span>Все фото проверяются вручную. Только реальные люди и настоящие фото.</span>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">❤️</div>
+                    <div class="feature-text">
+                        <strong>15 лайков в день бесплатно</strong>
+                        <span>+10 лайков за каждого приглашенного друга. Честно и без скрытых платежей.</span>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-text">
+                        <strong>Мгновенный чат</strong>
+                        <span>При взаимном лайке начинается чат. Общайтесь безопасно внутри приложения.</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function setupTelegramButton(isProfileComplete) {
+            if (!tg.MainButton) return;
+            
+            if (!isProfileComplete) {
+                tg.MainButton.setText('📝 Зарегистрироваться');
+                tg.MainButton.onClick(goToRegistration);
+            } else if (photoStatus !== 'approved') {
+                tg.MainButton.setText('📸 Загрузить фото');
+                tg.MainButton.onClick(goToUploadPhoto);
+            } else {
+                tg.MainButton.setText('🔥 Начать знакомства');
+                tg.MainButton.onClick(goToSwipes);
+            }
+            
+            tg.MainButton.show();
         }
         
         // ========== НАВИГАЦИОННЫЕ ФУНКЦИИ ==========
@@ -567,33 +729,19 @@
         }
         
         function goToSwipes() {
-            if (!userProfile) {
-                showAlert('Сначала создайте профиль!');
+            if (!userProfile || !userProfile.age || !userProfile.gender || !userProfile.city) {
+                showAlert('Сначала завершите регистрацию!');
                 goToRegistration();
                 return;
             }
             
-            // Проверяем статус фото
             if (photoStatus !== 'approved') {
                 showAlert('Для начала знакомств нужно загрузить и подтвердить фото!');
                 goToUploadPhoto();
                 return;
             }
             
-            // Проверяем, существует ли файл swipes.html
-            fetch('swipes.html')
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = 'swipes.html';
-                    } else {
-                        showAlert('Функция свайпов скоро будет доступна!');
-                        // Можно создать временную страницу
-                        // createTempSwipesPage();
-                    }
-                })
-                .catch(() => {
-                    showAlert('Свайпы в разработке. Скоро будет доступно!');
-                });
+            window.location.href = 'swipes.html';
         }
         
         function goToUploadPhoto() {
@@ -602,10 +750,6 @@
                 goToRegistration();
                 return;
             }
-            
-            // Сохраняем статус фото как "ожидает загрузки"
-            localStorage.setItem('photo_status', 'pending');
-            photoStatus = 'pending';
             
             window.location.href = 'upload-photo.html';
         }
@@ -631,23 +775,11 @@
         }
         
         function showAllFeatures() {
-            // Проверяем существование файла features.html
-            fetch('features.html')
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = 'features.html';
-                    } else {
-                        showAlert('Все функции приложения:\n\n1. 📝 Регистрация профиля\n2. 📸 Загрузка фото\n3. 🔥 Свайпы знакомств\n4. 💬 Чат с мэтчами\n5. 👤 Редактирование профиля\n6. 📢 Приглашение друзей');
-                    }
-                })
-                .catch(() => {
-                    showAlert('Страница функций скоро будет доступна!');
-                });
+            window.location.href = 'features.html';
         }
         
         function editProfile() {
             if (userProfile) {
-                // Переходим к редактированию профиля
                 localStorage.setItem('edit_profile', 'true');
                 goToRegistration();
             } else {
@@ -656,8 +788,7 @@
         }
         
         function showRules() {
-            const rules = `
-📋 Правила Match Россия:
+            const rules = `📋 Правила Match Россия:
 
 1. Возраст 18+
 2. Только реальные фото
@@ -666,14 +797,12 @@
 5. Модерация в ручном режиме
 6. Нарушение правил = бан
 
-Спасибо, что вы с нами! ❤️
-            `;
+Спасибо, что вы с нами! ❤️`;
             showAlert(rules);
         }
         
         function showFeatures() {
-            const features = `
-🎯 Возможности Match:
+            const features = `🎯 Возможности Match:
 
 • Регистрация с выбором города
 • Загрузка фото с модерацией
@@ -682,8 +811,7 @@
 • Геолокационный поиск
 • 15 лайков в день бесплатно
 • Приглашение друзей за бонусы
-• Безопасная ручная модерация
-            `;
+• Безопасная ручная модерация`;
             showAlert(features);
         }
         
@@ -691,19 +819,17 @@
             const referralCode = userProfile ? userProfile.id || '12345' : 'join';
             const link = `https://t.me/SiaMatchBot?start=ref_${referralCode}`;
             
-            const message = `
-🎁 Пригласите друга и получите +10 лайков!
+            const message = `🎁 Пригласите друга и получите +10 лайков!
 
 Ваша ссылка для приглашения:
 ${link}
 
-Просто отправьте эту ссылку другу в Telegram.
-            `;
+Просто отправьте эту ссылку другу в Telegram.`;
             
             showAlert(message);
             
-            // Копирование ссылки в буфер (если поддерживается)
-            if (navigator.clipboard && tg && tg.showConfirm) {
+            // Копирование ссылки в буфер
+            if (navigator.clipboard && tg.showConfirm) {
                 tg.showConfirm('Скопировать ссылку в буфер обмена?', (confirmed) => {
                     if (confirmed) {
                         navigator.clipboard.writeText(link);
@@ -713,7 +839,8 @@ ${link}
             }
         }
         
-        // Вспомогательные функции
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        
         function showAlert(message) {
             if (tg && tg.showAlert) {
                 tg.showAlert(message);
@@ -722,24 +849,11 @@ ${link}
             }
         }
         
-        function createTempSwipesPage() {
-            // Создаем временную страницу свайпов
-            document.body.innerHTML = `
-                <div class="container">
-                    <h1>🔥 Знакомства</h1>
-                    <p>Функция свайпов скоро будет доступна!</p>
-                    <p>Мы работаем над добавлением этой функции.</p>
-                    <button class="btn" onclick="window.location.href='index.html'">
-                        ← На главную
-                    </button>
-                </div>
-            `;
-        }
+        // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
         
-        // Запуск приложения при загрузке
         document.addEventListener('DOMContentLoaded', initApp);
         
-        // Глобальный экспорт функций для HTML
+        // Экспортируем функции глобально
         window.goToRegistration = goToRegistration;
         window.goToSwipes = goToSwipes;
         window.goToUploadPhoto = goToUploadPhoto;
@@ -749,6 +863,7 @@ ${link}
         window.showRules = showRules;
         window.showFeatures = showFeatures;
         window.inviteFriend = inviteFriend;
+        window.savePhotoStatus = savePhotoStatus;
     </script>
 </body>
 </html>
