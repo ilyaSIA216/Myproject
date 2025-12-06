@@ -175,19 +175,26 @@ document.addEventListener('DOMContentLoaded', checkAuth);
 
 // Отправка заявки на модерацию
 function submitForModeration(userData) {
+    console.log('submitForModeration вызвана с данными:', userData);
+    
     const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
 
     // НЕ трогаем id, если он уже есть (приходит из auth.js)
     if (!userData.id) {
         userData.id = Date.now();
+        console.log('Создан новый ID для пользователя:', userData.id);
     }
 
     userData.status = 'pending';
     userData.submittedAt = new Date().toISOString();
     userData.applicationId = 'APP-' + userData.id.toString().slice(-6);
 
+    console.log('Добавляю пользователя в pendingUsers:', userData);
+    
     pendingUsers.push(userData);
     localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
+
+    console.log('Теперь всего заявок:', pendingUsers.length);
 
     // Создаем уведомление для админа
     notifyAdmin(userData);
@@ -207,6 +214,7 @@ function notifyAdmin(userData) {
         userId: userData.id,
         applicationId: userData.applicationId,
         name: userData.name,
+        gender: userData.gender,
         age: userData.age,
         city: userData.city,
         time: new Date().toLocaleString(),
@@ -217,7 +225,7 @@ function notifyAdmin(userData) {
     localStorage.setItem('sia_admin_notifications', JSON.stringify(adminNotifications.slice(-100)));
     
     // В реальном приложении здесь будет отправка на сервер/email/telegram
-    console.log(`📨 Новое уведомление для админа: ${userData.name}`);
+    console.log(`📨 Новое уведомление для админа: ${userData.name} (${userData.gender})`);
 }
 
 // Проверка статуса пользователя
@@ -244,7 +252,8 @@ function checkUserStatus(userId) {
                 age: user.age,
                 city: user.city,
                 photo: user.mainPhoto,
-                bio: user.bio || 'Пользователь SiaMatch'
+                bio: user.bio || 'Пользователь SiaMatch',
+                gender: user.gender || 'Не указан'
             });
             localStorage.setItem('sia_active_users', JSON.stringify(activeUsers));
         }
@@ -299,6 +308,101 @@ function checkDashboardAccess() {
     }
 }
 
+// Получение активных пользователей для свайпов (с учетом пола)
+function getActiveUsers(currentUserId) {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentUser.gender) {
+        console.log('Текущий пользователь или его пол не определен');
+        return createDemoUsers(currentUserId);
+    }
+    
+    const activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
+    
+    // Если нет активных пользователей, создаем демо
+    if (activeUsers.length === 0) {
+        return createDemoUsers(currentUserId);
+    }
+    
+    // Фильтруем текущего пользователя и выбираем противоположный пол
+    return activeUsers.filter(user => {
+        return user.id !== currentUserId && 
+               ((currentUser.gender === 'male' && user.gender === 'female') ||
+                (currentUser.gender === 'female' && user.gender === 'male'));
+    });
+}
+
+// Создание демо-пользователей для свайпов
+function createDemoUsers(currentUserId) {
+    const demoUsers = [
+        {
+            id: 100001,
+            name: "Анна",
+            age: 25,
+            city: "Москва",
+            gender: "female",
+            photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=500&fit=crop",
+            bio: "Люблю путешествия и книги. Ищу серьёзные отношения.",
+            interests: ["Путешествия", "Книги", "Йога", "Кофе"]
+        },
+        {
+            id: 100002,
+            name: "Мария",
+            age: 28,
+            city: "Санкт-Петербург",
+            gender: "female",
+            photo: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=500&fit=crop",
+            bio: "Фотограф по профессии, мечтатель по призванию.",
+            interests: ["Фотография", "Искусство", "Виноделие", "Велоспорт"]
+        },
+        {
+            id: 100003,
+            name: "Иван",
+            age: 30,
+            city: "Казань",
+            gender: "male",
+            photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop",
+            bio: "Программист, люблю горы и технологии.",
+            interests: ["Программирование", "Горы", "Технологии", "Спорт"]
+        },
+        {
+            id: 100004,
+            name: "Алексей",
+            age: 32,
+            city: "Екатеринбург",
+            gender: "male",
+            photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop",
+            bio: "Бизнесмен. Ценю умных и целеустремлённых людей.",
+            interests: ["Бизнес", "Психология", "Авто", "Путешествия"]
+        },
+        {
+            id: 100005,
+            name: "Екатерина",
+            age: 23,
+            city: "Новосибирск",
+            gender: "female",
+            photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=500&fit=crop",
+            bio: "Студентка, увлекаюсь танцами и искусством.",
+            interests: ["Танцы", "Искусство", "Настолки", "Горы"]
+        }
+    ];
+    
+    // Сохраняем демо-пользователей
+    localStorage.setItem('sia_active_users', JSON.stringify(demoUsers));
+    
+    // Фильтруем по противоположному полу текущего пользователя
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.gender) {
+        return demoUsers.filter(user => 
+            user.id !== currentUserId && 
+            ((currentUser.gender === 'male' && user.gender === 'female') ||
+             (currentUser.gender === 'female' && user.gender === 'male'))
+        );
+    }
+    
+    // Если пол не определен, показываем всех
+    return demoUsers.filter(user => user.id !== currentUserId);
+}
+
 // Получение уведомлений пользователя
 function getUserNotifications(userId) {
     return JSON.parse(localStorage.getItem(`sia_notifications_${userId}`) || '[]');
@@ -327,76 +431,6 @@ function updateUnreadCount(userId) {
     const notifications = JSON.parse(localStorage.getItem(`sia_notifications_${userId}`) || '[]');
     const unreadCount = notifications.filter(n => !n.read).length;
     localStorage.setItem(`sia_unread_count_${userId}`, unreadCount.toString());
-}
-
-// Получение активных пользователей для свайпов
-function getActiveUsers(currentUserId) {
-    const activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || []);
-    
-    // Если нет активных пользователей, создаем демо
-    if (activeUsers.length === 0) {
-        return createDemoUsers(currentUserId);
-    }
-    
-    // Фильтруем текущего пользователя
-    return activeUsers.filter(user => user.id !== currentUserId);
-}
-
-// Создание демо-пользователей для свайпов
-function createDemoUsers(currentUserId) {
-    const demoUsers = [
-        {
-            id: 100001,
-            name: "Анна",
-            age: 25,
-            city: "Москва",
-            photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=500&fit=crop",
-            bio: "Люблю путешествия и книги. Ищу серьёзные отношения.",
-            interests: ["Путешествия", "Книги", "Йога", "Кофе"]
-        },
-        {
-            id: 100002,
-            name: "Мария",
-            age: 28,
-            city: "Санкт-Петербург",
-            photo: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=500&fit=crop",
-            bio: "Фотограф по профессии, мечтатель по призванию.",
-            interests: ["Фотография", "Искусство", "Виноделие", "Велоспорт"]
-        },
-        {
-            id: 100003,
-            name: "Екатерина",
-            age: 23,
-            city: "Казань",
-            photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=500&fit=crop",
-            bio: "Студентка, увлекаюсь танцами и программированием.",
-            interests: ["Танцы", "Программирование", "Настолки", "Горы"]
-        },
-        {
-            id: 100004,
-            name: "София",
-            age: 30,
-            city: "Екатеринбург",
-            photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=500&fit=crop",
-            bio: "Бизнес-аналитик. Ценю умных и целеустремлённых людей.",
-            interests: ["Бизнес", "Психология", "Гольф", "Вино"]
-        },
-        {
-            id: 100005,
-            name: "Алиса",
-            age: 26,
-            city: "Новосибирск",
-            photo: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=400&h=500&fit=crop",
-            bio: "Врач-терапевт. Верю в искренность и простые радости.",
-            interests: ["Медицина", "Бег", "Кулинария", "Театр"]
-        }
-    ];
-    
-    // Сохраняем демо-пользователей
-    localStorage.setItem('sia_active_users', JSON.stringify(demoUsers));
-    
-    // Фильтруем текущего пользователя
-    return demoUsers.filter(user => user.id !== currentUserId);
 }
 
 // Добавление совпадения (match)
@@ -429,6 +463,7 @@ function createDemoApplications() {
             id: Date.now() - 1000,
             applicationId: 'APP-' + (Date.now() - 1000).toString().slice(-6),
             name: "Анна",
+            gender: "female",
             age: 25,
             city: "Москва",
             mainPhoto: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=500&fit=crop",
@@ -441,6 +476,7 @@ function createDemoApplications() {
             id: Date.now() - 2000,
             applicationId: 'APP-' + (Date.now() - 2000).toString().slice(-6),
             name: "Иван",
+            gender: "male",
             age: 30,
             city: "Санкт-Петербург",
             mainPhoto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop",
@@ -455,6 +491,7 @@ function createDemoApplications() {
             id: Date.now() - 3000,
             applicationId: 'APP-' + (Date.now() - 3000).toString().slice(-6),
             name: "Мария",
+            gender: "female",
             age: 22,
             city: "Казань",
             mainPhoto: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=500&fit=crop",
@@ -482,7 +519,8 @@ function createDemoApplications() {
                 age: approvedUser.age,
                 city: approvedUser.city,
                 photo: approvedUser.mainPhoto,
-                bio: approvedUser.bio
+                bio: approvedUser.bio,
+                gender: approvedUser.gender
             });
             localStorage.setItem('sia_active_users', JSON.stringify(activeUsers));
         }
@@ -529,14 +567,5 @@ function resetAllData() {
         }, 1500);
     }
 }
-
-// Автоматически создать демо-данные при первой загрузке (раскомментируйте для тестирования)
-// document.addEventListener('DOMContentLoaded', function() {
-//     if (!localStorage.getItem('sia_demo_created')) {
-//         createDemoApplications();
-//         createDemoLogs();
-//         localStorage.setItem('sia_demo_created', 'true');
-//     }
-// });
 
 console.log("✅ Utils.js загружен");
