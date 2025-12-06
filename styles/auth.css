@@ -2,22 +2,31 @@
 
 /* Шаг 0: Приветствие */
 #step-0 {
-    background: #4CAF50;
+    background: transparent;
     color: white;
     text-align: center;
     justify-content: center;
     align-items: center;
-    padding: 60px 30px;
+    padding: 40px 20px;
+    min-height: 100vh;
+    display: flex;
 }
 
 .welcome-container {
     width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 25px;
+    padding: 40px 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    max-width: 350px;
+    margin: 0 auto;
 }
 
 .app-logo {
     font-size: 60px;
     margin-bottom: 20px;
     animation: pulse 2s infinite;
+    color: #4CAF50;
 }
 
 @keyframes pulse {
@@ -27,22 +36,27 @@
 }
 
 .app-title {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: bold;
     margin-bottom: 10px;
-    color: white;
+    color: #4CAF50;
 }
 
 .welcome-text {
-    font-size: 20px;
-    margin: 30px 0;
-    color: rgba(255,255,255,0.9);
+    font-size: 18px;
+    margin: 25px 0;
+    color: #666;
     line-height: 1.5;
 }
 
 /* Контент шагов */
 .step-content {
-    flex: 1;
+    background: white;
+    border-radius: 25px;
+    padding: 30px 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    margin-top: 20px;
+    min-height: auto;
     display: flex;
     flex-direction: column;
 }
@@ -51,13 +65,13 @@
 .progress-indicator {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin: 20px 0 40px 0;
+    gap: 10px;
+    margin: 10px 0 25px 0;
 }
 
 .step-dot {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     background: #E0E0E0;
     border-radius: 50%;
     transition: all 0.3s;
@@ -65,43 +79,45 @@
 
 .step-dot.active {
     background: #4CAF50;
-    transform: scale(1.2);
+    transform: scale(1.3);
 }
 
 h2 {
     color: #333;
-    font-size: 28px;
-    margin-bottom: 15px;
+    font-size: 24px;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
 .step-description {
     color: #666;
-    font-size: 16px;
-    margin-bottom: 40px;
-    line-height: 1.5;
+    font-size: 15px;
+    margin-bottom: 25px;
+    line-height: 1.4;
+    text-align: center;
 }
 
 .input-group {
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .form-note {
-    font-size: 14px;
+    font-size: 13px;
     color: #888;
-    margin-top: 8px;
+    margin-top: 6px;
     text-align: center;
 }
 
 /* Загрузка фото */
 .photo-upload-container {
     text-align: center;
-    margin: 20px 0;
+    margin: 15px 0;
 }
 
 .photo-drop-area {
     border: 3px dashed #E0E0E0;
     border-radius: 20px;
-    padding: 40px 20px;
+    padding: 30px 15px;
     cursor: pointer;
     transition: all 0.3s;
     background: #FAFAFA;
@@ -113,28 +129,28 @@ h2 {
 }
 
 .photo-icon {
-    font-size: 48px;
+    font-size: 40px;
     color: #4CAF50;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .photo-text {
     color: #666;
-    font-size: 16px;
-    margin-bottom: 10px;
+    font-size: 15px;
+    margin-bottom: 8px;
 }
 
 .photo-subtext {
     color: #888;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .photo-preview {
     width: 100%;
-    height: 200px;
+    height: 180px;
     object-fit: cover;
     border-radius: 15px;
-    margin-top: 20px;
+    margin-top: 15px;
     display: none;
 }
 
@@ -149,17 +165,16 @@ h2 {
 /* Экран проверки */
 .verification-screen {
     text-align: center;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 20px;
+    background: white;
+    border-radius: 25px;
+    padding: 40px 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    margin-top: 20px;
 }
 
 .verification-icon {
-    font-size: 80px;
-    margin-bottom: 30px;
+    font-size: 70px;
+    margin-bottom: 25px;
     color: #4CAF50;
     animation: bounce 2s infinite;
 }
@@ -170,27 +185,27 @@ h2 {
 }
 
 .verification-title {
-    font-size: 28px;
+    font-size: 24px;
     color: #333;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .verification-text {
     color: #666;
-    font-size: 18px;
-    line-height: 1.6;
-    max-width: 300px;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 280px;
 }
 
 .loading-dots {
     display: inline-flex;
-    margin-top: 30px;
+    margin-top: 25px;
     gap: 8px;
 }
 
 .loading-dots span {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     background: #4CAF50;
     border-radius: 50%;
     animation: pulse-dots 1.5s infinite;
@@ -212,24 +227,32 @@ h2 {
 /* Адаптивность */
 @media (max-width: 480px) {
     body {
-        padding: 10px;
+        padding: 0;
     }
     
     .container {
-        min-height: 600px;
-        border-radius: 20px;
+        min-height: 100vh;
+        border-radius: 0;
     }
     
     .step {
-        padding: 30px 20px;
+        padding: 20px 15px;
+    }
+    
+    .welcome-container {
+        padding: 30px 15px;
     }
     
     h2 {
-        font-size: 24px;
+        font-size: 22px;
     }
     
     .btn {
-        padding: 16px 30px;
-        font-size: 18px;
+        padding: 14px 25px;
+        font-size: 16px;
+    }
+    
+    .step-content {
+        padding: 25px 20px;
     }
 }
