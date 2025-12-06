@@ -13,13 +13,9 @@ let userProfile = {
 
 // Начало регистрации
 function startOnboarding() {
-    // Получаем имя из Telegram, если доступно
-    if (typeof Telegram !== 'undefined' && Telegram.WebApp.initDataUnsafe.user) {
-        const tgUser = Telegram.WebApp.initDataUnsafe.user;
-        userProfile.name = tgUser.first_name || '';
-        document.getElementById('welcome-text').textContent = 
-            `Привет, ${tgUser.first_name || 'друг'}! Добро пожаловать в SiaMatch!`;
-    }
+    // Приветствие без использования данных Telegram
+    document.getElementById('welcome-text').textContent = 
+        'Привет, друг! Добро пожаловать в мир знакомств!';
     
     // Переходим к шагу 1
     goToStep(1);
@@ -399,13 +395,7 @@ function simulateApproval() {
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     // Устанавливаем приветствие
-    if (typeof Telegram !== 'undefined' && Telegram.WebApp.initDataUnsafe.user) {
-        const tgUser = Telegram.WebApp.initDataUnsafe.user;
-        const welcomeText = document.getElementById('welcome-text');
-        if (welcomeText && tgUser.first_name) {
-            welcomeText.textContent = `Привет, ${tgUser.first_name}! Добро пожаловать в мир знакомств!`;
-        }
-    }
+    document.getElementById('welcome-text').textContent = 'Привет, друг! Добро пожаловать в мир знакомств!';
     
     // Добавляем обработчики для Enter на полях ввода
     document.getElementById('name-input')?.addEventListener('keypress', function(e) {
