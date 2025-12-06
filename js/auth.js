@@ -203,27 +203,61 @@ function previewSelfie(event) {
 }
 
 function saveSelfie() {
+    console.log('saveSelfie вызвана');
+    
     if (!userProfile.selfie) {
+        console.log('Нет селфи');
         showNotification('Пожалуйста, загрузите селфи для подтверждения', 'error');
         return;
     }
+    
+    console.log('Данные пользователя перед сохранением:', userProfile);
     
     // Сохраняем пользователя
     const userId = Date.now();
     userProfile.id = userId;
     userProfile.registrationDate = new Date().toISOString();
-    userProfile.bio = "Пользователь SiaMatch"; // Можно добавить поле для биографии позже
+    userProfile.bio = "Пользователь SiaMatch";
     
-    // Сохраняем в localStorage
+    console.log('ID пользователя:', userId);
+    
+    // Сохраняем в localStorage как текущего пользователя
     saveUser(userProfile);
+    console.log('Пользователь сохранен в localStorage как sia_current_user');
+    
+    // Создаем копию данных для модерации
+    const userDataForModeration = {
+        name: userProfile.name,
+        age: userProfile.age,
+        city: userProfile.city,
+        mainPhoto: userProfile.mainPhoto,
+        selfie: userProfile.selfie,
+        bio: userProfile.bio,
+        id: userId, // Используем тот же ID
+        registrationDate: userProfile.registrationDate
+    };
+    
+    console.log('Данные для модерации:', userDataForModeration);
     
     // Отправляем на модерацию
-    const applicationId = submitForModeration(userProfile);
+    console.log('Вызываю submitForModeration...');
+    const applicationId = submitForModeration(userDataForModeration);
+    console.log('Получен ID заявки из submitForModeration:', applicationId);
     
     // Сохраняем ID заявки для проверки статуса
     localStorage.setItem('sia_current_application_id', applicationId);
+    console.log('sia_current_application_id сохранен:', applicationId);
+    
+    // Проверяем сохраненные данные
+    const savedId = localStorage.getItem('sia_current_application_id');
+    console.log('Проверка сохраненного ID:', savedId);
+    
+    const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+    console.log('Всего заявок в системе:', pendingUsers.length);
+    console.log('Все заявки:', pendingUsers);
     
     // Переходим к шагу 6
+    console.log('Перехожу к шагу 6...');
     goToStep(6);
 }
 
@@ -235,10 +269,19 @@ function showModerationInfo() {
         if (!verificationScreen) return;
         
         const applicationId = localStorage.getItem('sia_current_application_id');
+        console.log('showModerationInfo: ищу заявку с ID:', applicationId);
+        
         const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+        console.log('showModerationInfo: всего заявок:', pendingUsers.length);
+        
         const userApp = pendingUsers.find(u => u.id === Number(applicationId));
         
-        if (!userApp) return;
+        if (!userApp) {
+            console.error('showModerationInfo: заявка не найдена!');
+            return;
+        }
+        
+        console.log('showModerationInfo: найдена заявка:', userApp);
         
         const infoDiv = document.createElement('div');
         infoDiv.style.marginTop = '30px';
@@ -325,7 +368,10 @@ function showModerationInfo() {
 // Проверка статуса заявки
 function checkApplicationStatus() {
     const applicationId = localStorage.getItem('sia_current_application_id');
+    console.log('checkApplicationStatus: проверяю ID:', applicationId);
+    
     const status = checkUserStatus(Number(applicationId));
+    console.log('checkApplicationStatus: статус:', status);
     
     if (status === 'approved') {
         showNotification('🎉 Ваша анкета одобрена! Перенаправляем...', 'success');
