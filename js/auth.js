@@ -1,118 +1,129 @@
-// ========== ЛОГИКА РЕГИСТРАЦИИ (index.html) ==========
+// ========== ЛОГИКА РЕГИСТРАЦИИ SiaMatch ==========
 
+// Объект для хранения данных пользователя
 let userProfile = {
-    telegramId: null,
-    username: null,
-    firstName: null,
-    age: null,
-    city: null,
-    mainPhoto: null,
-    selfiePhoto: null,
-    status: 'new',
-    likes: 0,
-    matches: 0,
-    createdAt: null
+    name: '',
+    age: '',
+    city: '',
+    mainPhoto: '',
+    selfie: '',
+    bio: '',
+    interests: []
 };
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Страница регистрации загружена');
-    
-    // Приветствуем пользователя из Telegram
-    const tgUser = tg.initDataUnsafe?.user;
-    if (tgUser?.first_name) {
-        document.getElementById('welcome-text').textContent = `Привет, ${tgUser.first_name}!`;
-    }
-});
-
-// Функции регистрации
+// Начало регистрации
 function startOnboarding() {
-    console.log('Начало онбординга');
-    NavigationUtils.goToStep(1);
-    populateAgeSelect();
-    populateCitySelect();
+    // Получаем имя из Telegram, если доступно
+    if (typeof Telegram !== 'undefined' && Telegram.WebApp.initDataUnsafe.user) {
+        const tgUser = Telegram.WebApp.initDataUnsafe.user;
+        userProfile.name = tgUser.first_name || '';
+        document.getElementById('welcome-text').textContent = 
+            `Привет, ${tgUser.first_name || 'друг'}! Добро пожаловать в SiaMatch!`;
+    }
+    
+    // Переходим к шагу 1
+    goToStep(1);
 }
 
-function populateAgeSelect() {
-    const select = document.getElementById('age-select');
-    
-    // Очищаем, оставляя первый option
-    while (select.options.length > 1) {
-        select.removeChild(select.lastChild);
-    }
-    
-    // Добавляем возраста 18-60
-    for (let age = 18; age <= 60; age++) {
-        const option = document.createElement('option');
-        option.value = age;
-        option.textContent = `${age} лет`;
-        select.appendChild(option);
-    }
-    
-    console.log(`Добавлено ${select.options.length - 1} возрастов`);
-}
-
-function populateCitySelect() {
-    const select = document.getElementById('city-select');
-    
-    // Очищаем, оставляя первый option
-    while (select.options.length > 1) {
-        select.removeChild(select.lastChild);
-    }
-    
-    // Добавляем города
-    window.russianCities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        option.textContent = city;
-        select.appendChild(option);
+// Переход между шагами
+function goToStep(stepNumber) {
+    // Скрываем все шаги
+    document.querySelectorAll('.step').forEach(step => {
+        step.classList.add('hidden');
     });
     
-    console.log(`Добавлено ${select.options.length - 1} городов`);
+    // Показываем нужный шаг
+    const stepElement = document.getElementById(`step-${stepNumber}`);
+    stepElement.classList.remove('hidden');
+    
+    // Инициализируем шаг, если нужно
+    switch(stepNumber) {
+        case 2:
+            initAgeSelect();
+            break;
+        case 3:
+            initCitySelect();
+            break;
+        case 6:
+            // На шаге 6 сразу запускаем процесс модерации
+            setTimeout(showModerationInfo, 500);
+            break;
+    }
+    
+    // Прокрутка вверх
+    window.scrollTo(0, 0);
 }
+
+// ========== ШАГ 1: ИМЯ ==========
 
 function saveName() {
     const nameInput = document.getElementById('name-input');
     const name = nameInput.value.trim();
     
-    if (!name) {
-        NotificationUtils.show('Введите ваше имя', 'error');
-        nameInput.focus();
+    // Проверка имени
+    if (!name || name.length < 2) {
+        showNotification('Введите ваше имя (минимум 2 буквы)', 'error');
         return;
     }
     
-    if (name.length < 2) {
-        NotificationUtils.show('Имя должно быть минимум 2 символа', 'error');
-        nameInput.focus();
+    if (!/^[а-яА-ЯёЁa-zA-Z\s-]+$/.test(name)) {
+        showNotification('Имя может содержать только буквы, пробелы и дефисы', 'error');
         return;
     }
     
-    // Проверяем что только буквы
-    const nameRegex = /^[A-Za-zА-Яа-яЁё\s\-]+$/;
-    if (!nameRegex.test(name)) {
-        NotificationUtils.show('Имя может содержать только буквы, пробелы и дефисы', 'error');
-        nameInput.focus();
-        return;
+    userProfile.name = name;
+    goToStep(2);
+}
+
+// ========== ШАГ 2: ВОЗРАСТ ==========
+
+function initAgeSelect() {
+    const ageSelect = document.getElementById('age-select');
+    
+    // Очищаем, кроме первого option
+    while (ageSelect.options.length > 1) {
+        ageSelect.remove(1);
     }
     
-    userProfile.firstName = name;
-    console.log('Имя сохранено:', userProfile.firstName);
-    NavigationUtils.goToStep(2);
+    // Добавляем возрасты от 18 до 60
+    for (let age = 18; age <= 60; age++) {
+        const option = document.createElement('option');
+        option.value = age;
+        option.textContent = `${age} лет`;
+        ageSelect.appendChild(option);
+    }
 }
 
 function saveAge() {
     const ageSelect = document.getElementById('age-select');
-    const age = parseInt(ageSelect.value);
+    const age = ageSelect.value;
     
-    if (!age || age < 18 || age > 60) {
-        NotificationUtils.show('Выберите возраст от 18 до 60 лет', 'error');
-        ageSelect.focus();
+    if (!age) {
+        showNotification('Пожалуйста, выберите ваш возраст', 'error');
         return;
     }
     
-    userProfile.age = age;
-    console.log('Возраст сохранен:', userProfile.age);
-    NavigationUtils.goToStep(3);
+    userProfile.age = parseInt(age);
+    goToStep(3);
+}
+
+// ========== ШАГ 3: ГОРОД ==========
+
+function initCitySelect() {
+    const citySelect = document.getElementById('city-select');
+    
+    // Очищаем, кроме первого option
+    while (citySelect.options.length > 1) {
+        citySelect.remove(1);
+    }
+    
+    // Добавляем города России из utils.js
+    russianCities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+    });
 }
 
 function saveCity() {
@@ -120,29 +131,30 @@ function saveCity() {
     const city = citySelect.value;
     
     if (!city) {
-        NotificationUtils.show('Выберите ваш город', 'error');
-        citySelect.focus();
+        showNotification('Пожалуйста, выберите ваш город', 'error');
         return;
     }
     
     userProfile.city = city;
-    console.log('Город сохранен:', userProfile.city);
-    NavigationUtils.goToStep(4);
+    goToStep(4);
 }
+
+// ========== ШАГ 4: ОСНОВНОЕ ФОТО ==========
 
 function previewMainPhoto(event) {
     const file = event.target.files[0];
+    
     if (!file) return;
     
-    // Проверка типа файла
-    if (!file.type.startsWith('image/')) {
-        NotificationUtils.show('Пожалуйста, загрузите изображение', 'error');
+    // Проверка размера (максимум 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showNotification('Файл слишком большой (максимум 5MB)', 'error');
         return;
     }
     
-    // Проверка размера (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        NotificationUtils.show('Фото должно быть меньше 5MB', 'error');
+    // Проверка типа файла
+    if (!file.type.startsWith('image/')) {
+        showNotification('Пожалуйста, выберите изображение', 'error');
         return;
     }
     
@@ -151,27 +163,36 @@ function previewMainPhoto(event) {
         const preview = document.getElementById('main-photo-preview');
         preview.src = e.target.result;
         preview.classList.add('show');
-        
         userProfile.mainPhoto = e.target.result;
-        console.log('Основное фото загружено');
-        
-        NotificationUtils.show('Фото успешно загружено!');
     };
-    
-    reader.onerror = function() {
-        NotificationUtils.show('Ошибка загрузки файла', 'error');
-    };
-    
     reader.readAsDataURL(file);
 }
 
+function saveMainPhoto() {
+    if (!userProfile.mainPhoto) {
+        showNotification('Пожалуйста, загрузите ваше фото', 'error');
+        return;
+    }
+    
+    goToStep(5);
+}
+
+// ========== ШАГ 5: СЕЛФИ ДЛЯ ПОДТВЕРЖДЕНИЯ ==========
+
 function previewSelfie(event) {
     const file = event.target.files[0];
+    
     if (!file) return;
+    
+    // Проверка размера (максимум 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showNotification('Файл слишком большой (максимум 5MB)', 'error');
+        return;
+    }
     
     // Проверка типа файла
     if (!file.type.startsWith('image/')) {
-        NotificationUtils.show('Пожалуйста, загрузите изображение', 'error');
+        showNotification('Пожалуйста, выберите изображение', 'error');
         return;
     }
     
@@ -180,92 +201,220 @@ function previewSelfie(event) {
         const preview = document.getElementById('selfie-preview');
         preview.src = e.target.result;
         preview.classList.add('show');
-        
-        userProfile.selfiePhoto = e.target.result;
-        console.log('Селфи загружено');
-        
-        NotificationUtils.show('Селфи успешно загружено!');
+        userProfile.selfie = e.target.result;
     };
-    
-    reader.onerror = function() {
-        NotificationUtils.show('Ошибка загрузки файла', 'error');
-    };
-    
     reader.readAsDataURL(file);
 }
 
-function saveMainPhoto() {
-    if (!userProfile.mainPhoto) {
-        NotificationUtils.show('Загрузите ваше фото', 'error');
-        return;
-    }
-    
-    console.log('Основное фото сохранено');
-    NavigationUtils.goToStep(5);
-}
-
 function saveSelfie() {
-    if (!userProfile.selfiePhoto) {
-        NotificationUtils.show('Загрузите селфи для подтверждения', 'error');
+    if (!userProfile.selfie) {
+        showNotification('Пожалуйста, загрузите селфи для подтверждения', 'error');
         return;
     }
     
-    // Подтверждение отправки
-    tg.showConfirm(
-        'Отправить анкету на проверку?\n\nПосле отправки вы не сможете изменить данные в течение 24 часов.',
-        function(confirmed) {
-            if (confirmed) {
-                // Сохраняем профиль
-                userProfile.status = 'pending';
-                userProfile.createdAt = new Date().toISOString();
-                userProfile.telegramId = tg.initDataUnsafe.user.id;
-                userProfile.username = tg.initDataUnsafe.user.username || 'user_' + Date.now();
-                
-                // Сохраняем в localStorage
-                UserUtils.saveUser(userProfile);
-                
-                // Добавляем в общий список пользователей
-                const allUsers = UserUtils.getAllUsers();
-                allUsers.push(userProfile);
-                UserUtils.saveAllUsers(allUsers);
-                
-                console.log('Анкета отправлена на проверку:', userProfile);
-                
-                // Переходим к экрану ожидания
-                NavigationUtils.goToStep(6);
-                
-                // Имитируем проверку модерацией (3 секунды)
-                setTimeout(() => {
-                    // Одобряем анкету (в реальности это делает админ)
-                    userProfile.status = 'approved';
-                    userProfile.id = Date.now(); // Добавляем ID
-                    UserUtils.saveUser(userProfile);
-                    
-                    // Обновляем в общем списке
-                    const updatedUsers = UserUtils.getAllUsers();
-                    const userIndex = updatedUsers.findIndex(u => u.telegramId === userProfile.telegramId);
-                    if (userIndex !== -1) {
-                        updatedUsers[userIndex] = { ...userProfile };
-                        UserUtils.saveAllUsers(updatedUsers);
-                    }
-                    
-                    // Через 3 секунды редирект на дашборд
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 3000);
-                    
-                }, 3000);
-            }
-        }
-    );
+    // Сохраняем пользователя
+    const userId = Date.now();
+    userProfile.id = userId;
+    userProfile.registrationDate = new Date().toISOString();
+    userProfile.bio = "Пользователь SiaMatch"; // Можно добавить поле для биографии позже
+    
+    // Сохраняем в localStorage
+    saveUser(userProfile);
+    
+    // Отправляем на модерацию
+    const applicationId = submitForModeration(userProfile);
+    
+    // Сохраняем ID заявки для проверки статуса
+    localStorage.setItem('sia_current_application_id', applicationId);
+    
+    // Переходим к шагу 6
+    goToStep(6);
 }
 
-// Экспорт функций для HTML
-window.startOnboarding = startOnboarding;
-window.saveName = saveName;
-window.saveAge = saveAge;
-window.saveCity = saveCity;
-window.saveMainPhoto = saveMainPhoto;
-window.saveSelfie = saveSelfie;
-window.previewMainPhoto = previewMainPhoto;
-window.previewSelfie = previewSelfie;
+// ========== ШАГ 6: МОДЕРАЦИЯ ==========
+
+function showModerationInfo() {
+    setTimeout(() => {
+        const verificationScreen = document.querySelector('.verification-screen');
+        if (!verificationScreen) return;
+        
+        const applicationId = localStorage.getItem('sia_current_application_id');
+        const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+        const userApp = pendingUsers.find(u => u.id === Number(applicationId));
+        
+        if (!userApp) return;
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.style.marginTop = '30px';
+        infoDiv.style.padding = '20px';
+        infoDiv.style.background = '#f0f7f0';
+        infoDiv.style.borderRadius = '15px';
+        infoDiv.style.fontSize = '15px';
+        infoDiv.style.color = '#2E7D32';
+        infoDiv.style.textAlign = 'left';
+        infoDiv.style.boxShadow = '0 5px 15px rgba(76, 175, 80, 0.1)';
+        
+        infoDiv.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">📋</span>
+                <span>Информация о вашей заявке</span>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-weight: 600; color: #555; margin-bottom: 5px;">Номер заявки:</div>
+                <div style="background: white; padding: 8px 12px; border-radius: 8px; font-family: monospace; font-weight: bold;">
+                    ${userApp.applicationId || 'APP-' + userApp.id.toString().slice(-6)}
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Имя:</div>
+                    <div>${userApp.name}</div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Возраст:</div>
+                    <div>${userApp.age} лет</div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Город:</div>
+                    <div>${userApp.city}</div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Дата подачи:</div>
+                    <div>${new Date(userApp.submittedAt).toLocaleDateString()}</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #C8E6C9;">
+                <div style="font-weight: 600; color: #555; margin-bottom: 8px;">Что происходит сейчас:</div>
+                <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px;">
+                    <li>Ваша анкета отправлена администратору на проверку</li>
+                    <li>Проверяются фото и соответствие данных</li>
+                    <li>Обычно проверка занимает от 15 минут до 24 часов</li>
+                    <li>Вы получите уведомление о результате</li>
+                </ul>
+            </div>
+        `;
+        
+        const actionDiv = document.createElement('div');
+        actionDiv.style.marginTop = '25px';
+        actionDiv.style.display = 'flex';
+        actionDiv.style.flexDirection = 'column';
+        actionDiv.style.gap = '10px';
+        
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'btn';
+        checkBtn.style.background = '#4CAF50';
+        checkBtn.style.color = 'white';
+        checkBtn.textContent = 'Проверить статус сейчас';
+        checkBtn.onclick = checkApplicationStatus;
+        
+        const demoBtn = document.createElement('button');
+        demoBtn.className = 'btn';
+        demoBtn.style.background = '#2196F3';
+        demoBtn.style.color = 'white';
+        demoBtn.textContent = 'Тестовый режим (для демо)';
+        demoBtn.onclick = simulateApproval;
+        
+        actionDiv.appendChild(checkBtn);
+        // Раскомментируйте для демо-тестирования:
+        // actionDiv.appendChild(demoBtn);
+        
+        verificationScreen.appendChild(infoDiv);
+        verificationScreen.appendChild(actionDiv);
+    }, 1000);
+}
+
+// Проверка статуса заявки
+function checkApplicationStatus() {
+    const applicationId = localStorage.getItem('sia_current_application_id');
+    const status = checkUserStatus(Number(applicationId));
+    
+    if (status === 'approved') {
+        showNotification('🎉 Ваша анкета одобрена! Перенаправляем...', 'success');
+        setTimeout(() => {
+            window.location.href = 'dashboard.html';
+        }, 1500);
+    } else if (status === 'rejected') {
+        // Получаем причину отклонения
+        const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+        const user = pendingUsers.find(u => u.id === Number(applicationId));
+        const reason = user && user.rejectionReason ? `Причина: ${user.rejectionReason}` : '';
+        
+        const message = reason ? 
+            `❌ Анкета отклонена. ${reason}` : 
+            '❌ Анкета отклонена. Пожалуйста, проверьте данные и попробуйте снова.';
+        
+        showNotification(message, 'error');
+        
+        // Предлагаем вернуться к редактированию
+        setTimeout(() => {
+            if (confirm('Хотите вернуться к редактированию анкеты?')) {
+                goToStep(0);
+            }
+        }, 2000);
+    } else if (status === 'pending') {
+        showNotification('⏳ Анкета все еще на проверке. Попробуйте позже.', 'info');
+    } else {
+        showNotification('⚠️ Не удалось проверить статус. Попробуйте обновить страницу.', 'error');
+    }
+}
+
+// Функция для демо-тестирования (одобрение без админа)
+function simulateApproval() {
+    if (confirm('Включить тестовый режим? Ваша анкета будет автоматически одобрена.')) {
+        const applicationId = localStorage.getItem('sia_current_application_id');
+        const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+        const userIndex = pendingUsers.findIndex(u => u.id === Number(applicationId));
+        
+        if (userIndex !== -1) {
+            pendingUsers[userIndex].status = 'approved';
+            pendingUsers[userIndex].moderatedAt = new Date().toISOString();
+            pendingUsers[userIndex].moderator = 'Тестовый режим';
+            
+            localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
+            
+            // Добавляем в активные пользователи
+            const user = pendingUsers[userIndex];
+            const activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
+            activeUsers.push({
+                id: user.id,
+                name: user.name,
+                age: user.age,
+                city: user.city,
+                photo: user.mainPhoto,
+                bio: user.bio || 'Пользователь SiaMatch'
+            });
+            localStorage.setItem('sia_active_users', JSON.stringify(activeUsers));
+            
+            showNotification('✅ Тестовое одобрение выполнено! Перенаправляем...', 'success');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+        }
+    }
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Устанавливаем приветствие
+    if (typeof Telegram !== 'undefined' && Telegram.WebApp.initDataUnsafe.user) {
+        const tgUser = Telegram.WebApp.initDataUnsafe.user;
+        const welcomeText = document.getElementById('welcome-text');
+        if (welcomeText && tgUser.first_name) {
+            welcomeText.textContent = `Привет, ${tgUser.first_name}! Добро пожаловать в мир знакомств!`;
+        }
+    }
+    
+    // Добавляем обработчики для Enter на полях ввода
+    document.getElementById('name-input')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') saveName();
+    });
+    
+    // Инициализируем выпадающие списки
+    initAgeSelect();
+    initCitySelect();
+});
+
+console.log("✅ Auth.js загружен");
