@@ -227,6 +227,24 @@ function checkUserStatus(userId) {
         return activeUser ? 'approved' : 'not_found';
     }
     
+    // Если пользователь одобрен, но еще не в активных - добавляем
+    if (user.status === 'approved') {
+        const activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
+        const activeUser = activeUsers.find(u => u.id === userId);
+        
+        if (!activeUser) {
+            activeUsers.push({
+                id: user.id,
+                name: user.name,
+                age: user.age,
+                city: user.city,
+                photo: user.mainPhoto,
+                bio: user.bio || 'Пользователь SiaMatch'
+            });
+            localStorage.setItem('sia_active_users', JSON.stringify(activeUsers));
+        }
+    }
+    
     return user.status;
 }
 
