@@ -214,14 +214,14 @@ function saveSelfie() {
     userProfile.registrationDate = new Date().toISOString();
     userProfile.bio = "Пользователь SiaMatch"; // Можно добавить поле для биографии позже
     
-    // Сохраняем в localStorage
+    // Сохраняем в localStorage как текущего пользователя
     saveUser(userProfile);
     
     // Отправляем на модерацию
     const applicationId = submitForModeration(userProfile);
     
     // Сохраняем ID заявки для проверки статуса
-    localStorage.setItem('sia_current_application_id', applicationId);
+    localStorage.setItem('sia_current_application_id', applicationId.toString());
     
     // Переходим к шагу 6
     goToStep(6);
@@ -235,10 +235,18 @@ function showModerationInfo() {
         if (!verificationScreen) return;
         
         const applicationId = localStorage.getItem('sia_current_application_id');
+        if (!applicationId) {
+            console.error('ID заявки не найден');
+            return;
+        }
+        
         const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
         const userApp = pendingUsers.find(u => u.id === Number(applicationId));
         
-        if (!userApp) return;
+        if (!userApp) {
+            console.error('Заявка не найдена в списке');
+            return;
+        }
         
         const infoDiv = document.createElement('div');
         infoDiv.style.marginTop = '30px';
@@ -325,6 +333,11 @@ function showModerationInfo() {
 // Проверка статуса заявки
 function checkApplicationStatus() {
     const applicationId = localStorage.getItem('sia_current_application_id');
+    if (!applicationId) {
+        showNotification('⚠️ Не удалось найти ID вашей заявки', 'error');
+        return;
+    }
+    
     const status = checkUserStatus(Number(applicationId));
     
     if (status === 'approved') {
@@ -352,6 +365,8 @@ function checkApplicationStatus() {
         }, 2000);
     } else if (status === 'pending') {
         showNotification('⏳ Анкета все еще на проверке. Попробуйте позже.', 'info');
+    } else if (status === 'not_found') {
+        showNotification('⚠️ Ваша заявка не найдена. Попробуйте заполнить анкету заново.', 'error');
     } else {
         showNotification('⚠️ Не удалось проверить статус. Попробуйте обновить страницу.', 'error');
     }
@@ -361,6 +376,11 @@ function checkApplicationStatus() {
 function simulateApproval() {
     if (confirm('Включить тестовый режим? Ваша анкета будет автоматически одобрена.')) {
         const applicationId = localStorage.getItem('sia_current_application_id');
+        if (!applicationId) {
+            showNotification('⚠️ Не удалось найти ID заявки', 'error');
+            return;
+        }
+        
         const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
         const userIndex = pendingUsers.findIndex(u => u.id === Number(applicationId));
         
@@ -388,6 +408,8 @@ function simulateApproval() {
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
             }, 1500);
+        } else {
+            showNotification('⚠️ Заявка не найдена', 'error');
         }
     }
 }
