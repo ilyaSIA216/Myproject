@@ -3,73 +3,845 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель SiaMatch</title>
-    <link rel="stylesheet" href="style.css">
+    <title>SiaMatch - Админ панель</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a237e, #283593);
+        }
+        
+        .admin-container {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 1000px;
+            width: 100%;
+            min-height: 90vh;
+            position: relative;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .admin-title {
+            font-size: 28px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .admin-title i {
+            color: #4CAF50;
+            margin-right: 10px;
+        }
+        
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #666;
+        }
+        
+        .logout-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+        
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+        
+        .tab-btn {
+            padding: 12px 25px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .tab-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .tab-btn i {
+            margin-right: 8px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .stat-card.pending {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
+        }
+        
+        .stat-card.rejected {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            box-shadow: 0 10px 20px rgba(244, 67, 54, 0.3);
+        }
+        
+        .stat-card.approved {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .applications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .application-card {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #4CAF50;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .application-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .application-card.pending {
+            border-left-color: #FF9800;
+        }
+        
+        .application-card.approved {
+            border-left-color: #4CAF50;
+        }
+        
+        .application-card.rejected {
+            border-left-color: #f44336;
+        }
+        
+        .application-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .application-title {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .application-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .application-photos {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .photo-container {
+            position: relative;
+        }
+        
+        .photo-container img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            transition: all 0.3s;
+        }
+        
+        .photo-container img:hover {
+            transform: scale(1.05);
+            border-color: #4CAF50;
+        }
+        
+        .photo-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            font-size: 12px;
+            text-align: center;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-approve {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-approve:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-reject {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-reject:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+        
+        .btn-view {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-view:hover {
+            background: #1976D2;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+        
+        .photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .photo-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        .search-box input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #FFE082;
+            color: #E65100;
+        }
+        
+        .status-approved {
+            background: #C8E6C9;
+            color: #2E7D32;
+        }
+        
+        .status-rejected {
+            background: #FFCDD2;
+            color: #C62828;
+        }
+        
+        .logs-container {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 5px;
+        }
+        
+        .log-entry.success {
+            background: #E8F5E9;
+        }
+        
+        .log-entry.failed {
+            background: #FFEBEE;
+        }
+        
+        .log-time {
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .log-message {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="admin-header">
-            <h1>👑 Админ-панель SiaMatch</h1>
-            <p>Управление пользователями и модерация</p>
-        </div>
-
-        <div class="admin-content">
-            <!-- Поиск -->
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Поиск по имени, ID или городу..." 
-                       oninput="searchUsers(this.value)">
-            </div>
-
-            <!-- Статистика -->
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
-                <div style="background: #eef2ff; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold;" id="total-users">0</div>
-                    <div style="color: #666; font-size: 14px;">Всего пользователей</div>
-                </div>
-                <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold;" id="pending-users">0</div>
-                    <div style="color: #666; font-size: 14px;">На проверке</div>
-                </div>
-                <div style="background: #fff3e0; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold;" id="active-users">0</div>
-                    <div style="color: #666; font-size: 14px;">Активных</div>
-                </div>
-            </div>
-
-            <!-- Фильтры -->
-            <div style="margin-bottom: 20px;">
-                <select id="status-filter" onchange="filterUsers()" style="width: 100%;">
-                    <option value="all">Все статусы</option>
-                    <option value="pending">На проверке</option>
-                    <option value="approved">Одобрены</option>
-                    <option value="rejected">Отклонены</option>
-                    <option value="banned">Заблокированы</option>
-                </select>
-            </div>
-
-            <!-- Список пользователей -->
-            <h3>Пользователи</h3>
-            <div id="users-list" class="user-list">
-                <div class="loading">Загрузка пользователей</div>
+        <div class="admin-container" id="admin-container">
+            <!-- Заглушка пока загружается -->
+            <div id="loading" style="text-align: center; padding: 100px;">
+                <div style="font-size: 48px; color: #4CAF50; margin-bottom: 20px;">⏳</div>
+                <div style="color: #666;">Загрузка админ-панели...</div>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно профиля -->
-    <div id="profile-modal" class="profile-modal hidden">
-        <div class="profile-content">
-            <button class="close-btn" onclick="closeProfile()">×</button>
-            <div id="profile-details">
-                <!-- Детали профиля будут здесь -->
-            </div>
-            <div style="margin-top: 20px;">
-                <button class="btn" onclick="openChatWithUser()">💬 Написать сообщение</button>
-                <button class="btn-secondary" onclick="changeUserStatus()" id="status-btn">Изменить статус</button>
-            </div>
-        </div>
+    <!-- Модальное окно для фото -->
+    <div id="photo-modal" class="photo-modal">
+        <button class="close-modal" onclick="closePhotoModal()">×</button>
+        <img id="modal-image" src="" alt="Увеличенное фото">
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        // Проверка авторизации админа
+        function checkAdminAuth() {
+            const session = localStorage.getItem('sia_admin_session');
+            const loginTime = localStorage.getItem('sia_admin_login_time');
+            
+            if (!session || session !== 'active') {
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            
+            // Проверка времени сессии (8 часов)
+            const loginDate = new Date(loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+            
+            if (hoursDiff > 8) {
+                localStorage.removeItem('sia_admin_session');
+                localStorage.removeItem('sia_admin_login_time');
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Основной скрипт админ-панели
+        function initAdminPanel() {
+            if (!checkAdminAuth()) return;
+            
+            // Загружаем данные
+            const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+            const adminLog = JSON.parse(localStorage.getItem('sia_admin_log') || '[]');
+            
+            // Статистика
+            const stats = {
+                pending: pendingUsers.filter(u => u.status === 'pending').length,
+                approved: pendingUsers.filter(u => u.status === 'approved').length,
+                rejected: pendingUsers.filter(u => u.status === 'rejected').length,
+                total: pendingUsers.length
+            };
+            
+            // Генерация HTML
+            document.getElementById('admin-container').innerHTML = `
+                <div class="admin-header">
+                    <div class="admin-title">
+                        <i class="fas fa-shield-alt"></i>SiaMatch Admin Panel
+                    </div>
+                    <div class="admin-info">
+                        <div>Администратор</div>
+                        <button class="logout-btn" onclick="logoutAdmin()">
+                            <i class="fas fa-sign-out-alt"></i> Выйти
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total}</div>
+                        <div class="stat-label">Всего заявок</div>
+                    </div>
+                    <div class="stat-card pending">
+                        <div class="stat-value">${stats.pending}</div>
+                        <div class="stat-label">На проверке</div>
+                    </div>
+                    <div class="stat-card approved">
+                        <div class="stat-value">${stats.approved}</div>
+                        <div class="stat-label">Одобрено</div>
+                    </div>
+                    <div class="stat-card rejected">
+                        <div class="stat-value">${stats.rejected}</div>
+                        <div class="stat-label">Отклонено</div>
+                    </div>
+                </div>
+                
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="showTab('pending')">
+                        <i class="fas fa-clock"></i>На проверке (${stats.pending})
+                    </button>
+                    <button class="tab-btn" onclick="showTab('approved')">
+                        <i class="fas fa-check-circle"></i>Одобренные (${stats.approved})
+                    </button>
+                    <button class="tab-btn" onclick="showTab('rejected')">
+                        <i class="fas fa-times-circle"></i>Отклоненные (${stats.rejected})
+                    </button>
+                    <button class="tab-btn" onclick="showTab('logs')">
+                        <i class="fas fa-history"></i>Логи доступа
+                    </button>
+                </div>
+                
+                <div id="pending-tab" class="tab-content active">
+                    <div class="search-box">
+                        <input type="text" id="search-pending" placeholder="Поиск по имени или городу..." onkeyup="searchApplications('pending')">
+                    </div>
+                    <div class="applications-list" id="pending-list">
+                        <!-- Список заявок на проверке -->
+                    </div>
+                </div>
+                
+                <div id="approved-tab" class="tab-content">
+                    <div class="search-box">
+                        <input type="text" id="search-approved" placeholder="Поиск по имени или городу..." onkeyup="searchApplications('approved')">
+                    </div>
+                    <div class="applications-list" id="approved-list">
+                        <!-- Список одобренных -->
+                    </div>
+                </div>
+                
+                <div id="rejected-tab" class="tab-content">
+                    <div class="search-box">
+                        <input type="text" id="search-rejected" placeholder="Поиск по имени или городу..." onkeyup="searchApplications('rejected')">
+                    </div>
+                    <div class="applications-list" id="rejected-list">
+                        <!-- Список отклоненных -->
+                    </div>
+                </div>
+                
+                <div id="logs-tab" class="tab-content">
+                    <h3>Логи входа в админ-панель</h3>
+                    <div class="logs-container" id="logs-list">
+                        <!-- Логи будут здесь -->
+                    </div>
+                </div>
+            `;
+            
+            // Загружаем данные в табы
+            loadApplications('pending');
+            loadApplications('approved');
+            loadApplications('rejected');
+            loadLogs();
+            
+            // Скрываем загрузку
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function showTab(tabName) {
+            // Скрыть все табы
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Показать выбранный таб
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Если это логи, обновить их
+            if (tabName === 'logs') {
+                loadLogs();
+            }
+        }
+        
+        function loadApplications(status) {
+            const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+            const containerId = status + '-list';
+            const container = document.getElementById(containerId);
+            
+            const filteredUsers = pendingUsers.filter(user => user.status === status);
+            
+            if (filteredUsers.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-inbox"></i>
+                        <p>Нет заявок со статусом "${getStatusText(status)}"</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            filteredUsers.forEach(user => {
+                const timeAgo = getTimeAgo(user.submittedAt);
+                
+                html += `
+                    <div class="application-card ${status}" data-name="${user.name.toLowerCase()}" data-city="${user.city.toLowerCase()}">
+                        <div class="application-header">
+                            <div class="application-title">
+                                ${user.name}, ${user.age} лет
+                                <span class="status-badge status-${status}">${getStatusText(status)}</span>
+                            </div>
+                            <div style="color: #888; font-size: 14px;">
+                                ${timeAgo}
+                            </div>
+                        </div>
+                        
+                        <div class="application-meta">
+                            <div><i class="fas fa-city"></i> ${user.city}</div>
+                            <div><i class="fas fa-calendar"></i> ${new Date(user.submittedAt).toLocaleDateString()}</div>
+                            <div><i class="fas fa-clock"></i> ${new Date(user.submittedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                        </div>
+                        
+                        ${(user.mainPhoto || user.selfie) ? `
+                        <div class="application-photos">
+                            ${user.mainPhoto ? `
+                            <div class="photo-container">
+                                <img src="${user.mainPhoto}" alt="Основное фото" onclick="showPhotoModal('${user.mainPhoto}')">
+                                <div class="photo-label">Основное фото</div>
+                            </div>
+                            ` : ''}
+                            
+                            ${user.selfie ? `
+                            <div class="photo-container">
+                                <img src="${user.selfie}" alt="Селфи" onclick="showPhotoModal('${user.selfie}')">
+                                <div class="photo-label">Селфи для проверки</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                        
+                        ${status === 'pending' ? `
+                        <div class="action-buttons">
+                            <button class="btn btn-approve" onclick="approveApplication(${user.id})">
+                                <i class="fas fa-check"></i> Одобрить
+                            </button>
+                            <button class="btn btn-reject" onclick="rejectApplication(${user.id})">
+                                <i class="fas fa-times"></i> Отклонить
+                            </button>
+                            <button class="btn btn-view" onclick="viewApplication(${user.id})">
+                                <i class="fas fa-eye"></i> Подробнее
+                            </button>
+                        </div>
+                        ` : `
+                        <div class="action-buttons">
+                            <button class="btn btn-view" onclick="viewApplication(${user.id})">
+                                <i class="fas fa-eye"></i> Подробнее
+                            </button>
+                            ${status === 'approved' ? `
+                            <button class="btn" style="background: #9C27B0; color: white;" onclick="sendToSwipes(${user.id})">
+                                <i class="fas fa-heart"></i> В свайпы
+                            </button>
+                            ` : ''}
+                        </div>
+                        `}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function searchApplications(status) {
+            const searchTerm = document.getElementById(`search-${status}`).value.toLowerCase();
+            const cards = document.querySelectorAll(`#${status}-list .application-card`);
+            
+            cards.forEach(card => {
+                const name = card.dataset.name;
+                const city = card.dataset.city;
+                
+                if (name.includes(searchTerm) || city.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function loadLogs() {
+            const logs = JSON.parse(localStorage.getItem('sia_admin_log') || '[]');
+            const container = document.getElementById('logs-list');
+            
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="no-data"><p>Нет записей в логах</p></div>';
+                return;
+            }
+            
+            let html = '';
+            logs.reverse().forEach(log => { // Новые сверху
+                const time = new Date(log.timestamp).toLocaleString();
+                html += `
+                    <div class="log-entry ${log.success ? 'success' : 'failed'}">
+                        <div><span class="log-time">${time}</span> - 
+                        <span class="log-message">${log.success ? '✅ Успешный вход' : '❌ Неудачная попытка входа'}</span></div>
+                        <div style="font-size: 10px; color: #888; margin-top: 5px;">
+                            IP: ${log.ip} | Пароль: ${log.attemptedPassword}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function approveApplication(userId) {
+            if (!confirm('Одобрить эту заявку?')) return;
+            
+            updateApplicationStatus(userId, 'approved');
+            showTab('pending');
+            initAdminPanel(); // Перезагружаем статистику
+        }
+        
+        function rejectApplication(userId) {
+            const reason = prompt('Укажите причину отклонения (необязательно):');
+            updateApplicationStatus(userId, 'rejected', reason);
+            showTab('pending');
+            initAdminPanel();
+        }
+        
+        function updateApplicationStatus(userId, newStatus, reason = '') {
+            const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+            const userIndex = pendingUsers.findIndex(u => u.id === userId);
+            
+            if (userIndex !== -1) {
+                pendingUsers[userIndex].status = newStatus;
+                pendingUsers[userIndex].moderatedAt = new Date().toISOString();
+                pendingUsers[userIndex].moderator = 'Администратор';
+                if (reason) {
+                    pendingUsers[userIndex].rejectionReason = reason;
+                }
+                
+                localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
+                
+                // Добавляем уведомление для пользователя
+                addUserNotification(userId, newStatus, reason);
+                
+                alert(`Заявка ${getStatusText(newStatus)}!`);
+            }
+        }
+        
+        function addUserNotification(userId, status, reason = '') {
+            const notifications = JSON.parse(localStorage.getItem(`sia_notifications_${userId}`) || '[]');
+            
+            let message = '';
+            if (status === 'approved') {
+                message = '✅ Ваша анкета одобрена! Теперь вы можете использовать SiaMatch.';
+            } else {
+                message = `❌ Ваша анкета отклонена. ${reason ? 'Причина: ' + reason : 'Пожалуйста, проверьте данные и попробуйте снова.'}`;
+            }
+            
+            notifications.push({
+                id: Date.now(),
+                message: message,
+                time: new Date().toISOString(),
+                read: false,
+                type: 'moderation'
+            });
+            
+            localStorage.setItem(`sia_notifications_${userId}`, JSON.stringify(notifications));
+        }
+        
+        function viewApplication(userId) {
+            const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+            const user = pendingUsers.find(u => u.id === userId);
+            
+            if (user) {
+                let details = `Имя: ${user.name}\n`;
+                details += `Возраст: ${user.age}\n`;
+                details += `Город: ${user.city}\n`;
+                details += `Дата регистрации: ${new Date(user.submittedAt).toLocaleString()}\n`;
+                details += `Статус: ${getStatusText(user.status)}\n`;
+                
+                if (user.moderatedAt) {
+                    details += `Проверено: ${new Date(user.moderatedAt).toLocaleString()}\n`;
+                    details += `Модератор: ${user.moderator || 'Администратор'}\n`;
+                }
+                
+                if (user.rejectionReason) {
+                    details += `Причина отклонения: ${user.rejectionReason}\n`;
+                }
+                
+                alert(details);
+            }
+        }
+        
+        function sendToSwipes(userId) {
+            // В реальном приложении здесь будет добавление в базу активных пользователей
+            alert('Пользователь добавлен в свайпы!');
+        }
+        
+        function showPhotoModal(photoUrl) {
+            document.getElementById('modal-image').src = photoUrl;
+            document.getElementById('photo-modal').style.display = 'flex';
+        }
+        
+        function closePhotoModal() {
+            document.getElementById('photo-modal').style.display = 'none';
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'На проверке',
+                'approved': 'Одобрено',
+                'rejected': 'Отклонено'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 60) {
+                return `${diffMins} мин назад`;
+            } else if (diffHours < 24) {
+                return `${diffHours} ч назад`;
+            } else {
+                return `${diffDays} дн назад`;
+            }
+        }
+        
+        function logoutAdmin() {
+            localStorage.removeItem('sia_admin_session');
+            localStorage.removeItem('sia_admin_login_time');
+            window.location.href = 'admin-login.html';
+        }
+        
+        // Запускаем админ-панель при загрузке
+        document.addEventListener('DOMContentLoaded', initAdminPanel);
+        
+        // Закрытие модального окна по клику вне фото
+        document.getElementById('photo-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoModal();
+            }
+        });
+        
+        // Закрытие модального окна по Esc
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePhotoModal();
+            }
+        });
+    </script>
 </body>
 </html>
