@@ -8,9 +8,9 @@
 }
 
 body {
-    background: #4CAF50; /* Зеленый фон как в Тиндере */
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     min-height: 100vh;
-    padding: 20px;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -19,11 +19,10 @@ body {
 .container {
     width: 100%;
     max-width: 400px;
-    background: white;
+    background: transparent;
     border-radius: 25px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     overflow: hidden;
-    min-height: 700px;
+    min-height: 100vh;
     position: relative;
 }
 
@@ -31,7 +30,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 40px 30px;
+    padding: 40px 20px 20px;
 }
 
 .hidden {
@@ -44,25 +43,25 @@ body {
     background: white;
     color: #4CAF50;
     border: none;
-    padding: 18px 40px;
+    padding: 16px 30px;
     border-radius: 50px;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
     width: 100%;
     max-width: 280px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    margin: 10px 0;
+    margin: 0 auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
 .btn:active {
-    transform: translateY(-1px);
+    transform: translateY(0);
 }
 
 .btn-secondary {
@@ -88,10 +87,10 @@ body {
 
 input, select {
     width: 100%;
-    padding: 18px 20px;
+    padding: 16px 20px;
     border: 2px solid #E0E0E0;
     border-radius: 15px;
-    font-size: 18px;
+    font-size: 16px;
     transition: all 0.3s;
     background: white;
 }
@@ -118,4 +117,16 @@ input:focus, select:focus {
 
 .full-width {
     width: 100%;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 480px) {
+    .container {
+        min-height: 100vh;
+        border-radius: 0;
+    }
+    
+    body {
+        padding: 0;
+    }
 }
