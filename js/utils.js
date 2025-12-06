@@ -176,20 +176,25 @@ document.addEventListener('DOMContentLoaded', checkAuth);
 // Отправка заявки на модерацию
 function submitForModeration(userData) {
     const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
-    
-    // Генерируем уникальный ID для заявки
-    userData.id = Date.now();
+
+    // НЕ трогаем id, если он уже есть (приходит из auth.js)
+    if (!userData.id) {
+        userData.id = Date.now();
+    }
+
     userData.status = 'pending';
     userData.submittedAt = new Date().toISOString();
     userData.applicationId = 'APP-' + userData.id.toString().slice(-6);
-    
+
     pendingUsers.push(userData);
     localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
-    
+
     // Создаем уведомление для админа
     notifyAdmin(userData);
-    
+
     console.log(`📝 Заявка #${userData.applicationId} отправлена на модерацию: ${userData.name}`);
+
+    // возвращаем именно userId
     return userData.id;
 }
 
