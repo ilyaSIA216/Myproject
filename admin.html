@@ -633,6 +633,7 @@
             }
         }
         
+        // ВАЖНО: ЭТА ФУНКЦИЯ БЫЛА ЗАМЕНЕНА - НОВАЯ ВЕРСИЯ
         function viewApplicationDetails(userId) {
             let applications = [];
             try {
@@ -642,40 +643,125 @@
                 }
             } catch (e) {
                 console.error('Ошибка:', e);
+                alert('Ошибка загрузки данных');
+                return;
             }
             
             const app = applications.find(u => u.id === userId);
-            if (app) {
-                let details = `📋 ЗАЯВКА #${app.applicationId || app.id}\n\n`;
-                details += `👤 Имя: ${app.name}\n`;
-                details += `🎂 Возраст: ${app.age} лет\n`;
-                details += `👫 Пол: ${app.gender === 'male' ? 'Мужчина' : 'Женщина'}\n`;
-                details += `🏙️ Город: ${app.city}\n`;
-                details += `📅 Дата подачи: ${formatDate(app.submittedAt)}\n`;
-                details += `📊 Статус: ${getStatusText(app.status)}\n`;
-                
-                if (app.bio) details += `\n📝 Описание:\n${app.bio}\n`;
-                
-                if (app.moderatedAt) {
-                    details += `\n✅ Проверено: ${formatDate(app.moderatedAt)}\n`;
-                }
-                
-                if (app.rejectionReason) {
-                    details += `\n❌ Причина отклонения:\n${app.rejectionReason}\n`;
-                }
-                
-                if (app.mainPhoto && app.mainPhoto.includes('http')) {
-                    details += `\n📷 Основное фото: ${app.mainPhoto.substring(0, 50)}...\n`;
-                }
-                
-                if (app.selfie && app.selfie.includes('http')) {
-                    details += `🤳 Селфи: ${app.selfie.substring(0, 50)}...\n`;
-                }
-                
-                alert(details);
-            } else {
+            if (!app) {
                 alert('Заявка не найдена');
+                return;
             }
+            
+            // Создаем модальное окно
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                padding: 20px;
+            `;
+            
+            // Собираем информацию
+            let detailsHTML = `
+                <h3 style="margin-top: 0; color: #333;">${app.name}, ${app.age} лет</h3>
+                <div style="margin-bottom: 15px;">
+                    <strong>Город:</strong> ${app.city || 'Не указан'}<br>
+                    <strong>Пол:</strong> ${app.gender === 'male' ? 'Мужчина' : 'Женщина'}<br>
+                    <strong>Статус:</strong> ${getStatusText(app.status)}<br>
+                    <strong>Дата:</strong> ${new Date(app.submittedAt).toLocaleString()}<br>
+                    <strong>ID заявки:</strong> ${app.applicationId || app.id}
+                </div>
+            `;
+            
+            if (app.bio) {
+                detailsHTML += `
+                    <div style="background: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                        <strong>О себе:</strong><br>
+                        ${app.bio}
+                    </div>
+                `;
+            }
+            
+            // ФОТО - КЛЮЧЕВАЯ ЧАСТЬ
+            if (app.hasMainPhoto || app.hasSelfie || app.mainPhoto || app.selfie) {
+                detailsHTML += `<div style="margin: 20px 0;"><strong>Фотографии:</strong></div>`;
+                
+                // Пробуем загрузить фото из отдельного хранилища
+                if (typeof getUserPhotos === 'function') {
+                    const photos = getUserPhotos(userId);
+                    
+                    // Основное фото
+                    if (photos.mainPhoto) {
+                        detailsHTML += `
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">📷 Основное фото:</div>
+                                <img src="${photos.mainPhoto}" 
+                                     alt="Основное фото" 
+                                     style="max-width: 100%; max-height: 300px; border-radius: 5px; border: 1px solid #ddd;">
+                            </div>
+                        `;
+                    } else if (app.hasMainPhoto) {
+                        detailsHTML += `<div>📷 Основное фото: <em>загружено, но недоступно для просмотра</em></div>`;
+                    }
+                    
+                    // Селфи
+                    if (photos.selfie) {
+                        detailsHTML += `
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">🤳 Селфи:</div>
+                                <img src="${photos.selfie}" 
+                                     alt="Селфи" 
+                                     style="max-width: 100%; max-height: 300px; border-radius: 5px; border: 1px solid #ddd;">
+                            </div>
+                        `;
+                    } else if (app.hasSelfie) {
+                        detailsHTML += `<div>🤳 Селфи: <em>загружено, но недоступно для просмотра</em></div>`;
+                    }
+                } else {
+                    detailsHTML += `<div><em>Функция просмотра фото недоступна</em></div>`;
+                }
+            } else {
+                detailsHTML += `<div style="color: #888; font-style: italic;">Фотографии не загружены</div>`;
+            }
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 25px; border-radius: 10px; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative;">
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">
+                        ×
+                    </button>
+                    
+                    ${detailsHTML}
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        ${app.status === 'pending' ? `
+                        <button onclick="approveApplication(${app.id})" 
+                                style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                            ✅ Одобрить
+                        </button>
+                        <button onclick="rejectApplication(${app.id})" 
+                                style="background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                            ❌ Отклонить
+                        </button>
+                        ` : ''}
+                        
+                        <button onclick="this.parentElement.parentElement.remove()" 
+                                style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+                            Закрыть
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
         }
         
         function deleteApplication(userId) {
