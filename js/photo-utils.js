@@ -1,84 +1,60 @@
-// ФУНКЦИИ ДЛЯ РАБОТЫ С ФОТО
-function compressPhoto(file, maxWidth = 600, quality = 0.7) {
-    return new Promise((resolve, reject) => {
-        if (!file || !file.type.startsWith('image/')) {
-            reject(new Error('Неверный тип файла'));
-            return;
-        }
+// ========== УТИЛИТЫ ДЛЯ РАБОТЫ С ФОТО ==========
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+// Глобальные переменные для фото
+window.currentMainPhoto = null;
+window.currentSelfie = null;
 
-                let width = img.width;
-                let height = img.height;
-
-                // Сохраняем пропорции
-                if (width > maxWidth) {
-                    height = Math.round((height * maxWidth) / width);
-                    width = maxWidth;
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Конвертируем в JPEG
-                const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-                resolve(compressedDataUrl);
-            };
-            img.onerror = reject;
-            img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
-// Функция для предпросмотра основного фото
+// Простое сохранение фото (без сложного сжатия)
 function previewMainPhoto(event) {
+    console.log('📸 Загрузка основного фото');
     const file = event.target.files[0];
+    
     if (!file) return;
-
-    compressPhoto(file)
-        .then(compressed => {
-            const preview = document.getElementById('main-photo-preview');
-            preview.src = compressed;
+    
+    // Быстрая проверка
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Файл слишком большой (максимум 10MB)');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('main-photo-preview');
+        if (preview) {
+            preview.src = e.target.result;
             preview.style.display = 'block';
-            
-            // Сохраняем в глобальной переменной
-            window.currentMainPhoto = compressed;
-        })
-        .catch(err => {
-            console.error('Ошибка сжатия фото:', err);
-            alert('Не удалось обработать фото');
-        });
+        }
+        window.currentMainPhoto = e.target.result;
+        console.log('✅ Основное фото загружено');
+    };
+    reader.readAsDataURL(file);
 }
 
-// Функция для предпросмотра селфи
 function previewSelfie(event) {
+    console.log('🤳 Загрузка селфи');
     const file = event.target.files[0];
+    
     if (!file) return;
-
-    compressPhoto(file)
-        .then(compressed => {
-            const preview = document.getElementById('selfie-preview');
-            preview.src = compressed;
+    
+    // Быстрая проверка
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Файл слишком большой (максимум 10MB)');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('selfie-preview');
+        if (preview) {
+            preview.src = e.target.result;
             preview.style.display = 'block';
-            
-            // Сохраняем в глобальной переменной
-            window.currentSelfie = compressed;
-        })
-        .catch(err => {
-            console.error('Ошибка сжатия селфи:', err);
-            alert('Не удалось обработать фото');
-        });
+        }
+        window.currentSelfie = e.target.result;
+        console.log('✅ Селфи загружено');
+    };
+    reader.readAsDataURL(file);
 }
 
-// Экспортируем функции
-window.compressPhoto = compressPhoto;
+// Экспортируем
 window.previewMainPhoto = previewMainPhoto;
 window.previewSelfie = previewSelfie;
