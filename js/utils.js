@@ -248,7 +248,10 @@ function submitForModeration(userData) {
     localStorage.setItem('sia_current_user_id', userData.id.toString());
     console.log('🔑 sia_current_user_id сохранен:', userData.id);
     
-    // 7. Создаем уведомление для админа
+    // 7. Сохраняем самого пользователя
+    saveUser(userData);
+    
+    // 8. Создаем уведомление для админа
     notifyAdmin(newApplication);
     
     console.log('🎉 ========== ОТПРАВКА ЗАВЕРШЕНА ==========');
@@ -449,6 +452,24 @@ function getActiveUsers(currentUserId) {
                 gender: "female",
                 bio: "Студентка, увлекаюсь искусством",
                 photo: "https://randomuser.me/api/portraits/women/3.jpg"
+            },
+            {
+                id: 1004,
+                name: "Дмитрий",
+                age: 28,
+                city: "Новосибирск",
+                gender: "male",
+                bio: "Программист, люблю спорт",
+                photo: "https://randomuser.me/api/portraits/men/1.jpg"
+            },
+            {
+                id: 1005,
+                name: "Алексей",
+                age: 25,
+                city: "Екатеринбург",
+                gender: "male",
+                bio: "Дизайнер, увлекаюсь фотографией",
+                photo: "https://randomuser.me/api/portraits/men/2.jpg"
             }
         ];
         
@@ -471,38 +492,72 @@ function getActiveUsers(currentUserId) {
     return filteredUsers;
 }
 
-// Функция для отладки
-function debugAllApplications() {
-    console.log('=== 🔍 ДЕБАГ: ВСЕ ЗАЯВКИ В СИСТЕМЕ ===');
+// Функция для отладки данных
+function debugSystem() {
+    console.log('=== 🔍 ДЕБАГ СИСТЕМЫ SiaMatch ===');
     
+    // 1. Пользователи
+    console.log('\n📱 ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ:');
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        console.log(`👤 ${currentUser.name}, ${currentUser.age} лет`);
+        console.log(`🏙️ ${currentUser.city}, ${currentUser.gender === 'male' ? 'Мужчина' : 'Женщина'}`);
+        console.log(`🔑 ID: ${currentUser.id}`);
+    } else {
+        console.log('❌ Нет текущего пользователя');
+    }
+    
+    // 2. Заявки на модерацию
+    console.log('\n📋 ЗАЯВКИ НА МОДЕРАЦИЮ:');
     try {
         const stored = localStorage.getItem('sia_pending_users');
-        console.log('📂 Сырые данные:', stored);
-        
         if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
             const apps = JSON.parse(stored);
             console.log(`📊 Всего заявок: ${apps.length}`);
             
             if (apps.length === 0) {
-                console.log('📭 Нет заявок в системе');
-                return;
+                console.log('📭 Нет заявок');
+            } else {
+                apps.forEach((app, i) => {
+                    console.log(`${i+1}. 📋 ${app.applicationId || 'Без ID'}`);
+                    console.log(`   👤 ${app.name}, ${app.age} лет`);
+                    console.log(`   🏙️ ${app.city}, ${app.gender === 'male' ? 'Мужчина' : 'Женщина'}`);
+                    console.log(`   📅 ${new Date(app.submittedAt).toLocaleString()}`);
+                    console.log(`   📊 Статус: ${app.status || 'pending'}`);
+                    console.log(`   🔑 ID: ${app.id}`);
+                    console.log('---');
+                });
             }
-            
-            apps.forEach((app, index) => {
-                console.log(`[${index + 1}] 📋 ${app.applicationId || 'Без ID'}`);
-                console.log(`   👤 ${app.name}, ${app.age} лет`);
-                console.log(`   🏙️ ${app.city}, ${app.gender === 'male' ? 'Мужчина' : 'Женщина'}`);
-                console.log(`   📅 ${new Date(app.submittedAt).toLocaleString()}`);
-                console.log(`   📊 Статус: ${app.status || 'pending'}`);
-                console.log(`   🔑 ID: ${app.id}`);
-                console.log('---');
-            });
         } else {
             console.log('📭 Нет данных о заявках в localStorage');
         }
     } catch (e) {
-        console.error('❌ Ошибка при отладке:', e);
+        console.error('❌ Ошибка при чтении заявок:', e);
     }
+    
+    // 3. Активные пользователи
+    console.log('\n👥 АКТИВНЫЕ ПОЛЬЗОВАТЕЛИ:');
+    try {
+        const activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
+        console.log(`👥 Активных пользователей: ${activeUsers.length}`);
+        
+        if (activeUsers.length > 0) {
+            activeUsers.forEach((user, i) => {
+                console.log(`${i+1}. ${user.name}, ${user.age} лет, ${user.city}`);
+            });
+        }
+    } catch (e) {
+        console.log('⚠️ Нет активных пользователей');
+    }
+    
+    // 4. Проверка localStorage
+    console.log('\n💾 ПРОВЕРКА localStorage:');
+    console.log('sia_current_user:', localStorage.getItem('sia_current_user')?.slice(0, 100) + '...');
+    console.log('sia_current_user_id:', localStorage.getItem('sia_current_user_id'));
+    console.log('sia_pending_users длина:', localStorage.getItem('sia_pending_users')?.length || 0);
+    console.log('sia_active_users длина:', localStorage.getItem('sia_active_users')?.length || 0);
+    
+    console.log('=== 🔍 ДЕБАГ ЗАВЕРШЕН ===');
 }
 
 // Функция для проверки и восстановления данных
@@ -552,13 +607,50 @@ function repairAdminData() {
     return repairedUsers;
 }
 
+// Очистка тестовых данных (для разработки)
+function clearTestData() {
+    if (confirm('⚠️ Очистить ВСЕ тестовые данные? Это действие нельзя отменить.')) {
+        localStorage.removeItem('sia_pending_users');
+        localStorage.removeItem('sia_current_user');
+        localStorage.removeItem('sia_current_user_id');
+        localStorage.removeItem('sia_active_users');
+        localStorage.removeItem('sia_admin_notifications');
+        
+        console.log('🧹 Все тестовые данные очищены!');
+        alert('✅ Данные очищены! Страница будет перезагружена.');
+        location.reload();
+    }
+}
+
+// Создание тестовой заявки (для отладки)
+function createTestApplication() {
+    const testUser = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        name: "Тестовый Пользователь",
+        age: 25,
+        city: "Москва",
+        gender: Math.random() > 0.5 ? "male" : "female",
+        bio: "Это тестовый пользователь для отладки",
+        mainPhoto: "https://randomuser.me/api/portraits/" + (Math.random() > 0.5 ? "men" : "women") + "/" + (Math.floor(Math.random() * 50) + 1) + ".jpg",
+        selfie: "https://randomuser.me/api/portraits/" + (Math.random() > 0.5 ? "men" : "women") + "/" + (Math.floor(Math.random() * 50) + 51) + ".jpg"
+    };
+    
+    console.log('🧪 Создаем тестовую заявку...');
+    submitForModeration(testUser);
+    alert('✅ Тестовая заявка создана! Проверьте админ-панель.');
+}
+
 // Автоматическая проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', checkAuth);
 
 console.log("✅ Utils.js загружен успешно!");
 
-// Экспортируем для отладки в консоли
-window.debugAllApplications = debugAllApplications;
+// Экспортируем функции для отладки в консоли
+window.debugSystem = debugSystem;
 window.repairAdminData = repairAdminData;
 window.getCurrentUser = getCurrentUser;
 window.checkUserStatus = checkUserStatus;
+window.clearTestData = clearTestData;
+window.createTestApplication = createTestApplication;
+window.getActiveUsers = getActiveUsers;
+window.submitForModeration = submitForModeration;
