@@ -33,7 +33,7 @@ if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
 function getCurrentUser() {
     try {
         const stored = localStorage.getItem('sia_current_user');
-        if (!stored || stored === 'undefined') {
+        if (!stored || stored === 'undefined' || stored === 'null') {
             return null;
         }
         const user = JSON.parse(stored);
@@ -145,30 +145,39 @@ document.addEventListener('DOMContentLoaded', checkAuth);
 
 // ========== СИСТЕМА МОДЕРАЦИИ ==========
 
-// КРИТИЧЕСКО ВАЖНАЯ ФУНКЦИЯ: Отправка заявки на модерацию
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ
 function submitForModeration(userData) {
-    console.log('🚀 === НАЧАЛО submitForModeration ===');
+    console.log('🚀 === ОТПРАВКА НА МОДЕРАЦИЮ (исправленная версия) ===');
     
-    // 1. Проверяем входные данные
-    if (!userData || !userData.name) {
-        console.error('❌ Нет данных пользователя');
-        return null;
-    }
+    // Проверяем, на каком устройстве
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    console.log(`📱 Устройство: ${isMobile ? 'Мобильное' : 'Десктоп'}`);
     
-    // 2. Создаем ID если его нет
+    // 1. Гарантируем ID
     if (!userData.id) {
         userData.id = Date.now();
-        console.log('📝 Создан ID:', userData.id);
+        console.log('📝 ID создан:', userData.id);
     }
     
-    // 3. Сохраняем пользователя
-    saveUser(userData);
+    // 2. Сохраняем текущего пользователя (упрощенная версия)
+    const simpleUserData = {
+        id: userData.id,
+        name: userData.name,
+        age: userData.age,
+        city: userData.city,
+        gender: userData.gender,
+        bio: userData.bio || "Пользователь SiaMatch"
+    };
     
-    // 4. Сохраняем ID отдельно
-    localStorage.setItem('sia_current_user_id', userData.id.toString());
-    console.log('🔑 ID сохранен:', userData.id);
+    try {
+        localStorage.setItem('sia_current_user', JSON.stringify(simpleUserData));
+        localStorage.setItem('sia_current_user_id', userData.id.toString());
+        console.log('✅ Пользователь сохранен');
+    } catch (e) {
+        console.error('❌ Ошибка сохранения пользователя:', e);
+    }
     
-    // 5. Создаем заявку для модерации
+    // 3. Подготавливаем заявку
     const newApplication = {
         id: userData.id,
         name: userData.name || 'Неизвестно',
@@ -178,35 +187,35 @@ function submitForModeration(userData) {
         bio: userData.bio || "Пользователь SiaMatch",
         status: 'pending',
         submittedAt: new Date().toISOString(),
-        applicationId: 'APP-' + Date.now().toString().slice(-8),
-        mainPhoto: userData.mainPhoto || '',
-        selfie: userData.selfie || '',
-        moderatedAt: null,
-        moderator: null,
-        rejectionReason: null
+        applicationId: 'APP-' + userData.id.toString().slice(-6) + '-' + Date.now().toString().slice(-4)
     };
     
-    console.log('📋 Заявка создана:', {
-        id: newApplication.id,
-        name: newApplication.name,
-        status: newApplication.status,
-        applicationId: newApplication.applicationId
-    });
+    // Для мобильных НЕ сохраняем фото в заявке
+    if (!isMobile) {
+        if (userData.mainPhoto) newApplication.mainPhoto = userData.mainPhoto;
+        if (userData.selfie) newApplication.selfie = userData.selfie;
+    } else {
+        // Для мобильных отмечаем что фото были
+        if (userData.mainPhoto) newApplication.hasMainPhoto = true;
+        if (userData.selfie) newApplication.hasSelfie = true;
+    }
     
-    // 6. Получаем текущие заявки
+    console.log('📋 Заявка подготовлена:', newApplication);
+    
+    // 4. Получаем существующие заявки
     let pendingUsers = [];
     try {
         const stored = localStorage.getItem('sia_pending_users');
         if (stored && stored !== 'undefined' && stored !== 'null') {
             pendingUsers = JSON.parse(stored);
-            console.log('📊 Найдено существующих заявок:', pendingUsers.length);
+            console.log('📊 Существующих заявок:', pendingUsers.length);
         }
     } catch (e) {
-        console.error('❌ Ошибка чтения заявок:', e);
+        console.error('❌ Ошибка чтения заявок, создаем новый массив');
         pendingUsers = [];
     }
     
-    // 7. Проверяем, нет ли уже такой заявки
+    // 5. Проверяем дубликаты
     const existingIndex = pendingUsers.findIndex(u => u.id === userData.id);
     
     if (existingIndex !== -1) {
@@ -217,11 +226,11 @@ function submitForModeration(userData) {
         pendingUsers.push(newApplication);
     }
     
-    // 8. Сохраняем заявки
+    // 6. Сохраняем заявки (специально для мобильных)
     try {
-        // Для мобильных устройств сохраняем без фото
-        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            const simplifiedApplications = pendingUsers.map(app => ({
+        // Для мобильных сохраняем без фото и с ограничением размера
+        if (isMobile) {
+            const mobileSafeData = pendingUsers.map(app => ({
                 id: app.id,
                 name: app.name,
                 age: app.age,
@@ -231,54 +240,156 @@ function submitForModeration(userData) {
                 status: app.status,
                 submittedAt: app.submittedAt,
                 applicationId: app.applicationId,
-                hasMainPhoto: !!app.mainPhoto,
-                hasSelfie: !!app.selfie
+                hasMainPhoto: app.hasMainPhoto || app.mainPhoto,
+                hasSelfie: app.hasSelfie || app.selfie
             }));
             
-            localStorage.setItem('sia_pending_users', JSON.stringify(simplifiedApplications));
-            console.log('📱 Сохранено для мобильных устройств');
+            // Ограничиваем количество заявок для мобильных (максимум 50)
+            const trimmedData = mobileSafeData.slice(-50);
+            
+            localStorage.setItem('sia_pending_users', JSON.stringify(trimmedData));
+            console.log('📱 Сохранено для мобильных:', trimmedData.length, 'заявок');
         } else {
+            // Для десктопа сохраняем все
             localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
+            console.log('💻 Сохранено для десктопа:', pendingUsers.length, 'заявок');
         }
         
-        console.log('✅ Заявки сохранены. Всего:', pendingUsers.length);
-        
-        // 9. Проверяем сохранение
+        // Проверяем сохранение
         const verify = localStorage.getItem('sia_pending_users');
         if (verify) {
             const parsed = JSON.parse(verify);
-            console.log('✅ Проверка: сохранено заявок:', parsed.length);
-        } else {
-            console.error('❌ Проверка: данные не сохранены!');
+            console.log('✅ Проверка: сохранено', parsed.length, 'заявок');
+            
+            // Логируем последнюю заявку
+            if (parsed.length > 0) {
+                const last = parsed[parsed.length - 1];
+                console.log('📋 Последняя заявка:', {
+                    id: last.id,
+                    name: last.name,
+                    status: last.status
+                });
+            }
         }
         
     } catch (e) {
         console.error('❌ Ошибка сохранения заявок:', e);
         
-        // Пробуем сохранить только основные данные
+        // Экстренное сохранение - только последние 10 заявок
         try {
-            const minimalData = pendingUsers.map(app => ({
+            const emergencyData = pendingUsers.slice(-10).map(app => ({
                 id: app.id,
                 name: app.name,
                 age: app.age,
                 city: app.city,
-                gender: app.gender,
                 status: app.status,
                 applicationId: app.applicationId
             }));
             
-            localStorage.setItem('sia_pending_users', JSON.stringify(minimalData));
-            console.log('✅ Сохранены минимальные данные');
+            localStorage.setItem('sia_pending_users_emergency', JSON.stringify(emergencyData));
+            console.log('⚠️ Экстренное сохранение:', emergencyData.length, 'заявок');
         } catch (e2) {
-            console.error('❌ Не удалось сохранить даже минимальные данные');
+            console.error('❌ Критическая ошибка!');
         }
     }
     
-    // 10. Создаем уведомление для админа
-    createAdminNotification(userData);
+    // 7. Создаем уведомление для админа
+    createAdminNotification(newApplication);
     
-    console.log('🎉 === submitForModeration ЗАВЕРШЕН ===');
+    console.log('🎉 === ОТПРАВКА ЗАВЕРШЕНА ===');
     return userData.id;
+}
+
+// Функция для загрузки заявок с восстановлением данных
+function loadPendingApplicationsWithFallback() {
+    console.log('🔄 Загрузка заявок с восстановлением...');
+    
+    let pendingUsers = [];
+    
+    // Пробуем основное хранилище
+    try {
+        const stored = localStorage.getItem('sia_pending_users');
+        if (stored && stored !== 'undefined' && stored !== 'null') {
+            pendingUsers = JSON.parse(stored);
+            console.log('✅ Основные данные:', pendingUsers.length, 'заявок');
+        }
+    } catch (e) {
+        console.log('❌ Ошибка чтения основных данных');
+    }
+    
+    // Если нет данных, пробуем экстренное хранилище
+    if (pendingUsers.length === 0) {
+        try {
+            const emergency = localStorage.getItem('sia_pending_users_emergency');
+            if (emergency) {
+                pendingUsers = JSON.parse(emergency);
+                console.log('⚠️ Загружены экстренные данные:', pendingUsers.length, 'заявок');
+            }
+        } catch (e) {
+            console.log('❌ Ошибка чтения экстренных данных');
+        }
+    }
+    
+    return pendingUsers;
+}
+
+// Функция для восстановления мобильных данных
+function repairMobileData() {
+    console.log('🔧 Восстановление данных с мобильных устройств...');
+    
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    console.log(`📱 Устройство: ${isMobile ? 'Мобильное' : 'Десктоп'}`);
+    
+    // Проверяем все возможные хранилища
+    const storageKeys = [
+        'sia_pending_users',
+        'sia_pending_users_emergency',
+        'sia_current_user',
+        'sia_active_users'
+    ];
+    
+    let totalRecovered = 0;
+    
+    storageKeys.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            try {
+                const parsed = JSON.parse(value);
+                console.log(`✅ ${key}: ${Array.isArray(parsed) ? parsed.length + ' элементов' : 'данные есть'}`);
+                totalRecovered++;
+            } catch (e) {
+                console.log(`❌ ${key}: поврежденные данные`);
+                
+                // Пробуем восстановить
+                try {
+                    // Удаляем поврежденные данные
+                    localStorage.removeItem(key);
+                    
+                    // Если это заявки, создаем новый массив
+                    if (key === 'sia_pending_users') {
+                        localStorage.setItem(key, '[]');
+                    }
+                    
+                    console.log(`🔄 ${key}: восстановлен`);
+                } catch (e2) {
+                    console.log(`❌ Не удалось восстановить ${key}`);
+                }
+            }
+        } else {
+            console.log(`📭 ${key}: нет данных`);
+        }
+    });
+    
+    console.log(`📊 Восстановлено: ${totalRecovered}/${storageKeys.length} хранилищ`);
+    
+    // Создаем тестовые данные если ничего нет
+    const mainData = localStorage.getItem('sia_pending_users');
+    if (!mainData || mainData === '[]' || mainData === 'null') {
+        console.log('📋 Создаем тестовые данные...');
+        createTestApplication();
+    }
+    
+    return totalRecovered;
 }
 
 // Создание уведомления для администратора
@@ -293,7 +404,7 @@ function createAdminNotification(userData) {
         const notification = {
             id: Date.now(),
             userId: userData.id,
-            applicationId: 'APP-' + Date.now().toString().slice(-8),
+            applicationId: userData.applicationId || 'APP-' + Date.now().toString().slice(-8),
             name: userData.name,
             gender: userData.gender === 'male' ? 'Мужчина' : 'Женщина',
             age: userData.age,
@@ -640,11 +751,14 @@ window.checkUserStatus = checkUserStatus;
 window.getCurrentUser = getCurrentUser;
 window.submitForModeration = submitForModeration;
 window.getActiveUsers = getActiveUsers;
+window.loadPendingApplicationsWithFallback = loadPendingApplicationsWithFallback;
+window.repairMobileData = repairMobileData;
 
 console.log("✅ Utils.js загружен успешно!");
 console.log("ℹ️ Доступные команды для отладки:");
 console.log("  - debugSystem() - показать все данные");
 console.log("  - createTestApplication() - создать тестовую заявку");
 console.log("  - repairAdminData() - восстановить данные");
+console.log("  - repairMobileData() - восстановить мобильные данные");
 console.log("  - clearAllData() - очистить все данные");
 console.log("  - checkStorage() - проверить состояние localStorage");
