@@ -32,9 +32,12 @@ if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
 
 function getCurrentUser() {
     try {
-        const user = JSON.parse(localStorage.getItem('sia_current_user'));
-        console.log('📱 Текущий пользователь:', user?.name || 'нет');
-        return user || null;
+        const stored = localStorage.getItem('sia_current_user');
+        if (!stored || stored === 'undefined') {
+            return null;
+        }
+        const user = JSON.parse(stored);
+        return user;
     } catch (e) {
         console.error('Ошибка получения пользователя:', e);
         return null;
@@ -43,9 +46,19 @@ function getCurrentUser() {
 
 function saveUser(userData) {
     try {
-        localStorage.setItem('sia_current_user', JSON.stringify(userData));
-        console.log('✅ Пользователь сохранен:', userData.name);
-        return userData;
+        // Сохраняем только основные данные
+        const simplifiedUser = {
+            id: userData.id,
+            name: userData.name,
+            age: userData.age,
+            city: userData.city,
+            gender: userData.gender,
+            bio: userData.bio || "Пользователь SiaMatch"
+        };
+        
+        localStorage.setItem('sia_current_user', JSON.stringify(simplifiedUser));
+        console.log('✅ Пользователь сохранен:', simplifiedUser.name);
+        return simplifiedUser;
     } catch (e) {
         console.error('❌ Ошибка сохранения пользователя:', e);
         return null;
@@ -109,59 +122,63 @@ const russianCities = [
 // ========== АВТОПРОВЕРКА АВТОРИЗАЦИИ ==========
 
 function checkAuth() {
-    console.log('🔐 Проверка авторизации...');
     const currentUser = getCurrentUser();
     const currentPath = window.location.pathname;
     
-    console.log('Текущий путь:', currentPath);
-    console.log('Текущий пользователь:', currentUser);
-    
     if (currentPath.includes('dashboard.html') && !currentUser) {
-        console.log('❌ Нет пользователя, редирект на index.html');
         window.location.href = 'index.html';
         return false;
     }
     
     if (currentPath.includes('index.html') && currentUser) {
-        console.log('Есть пользователь, проверяем статус...');
         const status = checkUserStatus(currentUser.id);
-        console.log('Статус пользователя:', status);
-        
         if (status === 'approved') {
-            console.log('✅ Анкета одобрена, редирект на dashboard.html');
             window.location.href = 'dashboard.html';
             return false;
         }
     }
     
-    console.log('✅ Проверка авторизации пройдена');
     return true;
 }
 
-// ========== СИСТЕМА МОДЕРАЦИИ - ИСПРАВЛЕННАЯ ==========
+document.addEventListener('DOMContentLoaded', checkAuth);
 
-// КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Отправка заявки на модерацию
+// ========== СИСТЕМА МОДЕРАЦИИ ==========
+
+// КРИТИЧЕСКО ВАЖНАЯ ФУНКЦИЯ: Отправка заявки на модерацию
 function submitForModeration(userData) {
-    console.log('🚀 ========== ОТПРАВКА НА МОДЕРАЦИЮ ==========');
-    console.log('Данные пользователя:', userData);
+    console.log('🚀 === НАЧАЛО submitForModeration ===');
     
-    // 1. Создаем ID если его нет
-    if (!userData.id) {
-        userData.id = Date.now();
-        console.log('📝 Создан новый ID:', userData.id);
+    // 1. Проверяем входные данные
+    if (!userData || !userData.name) {
+        console.error('❌ Нет данных пользователя');
+        return null;
     }
     
-    // 2. Подготавливаем заявку
+    // 2. Создаем ID если его нет
+    if (!userData.id) {
+        userData.id = Date.now();
+        console.log('📝 Создан ID:', userData.id);
+    }
+    
+    // 3. Сохраняем пользователя
+    saveUser(userData);
+    
+    // 4. Сохраняем ID отдельно
+    localStorage.setItem('sia_current_user_id', userData.id.toString());
+    console.log('🔑 ID сохранен:', userData.id);
+    
+    // 5. Создаем заявку для модерации
     const newApplication = {
         id: userData.id,
         name: userData.name || 'Неизвестно',
         age: userData.age || 18,
         city: userData.city || 'Не указан',
         gender: userData.gender || 'unknown',
-        bio: userData.bio || 'Пользователь SiaMatch',
+        bio: userData.bio || "Пользователь SiaMatch",
         status: 'pending',
         submittedAt: new Date().toISOString(),
-        applicationId: 'APP-' + userData.id.toString().slice(-6) + '-' + Date.now().toString().slice(-4),
+        applicationId: 'APP-' + Date.now().toString().slice(-8),
         mainPhoto: userData.mainPhoto || '',
         selfie: userData.selfie || '',
         moderatedAt: null,
@@ -169,205 +186,172 @@ function submitForModeration(userData) {
         rejectionReason: null
     };
     
-    console.log('📋 Создана заявка:', newApplication);
+    console.log('📋 Заявка создана:', {
+        id: newApplication.id,
+        name: newApplication.name,
+        status: newApplication.status,
+        applicationId: newApplication.applicationId
+    });
     
-    // 3. Получаем существующие заявки
-    let pendingUsers = [];
-    try {
-        const stored = localStorage.getItem('sia_pending_users');
-        console.log('📂 Данные из localStorage:', stored ? 'есть' : 'нет');
-        
-        if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
-            pendingUsers = JSON.parse(stored);
-            console.log('📊 Существующие заявки:', pendingUsers.length);
-        } else {
-            console.log('📂 Нет данных о заявках, создаем новый массив');
-        }
-    } catch (e) {
-        console.error('❌ Ошибка при чтении:', e);
-        pendingUsers = [];
-    }
-    
-    // 4. Проверяем, нет ли уже такой заявки
-    const existingIndex = pendingUsers.findIndex(u => u.id === userData.id);
-    
-    if (existingIndex !== -1) {
-        console.log('⚠️ Заявка уже существует, обновляем...');
-        pendingUsers[existingIndex] = newApplication;
-    } else {
-        console.log('➕ Добавляем новую заявку...');
-        pendingUsers.push(newApplication);
-    }
-    
-    // 5. Сохраняем в localStorage
-    try {
-        localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
-        console.log('💾 Заявка сохранена! Всего заявок:', pendingUsers.length);
-        
-        // Верификация сохранения
-        const verify = JSON.parse(localStorage.getItem('sia_pending_users'));
-        console.log('✅ Проверка: сохранено', verify?.length || 0, 'заявок');
-        
-        if (verify && verify.length > 0) {
-            const lastApp = verify[verify.length - 1];
-            console.log('📋 Последняя заявка:', {
-                id: lastApp.id,
-                name: lastApp.name,
-                status: lastApp.status,
-                applicationId: lastApp.applicationId
-            });
-        }
-        
-    } catch (e) {
-        console.error('❌ КРИТИЧЕСКАЯ ОШИБКА сохранения:', e);
-        
-        // Пробуем сохранить в упрощенном виде для мобильных
-        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            console.log('📱 Мобильное устройство, сохраняем упрощенно...');
-            try {
-                const simplified = pendingUsers.map(app => ({
-                    id: app.id,
-                    name: app.name,
-                    age: app.age,
-                    city: app.city,
-                    gender: app.gender,
-                    status: app.status,
-                    applicationId: app.applicationId,
-                    submittedAt: app.submittedAt
-                }));
-                
-                localStorage.setItem('sia_pending_users', JSON.stringify(simplified));
-                console.log('✅ Сохранено в упрощенном виде');
-            } catch (e2) {
-                console.error('❌ Не удалось сохранить даже упрощенные данные:', e2);
-            }
-        }
-    }
-    
-    // 6. Сохраняем ID пользователя для проверки статуса
-    localStorage.setItem('sia_current_user_id', userData.id.toString());
-    console.log('🔑 sia_current_user_id сохранен:', userData.id);
-    
-    // 7. Сохраняем самого пользователя
-    saveUser(userData);
-    
-    // 8. Создаем уведомление для админа
-    notifyAdmin(newApplication);
-    
-    console.log('🎉 ========== ОТПРАВКА ЗАВЕРШЕНА ==========');
-    return userData.id;
-}
-
-// Уведомление админа
-function notifyAdmin(userData) {
-    console.log('📢 Создаем уведомление для админа...');
-    
-    let adminNotifications = [];
-    try {
-        const stored = localStorage.getItem('sia_admin_notifications');
-        if (stored && stored !== 'undefined') {
-            adminNotifications = JSON.parse(stored);
-        }
-    } catch (e) {
-        console.log('⚠️ Нет уведомлений для админа, создаем новый массив');
-        adminNotifications = [];
-    }
-    
-    const newNotification = {
-        id: Date.now(),
-        userId: userData.id,
-        applicationId: userData.applicationId,
-        name: userData.name,
-        gender: userData.gender === 'male' ? 'Мужчина' : 'Женщина',
-        age: userData.age,
-        city: userData.city,
-        time: new Date().toLocaleString('ru-RU'),
-        type: 'new_application',
-        read: false,
-        status: userData.status
-    };
-    
-    adminNotifications.push(newNotification);
-    
-    try {
-        // Сохраняем только последние 50 уведомлений
-        localStorage.setItem('sia_admin_notifications', JSON.stringify(adminNotifications.slice(-50)));
-        console.log('✅ Уведомление для админа создано');
-    } catch (e) {
-        console.log('⚠️ Не удалось сохранить уведомление для админа');
-    }
-}
-
-// Проверка статуса пользователя (исправленная)
-function checkUserStatus(userId) {
-    console.log('🔍 Проверка статуса для userId:', userId);
-    
-    if (!userId) {
-        console.log('❌ userId не передан');
-        return 'not_found';
-    }
-    
-    const numericUserId = Number(userId);
-    console.log('🔢 Числовой ID:', numericUserId);
-    
-    // 1. Проверяем в заявках на модерацию
+    // 6. Получаем текущие заявки
     let pendingUsers = [];
     try {
         const stored = localStorage.getItem('sia_pending_users');
         if (stored && stored !== 'undefined' && stored !== 'null') {
             pendingUsers = JSON.parse(stored);
-            console.log('📂 Найдено заявок:', pendingUsers.length);
+            console.log('📊 Найдено существующих заявок:', pendingUsers.length);
         }
     } catch (e) {
-        console.error('❌ Ошибка при чтении заявок:', e);
+        console.error('❌ Ошибка чтения заявок:', e);
         pendingUsers = [];
     }
     
-    const userApp = pendingUsers.find(u => Number(u.id) === numericUserId);
+    // 7. Проверяем, нет ли уже такой заявки
+    const existingIndex = pendingUsers.findIndex(u => u.id === userData.id);
     
-    if (userApp) {
-        console.log('✅ Пользователь найден в заявках, статус:', userApp.status);
-        return userApp.status || 'pending';
+    if (existingIndex !== -1) {
+        console.log('⚠️ Заявка уже существует, обновляем');
+        pendingUsers[existingIndex] = newApplication;
+    } else {
+        console.log('➕ Добавляем новую заявку');
+        pendingUsers.push(newApplication);
     }
     
-    // 2. Проверяем в активных пользователях
-    let activeUsers = [];
+    // 8. Сохраняем заявки
     try {
-        activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
+        // Для мобильных устройств сохраняем без фото
+        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            const simplifiedApplications = pendingUsers.map(app => ({
+                id: app.id,
+                name: app.name,
+                age: app.age,
+                city: app.city,
+                gender: app.gender,
+                bio: app.bio,
+                status: app.status,
+                submittedAt: app.submittedAt,
+                applicationId: app.applicationId,
+                hasMainPhoto: !!app.mainPhoto,
+                hasSelfie: !!app.selfie
+            }));
+            
+            localStorage.setItem('sia_pending_users', JSON.stringify(simplifiedApplications));
+            console.log('📱 Сохранено для мобильных устройств');
+        } else {
+            localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
+        }
+        
+        console.log('✅ Заявки сохранены. Всего:', pendingUsers.length);
+        
+        // 9. Проверяем сохранение
+        const verify = localStorage.getItem('sia_pending_users');
+        if (verify) {
+            const parsed = JSON.parse(verify);
+            console.log('✅ Проверка: сохранено заявок:', parsed.length);
+        } else {
+            console.error('❌ Проверка: данные не сохранены!');
+        }
+        
     } catch (e) {
-        console.log('⚠️ Нет активных пользователей');
-        activeUsers = [];
+        console.error('❌ Ошибка сохранения заявок:', e);
+        
+        // Пробуем сохранить только основные данные
+        try {
+            const minimalData = pendingUsers.map(app => ({
+                id: app.id,
+                name: app.name,
+                age: app.age,
+                city: app.city,
+                gender: app.gender,
+                status: app.status,
+                applicationId: app.applicationId
+            }));
+            
+            localStorage.setItem('sia_pending_users', JSON.stringify(minimalData));
+            console.log('✅ Сохранены минимальные данные');
+        } catch (e2) {
+            console.error('❌ Не удалось сохранить даже минимальные данные');
+        }
     }
     
-    const activeUser = activeUsers.find(u => Number(u.id) === numericUserId);
+    // 10. Создаем уведомление для админа
+    createAdminNotification(userData);
     
-    if (activeUser) {
-        console.log('✅ Пользователь найден в активных');
-        return 'approved';
+    console.log('🎉 === submitForModeration ЗАВЕРШЕН ===');
+    return userData.id;
+}
+
+// Создание уведомления для администратора
+function createAdminNotification(userData) {
+    try {
+        let notifications = [];
+        const stored = localStorage.getItem('sia_admin_notifications');
+        if (stored && stored !== 'undefined') {
+            notifications = JSON.parse(stored);
+        }
+        
+        const notification = {
+            id: Date.now(),
+            userId: userData.id,
+            applicationId: 'APP-' + Date.now().toString().slice(-8),
+            name: userData.name,
+            gender: userData.gender === 'male' ? 'Мужчина' : 'Женщина',
+            age: userData.age,
+            city: userData.city,
+            time: new Date().toLocaleString('ru-RU'),
+            type: 'new_application',
+            read: false
+        };
+        
+        notifications.push(notification);
+        
+        // Сохраняем только последние 20 уведомлений
+        localStorage.setItem('sia_admin_notifications', JSON.stringify(notifications.slice(-20)));
+        console.log('📢 Уведомление для админа создано');
+    } catch (e) {
+        console.log('⚠️ Не удалось создать уведомление для админа');
     }
+}
+
+// Проверка статуса пользователя
+function checkUserStatus(userId) {
+    if (!userId) return 'not_found';
     
-    console.log('❌ Пользователь не найден нигде');
-    return 'not_found';
+    try {
+        const stored = localStorage.getItem('sia_pending_users');
+        if (stored && stored !== 'undefined') {
+            const pendingUsers = JSON.parse(stored);
+            const user = pendingUsers.find(u => u.id == userId);
+            
+            if (user) {
+                return user.status || 'pending';
+            }
+        }
+        
+        // Проверяем активных пользователей
+        const activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
+        const activeUser = activeUsers.find(u => u.id == userId);
+        
+        if (activeUser) {
+            return 'approved';
+        }
+        
+        return 'not_found';
+    } catch (e) {
+        console.error('Ошибка проверки статуса:', e);
+        return 'not_found';
+    }
 }
 
 // Проверка доступа для дашборда
 function checkDashboardAccess() {
-    console.log('🔐 Проверка доступа к дашборду...');
-    
     const currentUser = getCurrentUser();
-    console.log('Текущий пользователь:', currentUser);
     
     if (!currentUser || !currentUser.id) {
-        console.log('❌ Пользователь не найден');
-        return { 
-            allowed: false, 
-            reason: 'Пользователь не найден', 
-            code: 'no_user' 
-        };
+        return { allowed: false, reason: 'Пользователь не найден', code: 'no_user' };
     }
     
     const status = checkUserStatus(currentUser.id);
-    console.log('Статус пользователя:', status);
     
     if (status === 'pending') {
         return { 
@@ -388,12 +372,6 @@ function checkDashboardAccess() {
             code: 'approved',
             user: currentUser
         };
-    } else if (status === 'not_found') {
-        return { 
-            allowed: false, 
-            reason: 'Ваша анкета не найдена', 
-            code: 'not_found'
-        };
     } else {
         return { 
             allowed: false, 
@@ -405,26 +383,18 @@ function checkDashboardAccess() {
 
 // Получение активных пользователей для свайпов
 function getActiveUsers(currentUserId) {
-    console.log('👥 Получение активных пользователей...');
-    
     const currentUser = getCurrentUser();
-    if (!currentUser) {
-        console.log('❌ Текущий пользователь не найден');
-        return [];
-    }
+    if (!currentUser) return [];
     
     let activeUsers = [];
     try {
         activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
-        console.log('📊 Активных пользователей:', activeUsers.length);
     } catch (e) {
-        console.log('⚠️ Нет активных пользователей');
         activeUsers = [];
     }
     
+    // Если нет активных пользователей, создаем тестовых
     if (activeUsers.length === 0) {
-        console.log('📂 Создаем тестовых пользователей...');
-        // Создаем тестовых пользователей
         activeUsers = [
             {
                 id: 1001,
@@ -473,114 +443,127 @@ function getActiveUsers(currentUserId) {
             }
         ];
         
-        // Сохраняем тестовых пользователей
         localStorage.setItem('sia_active_users', JSON.stringify(activeUsers));
     }
     
-    // Фильтруем по противоположному полу и исключаем текущего пользователя
-    const filteredUsers = activeUsers.filter(user => {
+    // Фильтруем по противоположному полу и исключаем текущего
+    return activeUsers.filter(user => {
         const isOppositeGender = 
             (currentUser.gender === 'male' && user.gender === 'female') ||
             (currentUser.gender === 'female' && user.gender === 'male');
         
-        const isNotCurrentUser = user.id !== currentUserId;
-        
-        return isOppositeGender && isNotCurrentUser;
+        return isOppositeGender && user.id !== currentUserId;
     });
-    
-    console.log('✅ Отфильтровано пользователей:', filteredUsers.length);
-    return filteredUsers;
 }
 
-// Функция для отладки данных
+// ========== ФУНКЦИИ ДЛЯ ОТЛАДКИ ==========
+
+// Отладочная функция: показывает все данные в системе
 function debugSystem() {
     console.log('=== 🔍 ДЕБАГ СИСТЕМЫ SiaMatch ===');
     
-    // 1. Пользователи
     console.log('\n📱 ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ:');
     const currentUser = getCurrentUser();
     if (currentUser) {
-        console.log(`👤 ${currentUser.name}, ${currentUser.age} лет`);
-        console.log(`🏙️ ${currentUser.city}, ${currentUser.gender === 'male' ? 'Мужчина' : 'Женщина'}`);
-        console.log(`🔑 ID: ${currentUser.id}`);
+        console.log('✅', currentUser);
     } else {
         console.log('❌ Нет текущего пользователя');
     }
     
-    // 2. Заявки на модерацию
     console.log('\n📋 ЗАЯВКИ НА МОДЕРАЦИЮ:');
     try {
         const stored = localStorage.getItem('sia_pending_users');
-        if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
+        if (stored && stored !== 'undefined' && stored !== 'null') {
             const apps = JSON.parse(stored);
             console.log(`📊 Всего заявок: ${apps.length}`);
             
-            if (apps.length === 0) {
-                console.log('📭 Нет заявок');
-            } else {
+            if (apps.length > 0) {
                 apps.forEach((app, i) => {
-                    console.log(`${i+1}. 📋 ${app.applicationId || 'Без ID'}`);
-                    console.log(`   👤 ${app.name}, ${app.age} лет`);
-                    console.log(`   🏙️ ${app.city}, ${app.gender === 'male' ? 'Мужчина' : 'Женщина'}`);
-                    console.log(`   📅 ${new Date(app.submittedAt).toLocaleString()}`);
-                    console.log(`   📊 Статус: ${app.status || 'pending'}`);
-                    console.log(`   🔑 ID: ${app.id}`);
-                    console.log('---');
+                    console.log(`${i+1}. ${app.name} (${app.age} лет) - ${app.status}`);
                 });
+            } else {
+                console.log('📭 Нет заявок');
             }
         } else {
-            console.log('📭 Нет данных о заявках в localStorage');
+            console.log('📭 Нет данных о заявках');
         }
     } catch (e) {
-        console.error('❌ Ошибка при чтении заявок:', e);
+        console.error('❌ Ошибка чтения заявок:', e);
     }
     
-    // 3. Активные пользователи
     console.log('\n👥 АКТИВНЫЕ ПОЛЬЗОВАТЕЛИ:');
     try {
         const activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
         console.log(`👥 Активных пользователей: ${activeUsers.length}`);
-        
-        if (activeUsers.length > 0) {
-            activeUsers.forEach((user, i) => {
-                console.log(`${i+1}. ${user.name}, ${user.age} лет, ${user.city}`);
-            });
-        }
     } catch (e) {
         console.log('⚠️ Нет активных пользователей');
     }
     
-    // 4. Проверка localStorage
-    console.log('\n💾 ПРОВЕРКА localStorage:');
-    console.log('sia_current_user:', localStorage.getItem('sia_current_user')?.slice(0, 100) + '...');
-    console.log('sia_current_user_id:', localStorage.getItem('sia_current_user_id'));
-    console.log('sia_pending_users длина:', localStorage.getItem('sia_pending_users')?.length || 0);
-    console.log('sia_active_users длина:', localStorage.getItem('sia_active_users')?.length || 0);
+    console.log('\n💾 LOCALSTORAGE КЛЮЧИ:');
+    ['sia_current_user', 'sia_current_user_id', 'sia_pending_users', 'sia_active_users', 'sia_admin_notifications'].forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            console.log(`✅ ${key}: есть (${value.length} символов)`);
+        } else {
+            console.log(`❌ ${key}: нет`);
+        }
+    });
     
     console.log('=== 🔍 ДЕБАГ ЗАВЕРШЕН ===');
 }
 
-// Функция для проверки и восстановления данных
+// Создание тестовой заявки
+function createTestApplication() {
+    const testUser = {
+        id: Date.now(),
+        name: "Тестовый Пользователь",
+        age: 25,
+        city: "Москва",
+        gender: "male",
+        bio: "Это тестовый пользователь для отладки",
+        mainPhoto: "",
+        selfie: ""
+    };
+    
+    console.log('🧪 Создаем тестовую заявку...');
+    const result = submitForModeration(testUser);
+    
+    if (result) {
+        console.log('✅ Тестовая заявка создана!');
+        showNotification('✅ Тестовая заявка создана! Проверьте админ-панель.', 'success');
+        
+        // Обновляем страницу через секунду
+        setTimeout(() => {
+            if (window.location.pathname.includes('admin.html')) {
+                window.location.reload();
+            }
+        }, 1000);
+    } else {
+        console.error('❌ Ошибка создания тестовой заявки');
+        showNotification('❌ Ошибка создания тестовой заявки', 'error');
+    }
+}
+
+// Восстановление данных админ-панели
 function repairAdminData() {
-    console.log('🔧 Проверка и восстановление данных...');
+    console.log('🔧 Восстановление данных админ-панели...');
     
     let pendingUsers = [];
     try {
         const stored = localStorage.getItem('sia_pending_users');
         if (stored && stored !== 'undefined') {
             pendingUsers = JSON.parse(stored);
-            console.log('📂 Загружено заявок:', pendingUsers.length);
         }
     } catch (e) {
-        console.error('❌ Ошибка при чтении, удаляем поврежденные данные...');
+        console.log('❌ Ошибка чтения, очищаем данные');
         localStorage.removeItem('sia_pending_users');
         pendingUsers = [];
     }
     
-    // Проверяем структуру данных
+    // Исправляем структуру данных
     const repairedUsers = pendingUsers.map(user => {
         return {
-            id: user.id || Date.now() + Math.random(),
+            id: user.id || Date.now(),
             name: user.name || 'Неизвестно',
             age: user.age || 18,
             city: user.city || 'Не указан',
@@ -588,69 +571,80 @@ function repairAdminData() {
             status: user.status || 'pending',
             submittedAt: user.submittedAt || new Date().toISOString(),
             applicationId: user.applicationId || 'APP-' + Date.now().toString().slice(-6),
-            mainPhoto: user.mainPhoto || '',
-            selfie: user.selfie || '',
-            bio: user.bio || 'Пользователь SiaMatch',
-            moderatedAt: user.moderatedAt || null,
-            moderator: user.moderator || null,
-            rejectionReason: user.rejectionReason || null
+            bio: user.bio || 'Пользователь SiaMatch'
         };
     });
     
     try {
         localStorage.setItem('sia_pending_users', JSON.stringify(repairedUsers));
-        console.log('✅ Данные восстановлены, заявок:', repairedUsers.length);
+        console.log(`✅ Данные восстановлены: ${repairedUsers.length} заявок`);
+        showNotification(`✅ Данные восстановлены: ${repairedUsers.length} заявок`, 'success');
+        return repairedUsers;
     } catch (e) {
         console.log('❌ Не удалось восстановить данные');
+        showNotification('❌ Не удалось восстановить данные', 'error');
+        return [];
     }
-    
-    return repairedUsers;
 }
 
-// Очистка тестовых данных (для разработки)
-function clearTestData() {
-    if (confirm('⚠️ Очистить ВСЕ тестовые данные? Это действие нельзя отменить.')) {
-        localStorage.removeItem('sia_pending_users');
+// Очистка всех данных
+function clearAllData() {
+    if (confirm('⚠️ Вы уверены, что хотите очистить ВСЕ данные? Это действие нельзя отменить.')) {
         localStorage.removeItem('sia_current_user');
         localStorage.removeItem('sia_current_user_id');
+        localStorage.removeItem('sia_pending_users');
         localStorage.removeItem('sia_active_users');
         localStorage.removeItem('sia_admin_notifications');
         
-        console.log('🧹 Все тестовые данные очищены!');
-        alert('✅ Данные очищены! Страница будет перезагружена.');
-        location.reload();
+        console.log('🧹 Все данные очищены');
+        showNotification('✅ Все данные очищены', 'success');
+        
+        // Если мы в админ-панели, обновляем
+        if (window.location.pathname.includes('admin.html')) {
+            setTimeout(() => window.location.reload(), 1500);
+        }
     }
 }
 
-// Создание тестовой заявки (для отладки)
-function createTestApplication() {
-    const testUser = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        name: "Тестовый Пользователь",
-        age: 25,
-        city: "Москва",
-        gender: Math.random() > 0.5 ? "male" : "female",
-        bio: "Это тестовый пользователь для отладки",
-        mainPhoto: "https://randomuser.me/api/portraits/" + (Math.random() > 0.5 ? "men" : "women") + "/" + (Math.floor(Math.random() * 50) + 1) + ".jpg",
-        selfie: "https://randomuser.me/api/portraits/" + (Math.random() > 0.5 ? "men" : "women") + "/" + (Math.floor(Math.random() * 50) + 51) + ".jpg"
-    };
+// Проверка состояния localStorage
+function checkStorage() {
+    console.log('=== 📊 ПРОВЕРКА LOCALSTORAGE ===');
     
-    console.log('🧪 Создаем тестовую заявку...');
-    submitForModeration(testUser);
-    alert('✅ Тестовая заявка создана! Проверьте админ-панель.');
+    const keys = ['sia_current_user', 'sia_current_user_id', 'sia_pending_users', 'sia_active_users'];
+    let totalSize = 0;
+    
+    keys.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            const size = value.length;
+            totalSize += size;
+            console.log(`${key}: ${size} символов (${Math.round(size / 1024)} KB)`);
+        } else {
+            console.log(`${key}: ❌ не найден`);
+        }
+    });
+    
+    console.log(`Общий размер: ${totalSize} символов (${Math.round(totalSize / 1024)} KB)`);
+    console.log('=== 📊 ПРОВЕРКА ЗАВЕРШЕНА ===');
+    
+    return totalSize;
 }
 
-// Автоматическая проверка авторизации при загрузке
-document.addEventListener('DOMContentLoaded', checkAuth);
+// Экспортируем все функции для отладки
+window.debugSystem = debugSystem;
+window.createTestApplication = createTestApplication;
+window.repairAdminData = repairAdminData;
+window.clearAllData = clearAllData;
+window.checkStorage = checkStorage;
+window.checkUserStatus = checkUserStatus;
+window.getCurrentUser = getCurrentUser;
+window.submitForModeration = submitForModeration;
+window.getActiveUsers = getActiveUsers;
 
 console.log("✅ Utils.js загружен успешно!");
-
-// Экспортируем функции для отладки в консоли
-window.debugSystem = debugSystem;
-window.repairAdminData = repairAdminData;
-window.getCurrentUser = getCurrentUser;
-window.checkUserStatus = checkUserStatus;
-window.clearTestData = clearTestData;
-window.createTestApplication = createTestApplication;
-window.getActiveUsers = getActiveUsers;
-window.submitForModeration = submitForModeration;
+console.log("ℹ️ Доступные команды для отладки:");
+console.log("  - debugSystem() - показать все данные");
+console.log("  - createTestApplication() - создать тестовую заявку");
+console.log("  - repairAdminData() - восстановить данные");
+console.log("  - clearAllData() - очистить все данные");
+console.log("  - checkStorage() - проверить состояние localStorage");
