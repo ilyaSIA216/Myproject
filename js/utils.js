@@ -377,38 +377,4 @@ function repairAdminData() {
     return repairedUsers;
 }
 
-// Создание тестовых данных
-function createTestData() {
-    const testUsers = [
-        {
-            id: 100001,
-            name: "Анна",
-            age: 25,
-            city: "Москва",
-            gender: "female",
-            photo: "",
-            bio: "Люблю путешествия и книги.",
-            status: "pending",
-            submittedAt: new Date().toISOString(),
-            applicationId: "APP-100001"
-        },
-        {
-            id: 100002,
-            name: "Иван",
-            age: 30,
-            city: "Санкт-Петербург",
-            gender: "male",
-            photo: "",
-            bio: "Программист, люблю горы.",
-            status: "pending",
-            submittedAt: new Date(Date.now() - 86400000).toISOString(),
-            applicationId: "APP-100002"
-        }
-    ];
-    
-    localStorage.setItem('sia_pending_users', JSON.stringify(testUsers));
-    console.log("✅ Тестовые данные созданы");
-    return testUsers;
-}
-
 console.log("✅ Utils.js загружен");
