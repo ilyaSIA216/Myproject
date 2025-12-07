@@ -1,42 +1,23 @@
 // ========== ЛОГИКА РЕГИСТРАЦИИ SiaMatch ==========
 
-// Объект для хранения данных пользователя
+// Данные пользователя
 let userProfile = {
     name: '',
     age: '',
     city: '',
     mainPhoto: '',
     selfie: '',
-    bio: '',
-    gender: '',
-    interests: []
+    gender: ''
 };
 
-// Функция для показа уведомлений
-function showNotification(message, type = 'info') {
-    console.log(`🔔 Уведомление (${type}): ${message}`);
+// Простые уведомления
+function showNotification(message) {
     alert(message);
-}
-
-// Экспортируем функцию
-window.showNotification = showNotification;
-
-// Начало регистрации
-function startOnboarding() {
-    console.log('Начинаем онбординг');
-    
-    const welcomeText = document.getElementById('welcome-text');
-    if (welcomeText) {
-        welcomeText.textContent = 'Привет, друг! Добро пожаловать в мир знакомств!';
-    }
-    
-    // Переходим к шагу 1 (имя)
-    goToStep(1);
 }
 
 // Переход между шагами
 function goToStep(stepNumber) {
-    console.log(`Переход к шагу ${stepNumber}`);
+    console.log(`➡️ Переход к шагу ${stepNumber}`);
     
     // Скрываем все шаги
     document.querySelectorAll('.step').forEach(step => {
@@ -48,84 +29,47 @@ function goToStep(stepNumber) {
     if (stepElement) {
         stepElement.classList.remove('hidden');
         
-        // Обновляем индикатор прогресса
-        updateProgressIndicator(stepNumber);
-    } else {
-        console.error(`Шаг ${stepNumber} не найден!`);
-        return;
+        // Обновляем прогресс
+        const progressDots = document.querySelectorAll('.progress-indicator .step-dot');
+        progressDots.forEach((dot, index) => {
+            if (index < stepNumber) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
     }
     
-    // Инициализируем шаг, если нужно
-    switch(stepNumber) {
-        case 3: // Возраст
-            initAgeSelect();
-            break;
-        case 4: // Город
-            initCitySelect();
-            break;
-        case 7: // Модерация
-            setTimeout(showModerationInfo, 500);
-            break;
-    }
-    
-    // Прокрутка вверх
     window.scrollTo(0, 0);
-}
-
-// Обновление индикатора прогресса
-function updateProgressIndicator(currentStep) {
-    const progressDots = document.querySelectorAll('.progress-indicator .step-dot');
-    progressDots.forEach((dot, index) => {
-        if (index < currentStep) {
-            dot.classList.add('active');
-        } else {
-            dot.classList.remove('active');
-        }
-    });
 }
 
 // ========== ШАГ 1: ИМЯ ==========
 
+function startOnboarding() {
+    console.log('🚀 Начало регистрации');
+    goToStep(1);
+}
+
 function saveName() {
-    console.log('Сохранение имени');
     const nameInput = document.getElementById('name-input');
-    if (!nameInput) {
-        console.error('Поле имени не найдено');
-        return;
-    }
-    
     const name = nameInput.value.trim();
     
-    // Проверка имени
     if (!name || name.length < 2) {
-        showNotification('Введите ваше имя (минимум 2 буквы)', 'error');
-        return;
-    }
-    
-    if (!/^[а-яА-ЯёЁa-zA-Z\s-]+$/.test(name)) {
-        showNotification('Имя может содержать только буквы, пробелы и дефисы', 'error');
+        showNotification('Введите имя (минимум 2 буквы)');
         return;
     }
     
     userProfile.name = name;
-    console.log('Имя сохранено:', name);
-    
-    // Переходим к выбору пола
     goToStep(2);
 }
 
-// ========== ШАГ 2: ВЫБОР ПОЛА ==========
+// ========== ШАГ 2: ПОЛ ==========
 
-// Выбор пола при клике на опцию
 function selectGender(gender) {
-    console.log('Выбран пол:', gender);
-    
-    // Снимаем выделение со всех опций
     document.querySelectorAll('.gender-option').forEach(option => {
         option.classList.remove('selected');
     });
     
-    // Выделяем выбранную опцию
     if (gender === 'male') {
         document.querySelector('.gender-option:nth-child(1)').classList.add('selected');
     } else {
@@ -136,35 +80,23 @@ function selectGender(gender) {
 }
 
 function saveGender() {
-    console.log('Сохранение пола');
-    
     if (!userProfile.gender) {
-        showNotification('Пожалуйста, выберите ваш пол', 'error');
+        showNotification('Выберите ваш пол');
         return;
     }
-    
-    console.log('Пол сохранен:', userProfile.gender);
-    
-    // Переходим к возрасту
     goToStep(3);
 }
 
 // ========== ШАГ 3: ВОЗРАСТ ==========
 
 function initAgeSelect() {
-    console.log('Инициализация выбора возраста');
     const ageSelect = document.getElementById('age-select');
-    if (!ageSelect) {
-        console.error('Элемент выбора возраста не найден');
-        return;
-    }
+    if (!ageSelect) return;
     
-    // Очищаем, кроме первого option
     while (ageSelect.options.length > 1) {
         ageSelect.remove(1);
     }
     
-    // Добавляем возрасты от 18 до 60
     for (let age = 18; age <= 60; age++) {
         const option = document.createElement('option');
         option.value = age;
@@ -174,163 +106,103 @@ function initAgeSelect() {
 }
 
 function saveAge() {
-    console.log('Сохранение возраста');
     const ageSelect = document.getElementById('age-select');
-    if (!ageSelect) {
-        console.error('Поле выбора возраста не найдено');
-        return;
-    }
-    
     const age = ageSelect.value;
     
     if (!age) {
-        showNotification('Пожалуйста, выберите ваш возраст', 'error');
+        showNotification('Выберите возраст');
         return;
     }
     
     userProfile.age = parseInt(age);
-    console.log('Возраст сохранен:', age);
-    
-    // Переходим к городу
     goToStep(4);
 }
 
 // ========== ШАГ 4: ГОРОД ==========
 
 function initCitySelect() {
-    console.log('Инициализация выбора города');
     const citySelect = document.getElementById('city-select');
-    if (!citySelect) {
-        console.error('Элемент выбора города не найден');
-        return;
-    }
+    if (!citySelect) return;
     
-    // Очищаем, кроме первого option
     while (citySelect.options.length > 1) {
         citySelect.remove(1);
     }
     
-    // Добавляем города России из utils.js
-    if (typeof russianCities !== 'undefined' && russianCities.length > 0) {
-        russianCities.forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            citySelect.appendChild(option);
-        });
-    } else {
-        console.error('Список городов не загружен');
-        // Добавляем хотя бы несколько городов
-        const cities = ["Москва", "Санкт-Петербург", "Казань", "Новосибирск", "Екатеринбург"];
-        cities.forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            citySelect.appendChild(option);
-        });
-    }
+    // Простые города
+    const cities = [
+        "Москва", "Санкт-Петербург", "Казань", "Новосибирск", 
+        "Екатеринбург", "Нижний Новгород", "Самара", "Челябинск",
+        "Ростов-на-Дону", "Уфа", "Краснодар", "Воронеж"
+    ];
+    
+    cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+    });
 }
 
 function saveCity() {
-    console.log('Сохранение города');
     const citySelect = document.getElementById('city-select');
-    if (!citySelect) {
-        console.error('Поле выбора города не найдено');
-        return;
-    }
-    
     const city = citySelect.value;
     
     if (!city) {
-        showNotification('Пожалуйста, выберите ваш город', 'error');
+        showNotification('Выберите город');
         return;
     }
     
     userProfile.city = city;
-    console.log('Город сохранен:', city);
-    
-    // Переходим к основному фото
     goToStep(5);
 }
 
-// ========== ШАГ 5: ОСНОВНОЕ ФОТО ==========
-
-// ВАЖНО: Эта функция не используется, т.к. previewMainPhoto уже определен в photo-utils.js
-// Но для совместимости оставляем здесь проверку
+// ========== ШАГ 5: ФОТО ==========
 
 function saveMainPhoto() {
-    console.log('💾 Сохранение основного фото');
+    console.log('💾 Проверка основного фото');
+    console.log('Текущее фото:', window.currentMainPhoto ? 'загружено' : 'нет');
     
-    // Проверяем обе возможные системы хранения фото
-    const hasPhoto1 = window.currentMainPhoto && window.currentMainPhoto.length > 0;
-    const hasPhoto2 = userProfile.mainPhoto && userProfile.mainPhoto.length > 0;
-    
-    console.log('Проверка фото:', {
-        windowCurrentMainPhoto: hasPhoto1,
-        userProfileMainPhoto: hasPhoto2,
-        currentMainPhotoExists: typeof window.currentMainPhoto !== 'undefined',
-        currentMainPhotoLength: window.currentMainPhoto ? window.currentMainPhoto.length : 0
-    });
-    
-    if (!hasPhoto1 && !hasPhoto2) {
-        showNotification('⚠️ Пожалуйста, загрузите ваше фото');
+    if (!window.currentMainPhoto) {
+        showNotification('Загрузите ваше фото');
         return;
     }
     
-    // Синхронизируем данные
-    if (window.currentMainPhoto && !userProfile.mainPhoto) {
-        userProfile.mainPhoto = window.currentMainPhoto;
-    }
-    
-    console.log('Основное фото сохранено:', userProfile.mainPhoto ? 'есть' : 'нет');
-    
-    // Переходим к селфи
+    userProfile.mainPhoto = window.currentMainPhoto;
+    console.log('✅ Основное фото сохранено');
     goToStep(6);
 }
 
-// ========== ШАГ 6: СЕЛФИ ДЛЯ ПОДТВЕРЖДЕНИЯ ==========
+// ========== ШАГ 6: СЕЛФИ ==========
 
 function saveSelfie() {
-    console.log('=== Начинаем сохранение и отправку анкеты ===');
+    console.log('💾 Проверка селфи');
+    console.log('Текущее селфи:', window.currentSelfie ? 'загружено' : 'нет');
     
-    // Проверяем обе возможные системы хранения фото
-    const hasSelfie1 = window.currentSelfie && window.currentSelfie.length > 0;
-    const hasSelfie2 = userProfile.selfie && userProfile.selfie.length > 0;
-    const hasMainPhoto1 = window.currentMainPhoto && window.currentMainPhoto.length > 0;
-    const hasMainPhoto2 = userProfile.mainPhoto && userProfile.mainPhoto.length > 0;
-    
-    console.log('Проверка перед отправкой:', {
-        hasSelfieWindow: hasSelfie1,
-        hasSelfieProfile: hasSelfie2,
-        hasMainPhotoWindow: hasMainPhoto1,
-        hasMainPhotoProfile: hasMainPhoto2
-    });
-    
-    // Проверяем селфи
-    if (!hasSelfie1 && !hasSelfie2) {
-        showNotification('⚠️ Пожалуйста, загрузите селфи для подтверждения');
+    if (!window.currentSelfie) {
+        showNotification('Сделайте селфи для подтверждения');
         return;
     }
     
-    // Проверяем основное фото
-    if (!hasMainPhoto1 && !hasMainPhoto2) {
-        showNotification('⚠️ Пожалуйста, загрузите основное фото');
+    if (!window.currentMainPhoto) {
+        showNotification('Сначала загрузите основное фото');
         return;
     }
     
-    // Проверяем остальные обязательные поля
+    userProfile.selfie = window.currentSelfie;
+    
+    // Проверяем все данные
     if (!userProfile.name || !userProfile.age || !userProfile.city || !userProfile.gender) {
-        showNotification('Пожалуйста, заполните все обязательные поля', 'error');
+        showNotification('Заполните все поля');
         return;
     }
     
-    // Синхронизируем данные перед отправкой
-    if (window.currentMainPhoto && !userProfile.mainPhoto) {
-        userProfile.mainPhoto = window.currentMainPhoto;
-    }
-    if (window.currentSelfie && !userProfile.selfie) {
-        userProfile.selfie = window.currentSelfie;
-    }
+    // Добавляем ID и дату
+    userProfile.id = Date.now();
+    userProfile.submittedAt = new Date().toISOString();
+    userProfile.applicationId = 'APP-' + userProfile.id.toString().slice(-6);
+    userProfile.status = 'pending';
+    
+    console.log('📤 Отправка данных:', userProfile);
     
     // Блокируем кнопку
     const submitBtn = document.querySelector('#step-6 .btn');
@@ -339,99 +211,29 @@ function saveSelfie() {
         submitBtn.textContent = 'Отправка...';
     }
     
+    // Отправляем на модерацию
     try {
-        // Сохраняем пользователя
-        const userId = Date.now();
-        userProfile.id = userId;
-        userProfile.registrationDate = new Date().toISOString();
-        userProfile.bio = "Пользователь SiaMatch";
-        
-        console.log('ID пользователя создан:', userId);
-        console.log('Данные для отправки:', {
-            id: userProfile.id,
-            name: userProfile.name,
-            age: userProfile.age,
-            city: userProfile.city,
-            gender: userProfile.gender,
-            hasMainPhoto: !!userProfile.mainPhoto,
-            hasSelfie: !!userProfile.selfie
-        });
-        
-        // Для мобильных устройств
-        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            // Сохраняем упрощенные данные
-            const userDataForStorage = {
-                id: userProfile.id,
-                name: userProfile.name,
-                age: userProfile.age,
-                city: userProfile.city,
-                gender: userProfile.gender,
-                bio: userProfile.bio,
-                registrationDate: userProfile.registrationDate
-            };
-            
-            localStorage.setItem('sia_current_user', JSON.stringify(userDataForStorage));
-            localStorage.setItem('sia_current_user_id', userProfile.id.toString());
-            
-            // Фото сохраняем отдельно
-            try {
-                if (userProfile.mainPhoto) {
-                    localStorage.setItem(`sia_photo_main_${userProfile.id}`, userProfile.mainPhoto);
-                }
-                if (userProfile.selfie) {
-                    localStorage.setItem(`sia_photo_selfie_${userProfile.id}`, userProfile.selfie);
-                }
-            } catch (e) {
-                console.log('Фото сохранены в упрощенном виде');
-            }
+        // Используем существующую функцию или создаем простую
+        if (typeof submitForModeration === 'function') {
+            const result = submitForModeration(userProfile);
+            console.log('✅ Функция submitForModeration вызвана, результат:', result);
         } else {
-            // Для десктопа сохраняем все
-            localStorage.setItem('sia_current_user_id', userProfile.id.toString());
+            // Простая версия если функция не найдена
+            simpleSubmit(userProfile);
         }
         
-        // Проверяем доступность функции submitForModeration
-        if (typeof submitForModeration !== 'function') {
-            console.error('Функция submitForModeration не найдена!');
-            showNotification('Ошибка системы. Пожалуйста, обновите страницу.', 'error');
-            return;
-        }
-        
-        // Отправляем на модерацию
-        console.log('Вызываю submitForModeration...');
-        const returnedUserId = submitForModeration(userProfile);
-        console.log('submitForModeration вернула ID:', returnedUserId);
-        
-        // Храним userId
-        localStorage.setItem('sia_current_user_id', returnedUserId.toString());
-        console.log('sia_current_user_id сохранен:', returnedUserId);
-        
-        // Даем время на сохранение
+        // Переходим к ожиданию
         setTimeout(() => {
-            // Проверяем, что заявка действительно сохранилась
-            const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
-            console.log('Всего заявок в системе после отправки:', pendingUsers.length);
-            
-            if (pendingUsers.length > 0) {
-                console.log('Последняя заявка:', pendingUsers[pendingUsers.length - 1]);
-            }
-            
-            showNotification('✅ Анкета успешно отправлена на модерацию!');
-            
-            // Переходим к шагу модерации
             goToStep(7);
-            
-            // Разблокируем кнопку
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Отправить на проверку';
             }
-        }, 500);
+        }, 1000);
         
     } catch (error) {
-        console.error('Ошибка при отправке на модерацию:', error);
-        showNotification('Ошибка при отправке анкеты. Попробуйте еще раз.', 'error');
-        
-        // Разблокируем кнопку
+        console.error('❌ Ошибка отправки:', error);
+        showNotification('Ошибка отправки. Попробуйте снова.');
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Отправить на проверку';
@@ -439,191 +241,68 @@ function saveSelfie() {
     }
 }
 
-// ========== ШАГ 7: МОДЕРАЦИЯ ==========
-
-function showModerationInfo() {
-    console.log('Показываем информацию о модерации');
+// Простая функция отправки
+function simpleSubmit(userData) {
+    console.log('📝 Простая отправка данных');
     
-    setTimeout(() => {
-        const verificationScreen = document.querySelector('.verification-screen');
-        if (!verificationScreen) {
-            console.error('Экран верификации не найден');
-            return;
+    // Сохраняем в localStorage
+    let pendingUsers = [];
+    try {
+        const stored = localStorage.getItem('sia_pending_users');
+        if (stored) {
+            pendingUsers = JSON.parse(stored);
         }
-        
-        // Ищем заявку по userId
-        const userId = Number(localStorage.getItem('sia_current_user_id'));
-        console.log('Ищем заявку с userId:', userId);
-        
-        const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
-        console.log('Всего заявок в системе:', pendingUsers.length);
-        
-        const userApp = pendingUsers.find(u => u.id === userId);
-        
-        if (!userApp) {
-            console.error('Заявка не найдена для userId:', userId);
-            // Показываем общую информацию
-            verificationScreen.innerHTML += `
-                <div style="margin-top: 30px; padding: 20px; background: #f0f7f0; border-radius: 15px;">
-                    <p>Ваша анкета отправлена на проверку администратору.</p>
-                    <p>Обычно проверка занимает от 15 минут до 24 часов.</p>
-                    <button class="btn" onclick="checkApplicationStatus()" style="margin-top: 15px;">Проверить статус</button>
-                </div>
-            `;
-            return;
-        }
-        
-        console.log('Заявка найдена:', userApp);
-        
-        const infoDiv = document.createElement('div');
-        infoDiv.style.marginTop = '30px';
-        infoDiv.style.padding = '20px';
-        infoDiv.style.background = '#f0f7f0';
-        infoDiv.style.borderRadius = '15px';
-        infoDiv.style.fontSize = '15px';
-        infoDiv.style.color = '#2E7D32';
-        infoDiv.style.textAlign = 'left';
-        
-        infoDiv.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 20px;">📋</span>
-                <span>Информация о вашей заявке</span>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <div style="font-weight: 600; color: #555; margin-bottom: 5px;">Номер заявки:</div>
-                <div style="background: white; padding: 8px 12px; border-radius: 8px; font-family: monospace; font-weight: bold;">
-                    ${userApp.applicationId || 'APP-' + userApp.id.toString().slice(-6)}
-                </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                <div>
-                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Имя:</div>
-                    <div>${userApp.name}</div>
-                </div>
-                <div>
-                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Пол:</div>
-                    <div>${userApp.gender === 'male' ? 'Мужчина' : 'Женщина'}</div>
-                </div>
-                <div>
-                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Возраст:</div>
-                    <div>${userApp.age} лет</div>
-                </div>
-                <div>
-                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Город:</div>
-                    <div>${userApp.city}</div>
-                </div>
-                <div>
-                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Дата подачи:</div>
-                    <div>${new Date(userApp.submittedAt).toLocaleDateString()}</div>
-                </div>
-                <div>
-                    <div style="font-weight: 600; color: #555; margin-bottom: 3px;">Статус:</div>
-                    <div>${userApp.status === 'pending' ? '⏳ На проверке' : userApp.status === 'approved' ? '✅ Одобрено' : '❌ Отклонено'}</div>
-                </div>
-            </div>
-            
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #C8E6C9;">
-                <div style="font-weight: 600; color: #555; margin-bottom: 8px;">Что происходит сейчас:</div>
-                <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px;">
-                    <li>Ваша анкета отправлена администратору на проверку</li>
-                    <li>Проверяются фото и соответствие данных</li>
-                    <li>Обычно проверка занимает от 15 минут до 24 часов</li>
-                    <li>Вы получите уведомление о результате</li>
-                </ul>
-            </div>
-        `;
-        
-        const actionDiv = document.createElement('div');
-        actionDiv.style.marginTop = '25px';
-        actionDiv.style.display = 'flex';
-        actionDiv.style.flexDirection = 'column';
-        actionDiv.style.gap = '10px';
-        
-        const checkBtn = document.createElement('button');
-        checkBtn.className = 'btn';
-        checkBtn.style.background = '#4CAF50';
-        checkBtn.style.color = 'white';
-        checkBtn.textContent = 'Проверить статус сейчас';
-        checkBtn.onclick = checkApplicationStatus;
-        
-        actionDiv.appendChild(checkBtn);
-        
-        verificationScreen.appendChild(infoDiv);
-        verificationScreen.appendChild(actionDiv);
-        
-        console.log('Информация о модерации отображена');
-    }, 1000);
-}
-
-// Проверка статуса заявки
-function checkApplicationStatus() {
-    console.log('Проверка статуса заявки');
-    const userId = Number(localStorage.getItem('sia_current_user_id'));
-    console.log('ID пользователя для проверки:', userId);
-    
-    if (!userId) {
-        showNotification('⚠️ Не удалось найти информацию о вашей заявке', 'error');
-        return;
+    } catch (e) {
+        console.log('⚠️ Ошибка чтения данных, создаем новый список');
     }
     
-    const status = checkUserStatus(userId);
-    console.log('Статус заявки:', status);
+    // Очищаем фото для экономии места (сохраняем только флаги)
+    const userForStorage = {
+        id: userData.id,
+        name: userData.name,
+        age: userData.age,
+        city: userData.city,
+        gender: userData.gender,
+        status: 'pending',
+        submittedAt: userData.submittedAt,
+        applicationId: userData.applicationId,
+        hasMainPhoto: !!userData.mainPhoto,
+        hasSelfie: !!userData.selfie
+    };
     
-    if (status === 'approved') {
-        showNotification('🎉 Ваша анкета одобрена! Перенаправляем...', 'success');
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 1500);
-    } else if (status === 'rejected') {
-        // Получаем причину отклонения
-        const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
-        const user = pendingUsers.find(u => u.id === userId);
-        const reason = user && user.rejectionReason ? `Причина: ${user.rejectionReason}` : '';
-        
-        const message = reason ? 
-            `❌ Анкета отклонена. ${reason}` : 
-            '❌ Анкета отклонена. Пожалуйста, проверьте данные и попробуйте снова.';
-        
-        showNotification(message, 'error');
-        
-        // Предлагаем вернуться к редактированию
-        setTimeout(() => {
-            if (confirm('Хотите вернуться к редактированию анкеты?')) {
-                goToStep(1);
-            }
-        }, 2000);
-    } else if (status === 'pending') {
-        showNotification('⏳ Анкета все еще на проверке. Попробуйте позже.', 'info');
-    } else if (status === 'not_found') {
-        showNotification('⚠️ Ваша заявка не найдена. Попробуйте заполнить анкету заново.', 'error');
-    } else {
-        showNotification('⚠️ Не удалось проверить статус. Попробуйте обновить страницу.', 'error');
+    pendingUsers.push(userForStorage);
+    
+    // Сохраняем фото отдельно
+    if (userData.mainPhoto) {
+        localStorage.setItem(`sia_photo_${userData.id}_main`, userData.mainPhoto);
     }
+    if (userData.selfie) {
+        localStorage.setItem(`sia_photo_${userData.id}_selfie`, userData.selfie);
+    }
+    
+    // Сохраняем основной список
+    localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
+    localStorage.setItem('sia_current_user_id', userData.id.toString());
+    
+    console.log('✅ Данные сохранены. Всего заявок:', pendingUsers.length);
+    return userData.id;
 }
 
-// Инициализация при загрузке страницы
+// ========== ИНИЦИАЛИЗАЦИЯ ==========
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Auth.js инициализирован');
-    
-    // Устанавливаем приветствие
-    const welcomeText = document.getElementById('welcome-text');
-    if (welcomeText) {
-        welcomeText.textContent = 'Привет, друг! Добро пожаловать в мир знакомств!';
-    }
-    
-    // Добавляем обработчики для Enter на полях ввода
-    const nameInput = document.getElementById('name-input');
-    if (nameInput) {
-        nameInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') saveName();
-        });
-    }
-    
-    // Инициализируем выпадающие списки заранее
+    console.log('✅ Auth.js загружен');
     initAgeSelect();
     initCitySelect();
 });
 
-console.log("✅ Auth.js загружен");
+// Экспортируем функции для HTML
+window.startOnboarding = startOnboarding;
+window.selectGender = selectGender;
+window.saveName = saveName;
+window.saveGender = saveGender;
+window.saveAge = saveAge;
+window.saveCity = saveCity;
+window.saveMainPhoto = saveMainPhoto;
+window.saveSelfie = saveSelfie;
+window.goToStep = goToStep;
