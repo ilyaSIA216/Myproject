@@ -3,347 +3,531 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiaMatch - Админ панель</title>
-    <link rel="stylesheet" href="styles/common.css">
-    <link rel="stylesheet" href="styles/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>SiaMatch - Админ панель (исправленная)</title>
     <style>
+        /* СТИЛИ ОПТИМИЗИРОВАНЫ ДЛЯ БОЛЬШИХ ДАННЫХ */
+        * {
+            box-sizing: border-box;
+        }
         body {
-            background: linear-gradient(135deg, #1a237e, #283593);
+            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+            padding: 10px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* ШАПКА */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .admin-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a237e;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        /* СТАТИСТИКА */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-card.pending .stat-value { color: #FF9800; }
+        .stat-card.approved .stat-value { color: #4CAF50; }
+        .stat-card.rejected .stat-value { color: #f44336; }
+        
+        /* ТАБЫ */
+        .admin-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tab-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        /* ЗАЯВКИ */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .search-box {
+            margin-bottom: 15px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        /* СПИСОК ЗАЯВОК */
+        .applications-list {
+            display: grid;
+            gap: 15px;
+        }
+        .application-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .application-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .application-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status-pending { background: #FFE0B2; color: #E65100; }
+        .status-approved { background: #C8E6C9; color: #2E7D32; }
+        .status-rejected { background: #FFCDD2; color: #C62828; }
+        
+        .application-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .application-meta i {
+            margin-right: 5px;
+        }
+        
+        .application-bio {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        /* ФОТО - УПРОЩЕННЫЙ ВАРИАНТ */
+        .application-photos {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .photo-thumb {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        /* НЕТ ДАННЫХ */
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        /* ЛОГИ */
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .log-entry.success { background: #E8F5E9; }
+        .log-entry.failed { background: #FFEBEE; }
+        
+        /* ОЧИСТКА ДАННЫХ */
+        .storage-warning {
+            background: #FFF3CD;
+            border: 1px solid #FFEAA7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        /* АДАПТИВНОСТЬ */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .application-meta {
+                flex-direction: column;
+                gap: 5px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="admin-container" id="admin-container">
-            <!-- Заглушка пока загружается -->
-            <div id="loading" style="text-align: center; padding: 100px;">
-                <div style="font-size: 48px; color: #4CAF50; margin-bottom: 20px;">⏳</div>
+        <div id="admin-container">
+            <div id="loading" style="text-align: center; padding: 50px;">
+                <div style="font-size: 32px; color: #4CAF50; margin-bottom: 15px;">⏳</div>
                 <div style="color: #666;">Загрузка админ-панели...</div>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно для фото -->
-    <div id="photo-modal" class="photo-modal">
-        <button class="close-modal" onclick="closePhotoModal()">×</button>
-        <img id="modal-image" src="" alt="Увеличенное фото">
-    </div>
-
     <script>
-        // Проверка авторизации админа
-        function checkAdminAuth() {
-            const session = localStorage.getItem('sia_admin_session');
-            const loginTime = localStorage.getItem('sia_admin_login_time');
-            
-            if (!session || session !== 'active') {
-                window.location.href = 'admin-login.html';
-                return false;
-            }
-            
-            // Проверка времени сессии (8 часов)
-            const loginDate = new Date(loginTime);
-            const now = new Date();
-            const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
-            
-            if (hoursDiff > 8) {
-                localStorage.removeItem('sia_admin_session');
-                localStorage.removeItem('sia_admin_login_time');
-                window.location.href = 'admin-login.html';
-                return false;
-            }
-            
-            return true;
-        }
-        
-        // Основной скрипт админ-панели
+        // ОСНОВНАЯ ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ
         function initAdminPanel() {
-            if (!checkAdminAuth()) return;
+            console.log('🚀 Инициализация админ-панели...');
             
-            // ЗАГРУЖАЕМ ДАННЫЕ С ВОССТАНОВЛЕНИЕМ
-            let pendingUsers = [];
-            
-            // Используем новую функцию для загрузки
-            if (typeof loadPendingApplicationsWithFallback === 'function') {
-                pendingUsers = loadPendingApplicationsWithFallback();
-            } else {
-                // Старый способ как запасной
-                try {
-                    const stored = localStorage.getItem('sia_pending_users');
-                    console.log('Загружаем данные, длина:', stored?.length || 0);
-                    
-                    if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
-                        pendingUsers = JSON.parse(stored);
-                        console.log('Успешно загружено заявок:', pendingUsers.length);
-                    } else {
-                        console.log('Нет данных о заявках или undefined');
-                    }
-                } catch (error) {
-                    console.error('Ошибка при загрузке данных:', error);
-                    pendingUsers = [];
-                }
+            // Проверка авторизации
+            if (!checkAdminAuth()) {
+                console.log('❌ Нет авторизации');
+                return;
             }
+            
+            // Загружаем данные ОЧЕНЬ АККУРАТНО
+            let applications = loadApplicationsSafely();
+            console.log(`📊 Загружено заявок: ${applications.length}`);
             
             // Статистика
             const stats = {
-                pending: pendingUsers.filter(u => u.status === 'pending').length,
-                approved: pendingUsers.filter(u => u.status === 'approved').length,
-                rejected: pendingUsers.filter(u => u.status === 'rejected').length,
-                total: pendingUsers.length
+                pending: applications.filter(u => u.status === 'pending').length,
+                approved: applications.filter(u => u.status === 'approved').length,
+                rejected: applications.filter(u => u.status === 'rejected').length,
+                total: applications.length
             };
             
-            console.log('📊 Статистика:', stats);
-            console.log('📋 Все заявки:', pendingUsers.map(app => `${app.name} (${app.status})`));
+            // Проверяем размер данных
+            const storageSize = JSON.stringify(applications).length;
+            console.log(`💾 Размер данных: ${Math.round(storageSize / 1024 / 1024)} MB`);
             
             // Генерация HTML
-            document.getElementById('admin-container').innerHTML = `
+            const adminContainer = document.getElementById('admin-container');
+            adminContainer.innerHTML = `
+                <!-- ШАПКА -->
                 <div class="admin-header">
                     <div class="admin-title">
-                        <i class="fas fa-shield-alt"></i>SiaMatch Admin Panel
+                        🛡️ SiaMatch Admin (${stats.total} заявок)
                     </div>
-                    <div class="admin-info">
-                        <div>Администратор</div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn" style="background: #2196F3; color: white; padding: 8px 15px;" 
-                                    onclick="if(typeof repairMobileData === 'function') { repairMobileData(); setTimeout(() => window.location.reload(), 1000); } else alert('Функция недоступна')">
-                                <i class="fas fa-sync-alt"></i> Восстановить
-                            </button>
-                            <button class="logout-btn" onclick="logoutAdmin()">
-                                <i class="fas fa-sign-out-alt"></i> Выйти
-                            </button>
-                        </div>
+                    <div class="admin-actions">
+                        <button class="btn btn-primary" onclick="window.location.reload()">
+                            🔄 Обновить
+                        </button>
+                        <button class="btn btn-success" onclick="createTestApplication()">
+                            🧪 Тест
+                        </button>
+                        <button class="btn btn-danger" onclick="logoutAdmin()">
+                            🚪 Выйти
+                        </button>
                     </div>
                 </div>
                 
+                <!-- ПРЕДУПРЕЖДЕНИЕ О БОЛЬШИХ ДАННЫХ -->
+                ${storageSize > 5000000 ? `
+                <div class="storage-warning">
+                    ⚠️ <strong>Внимание!</strong> Размер данных: ${Math.round(storageSize / 1024 / 1024)} MB
+                    <br>Рекомендуется очистить старые фото для ускорения работы.
+                    <button class="btn" style="margin-left: 10px;" onclick="optimizeStorage()">
+                        🗑️ Оптимизировать
+                    </button>
+                </div>
+                ` : ''}
+                
+                <!-- СТАТИСТИКА -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value">${stats.total}</div>
-                        <div class="stat-label">Всего заявок</div>
+                        <div>Всего заявок</div>
                     </div>
                     <div class="stat-card pending">
                         <div class="stat-value">${stats.pending}</div>
-                        <div class="stat-label">На проверке</div>
+                        <div>На проверке</div>
                     </div>
                     <div class="stat-card approved">
                         <div class="stat-value">${stats.approved}</div>
-                        <div class="stat-label">Одобрено</div>
+                        <div>Одобрено</div>
                     </div>
                     <div class="stat-card rejected">
                         <div class="stat-value">${stats.rejected}</div>
-                        <div class="stat-label">Отклонено</div>
+                        <div>Отклонено</div>
                     </div>
                 </div>
                 
+                <!-- ТАБЫ -->
                 <div class="admin-tabs">
                     <button class="tab-btn active" onclick="showTab('pending')">
-                        <i class="fas fa-clock"></i>На проверке (${stats.pending})
+                        ⏳ На проверке (${stats.pending})
                     </button>
                     <button class="tab-btn" onclick="showTab('approved')">
-                        <i class="fas fa-check-circle"></i>Одобренные (${stats.approved})
+                        ✅ Одобренные (${stats.approved})
                     </button>
                     <button class="tab-btn" onclick="showTab('rejected')">
-                        <i class="fas fa-times-circle"></i>Отклоненные (${stats.rejected})
+                        ❌ Отклоненные (${stats.rejected})
                     </button>
                     <button class="tab-btn" onclick="showTab('logs')">
-                        <i class="fas fa-history"></i>Логи доступа
+                        📋 Логи
                     </button>
                 </div>
                 
+                <!-- КОНТЕНТ ТАБОВ -->
                 <div id="pending-tab" class="tab-content active">
+                    ${stats.pending > 0 ? `
                     <div class="search-box">
-                        <input type="text" id="search-pending" placeholder="Поиск по имени или городу..." onkeyup="searchApplications('pending')">
+                        <input type="text" id="search-pending" placeholder="🔍 Поиск..." onkeyup="searchApplications('pending')">
                     </div>
+                    ` : ''}
                     <div class="applications-list" id="pending-list">
-                        <!-- Список заявок на проверке -->
+                        ${stats.pending === 0 ? '<div class="no-data">📭 Нет заявок на проверке</div>' : ''}
                     </div>
                 </div>
                 
                 <div id="approved-tab" class="tab-content">
+                    ${stats.approved > 0 ? `
                     <div class="search-box">
-                        <input type="text" id="search-approved" placeholder="Поиск по имени или городу..." onkeyup="searchApplications('approved')">
+                        <input type="text" id="search-approved" placeholder="🔍 Поиск..." onkeyup="searchApplications('approved')">
                     </div>
+                    ` : ''}
                     <div class="applications-list" id="approved-list">
-                        <!-- Список одобренных -->
+                        ${stats.approved === 0 ? '<div class="no-data">📭 Нет одобренных заявок</div>' : ''}
                     </div>
                 </div>
                 
                 <div id="rejected-tab" class="tab-content">
+                    ${stats.rejected > 0 ? `
                     <div class="search-box">
-                        <input type="text" id="search-rejected" placeholder="Поиск по имени или городу..." onkeyup="searchApplications('rejected')">
+                        <input type="text" id="search-rejected" placeholder="🔍 Поиск..." onkeyup="searchApplications('rejected')">
                     </div>
+                    ` : ''}
                     <div class="applications-list" id="rejected-list">
-                        <!-- Список отклоненных -->
+                        ${stats.rejected === 0 ? '<div class="no-data">📭 Нет отклоненных заявок</div>' : ''}
                     </div>
                 </div>
                 
                 <div id="logs-tab" class="tab-content">
-                    <h3>Логи входа в админ-панель</h3>
-                    <div class="logs-container" id="logs-list">
-                        <!-- Логи будут здесь -->
+                    <div class="search-box">
+                        <input type="text" id="search-logs" placeholder="🔍 Поиск в логах..." onkeyup="searchLogs()">
                     </div>
+                    <div class="logs-container" id="logs-list"></div>
                 </div>
             `;
             
             // Загружаем данные в табы
-            loadApplications('pending');
-            loadApplications('approved');
-            loadApplications('rejected');
+            loadTabApplications('pending', applications);
+            loadTabApplications('approved', applications);
+            loadTabApplications('rejected', applications);
             loadLogs();
             
-            // Скрываем загрузку (безопасно)
+            // Скрываем загрузку
             const loadingElement = document.getElementById('loading');
             if (loadingElement) {
                 loadingElement.style.display = 'none';
-            } else {
-                console.log('⚠️ Элемент loading не найден');
             }
             
-            // Если нет заявок, показываем сообщение
-            if (stats.total === 0) {
-                const pendingList = document.getElementById('pending-list');
-                pendingList.innerHTML = `
-                    <div class="no-data">
-                        <i class="fas fa-inbox"></i>
-                        <p>Нет заявок на проверку</p>
-                        <p style="font-size: 14px; color: #888; margin-top: 10px;">
-                            После отправки анкеты пользователем, она появится здесь
-                        </p>
-                    </div>
-                `;
-            }
+            console.log('✅ Админ-панель загружена');
         }
         
-        function showTab(tabName) {
-            // Скрыть все табы
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+        // БЕЗОПАСНАЯ ЗАГРУЗКА ЗАЯВОК
+        function loadApplicationsSafely() {
+            console.log('🔄 Безопасная загрузка данных...');
             
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Показать выбранный таб
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
-            
-            // Если это логи, обновить их
-            if (tabName === 'logs') {
-                loadLogs();
-            }
-        }
-        
-        function loadApplications(status) {
-            let pendingUsers = [];
             try {
                 const stored = localStorage.getItem('sia_pending_users');
-                if (stored && stored !== 'undefined') {
-                    pendingUsers = JSON.parse(stored);
+                
+                if (!stored) {
+                    console.log('📭 Нет данных');
+                    return [];
                 }
-            } catch (e) {
-                console.error('Ошибка при загрузке заявок:', e);
-                pendingUsers = [];
+                
+                if (stored.length > 10000000) { // 10MB limit
+                    console.warn('⚠️ Данные слишком большие, ограничиваем');
+                    const truncated = stored.substring(0, 10000000);
+                    const lastBracket = truncated.lastIndexOf(']');
+                    if (lastBracket !== -1) {
+                        const safeData = truncated.substring(0, lastBracket + 1);
+                        return JSON.parse(safeData);
+                    }
+                }
+                
+                const data = JSON.parse(stored);
+                
+                // Очищаем большие base64 данные для отображения
+                const cleanedData = data.map(app => ({
+                    ...app,
+                    mainPhoto: app.mainPhoto && app.mainPhoto.length > 1000 ? 
+                        '[ФОТО: ' + Math.round(app.mainPhoto.length / 1024) + ' KB]' : app.mainPhoto,
+                    selfie: app.selfie && app.selfie.length > 1000 ? 
+                        '[СЕЛФИ: ' + Math.round(app.selfie.length / 1024) + ' KB]' : app.selfie
+                }));
+                
+                return cleanedData;
+                
+            } catch (error) {
+                console.error('❌ Ошибка загрузки:', error);
+                
+                // Пытаемся восстановить
+                try {
+                    const emergency = localStorage.getItem('sia_pending_users_emergency');
+                    if (emergency) {
+                        return JSON.parse(emergency);
+                    }
+                } catch (e2) {
+                    console.log('❌ Не удалось восстановить');
+                }
+                
+                return [];
             }
-            
+        }
+        
+        // ЗАГРУЗКА ЗАЯВОК В ТАБ
+        function loadTabApplications(status, allApplications) {
             const containerId = status + '-list';
             const container = document.getElementById(containerId);
             
-            const filteredUsers = pendingUsers.filter(user => user.status === status);
-            
-            if (filteredUsers.length === 0) {
-                container.innerHTML = `
-                    <div class="no-data">
-                        <i class="fas fa-inbox"></i>
-                        <p>Нет заявок со статусом "${getStatusText(status)}"</p>
-                    </div>
-                `;
+            if (!container) {
+                console.log(`❌ Контейнер не найден: ${containerId}`);
                 return;
             }
             
+            const filtered = allApplications.filter(app => app.status === status);
+            
+            if (filtered.length === 0) {
+                if (container.innerHTML.includes('no-data')) return;
+                return;
+            }
+            
+            console.log(`📋 Загружаем ${status}: ${filtered.length} заявок`);
+            
             let html = '';
-            filteredUsers.forEach(user => {
-                const timeAgo = getTimeAgo(user.submittedAt);
-                
-                // Проверяем наличие фото
-                const hasMainPhoto = user.mainPhoto || user.hasMainPhoto;
-                const hasSelfie = user.selfie || user.hasSelfie;
+            filtered.forEach((app, index) => {
+                const timeAgo = getTimeAgo(app.submittedAt);
                 
                 html += `
-                    <div class="application-card ${status}" data-name="${user.name.toLowerCase()}" data-city="${user.city.toLowerCase()}">
+                    <div class="application-card" data-id="${app.id}" data-name="${app.name.toLowerCase()}" data-city="${app.city.toLowerCase()}">
                         <div class="application-header">
                             <div class="application-title">
-                                ${user.name}, ${user.age} лет
-                                <span class="status-badge status-${status}">${getStatusText(status)}</span>
+                                ${app.name || 'Без имени'}, ${app.age || '?'} лет
+                                <span class="status-badge status-${app.status}">
+                                    ${getStatusText(app.status)}
+                                </span>
                             </div>
-                            <div style="color: #888; font-size: 14px;">
+                            <div style="font-size: 12px; color: #888;">
                                 ${timeAgo}
+                                <br>ID: ${app.id}
                             </div>
                         </div>
                         
                         <div class="application-meta">
-                            <div><i class="fas fa-user"></i> ${user.gender === 'male' ? 'Мужчина' : 'Женщина'}</div>
-                            <div><i class="fas fa-city"></i> ${user.city}</div>
-                            <div><i class="fas fa-calendar"></i> ${new Date(user.submittedAt).toLocaleDateString()}</div>
+                            <div><i class="fas fa-user"></i> ${app.gender === 'male' ? '👨 Мужчина' : '👩 Женщина'}</div>
+                            <div><i class="fas fa-city"></i> ${app.city || 'Не указан'}</div>
+                            <div><i class="fas fa-calendar"></i> ${formatDate(app.submittedAt)}</div>
                         </div>
                         
+                        ${app.bio ? `
                         <div class="application-bio">
-                            ${user.bio || 'Описание отсутствует'}
+                            ${app.bio.substring(0, 200)}${app.bio.length > 200 ? '...' : ''}
                         </div>
+                        ` : ''}
                         
-                        ${(hasMainPhoto || hasSelfie) ? `
-                        <div class="application-photos">
-                            ${hasMainPhoto ? `
-                            <div class="photo-container">
-                                <img src="${user.mainPhoto || 'https://via.placeholder.com/150?text=Фото+есть+но+не+загружено'}" 
-                                     alt="Основное фото" 
-                                     onclick="showPhotoModal('${user.mainPhoto || ''}')">
-                                <div class="photo-label">Основное фото</div>
-                            </div>
+                        ${(app.mainPhoto || app.selfie) ? `
+                        <div style="margin: 10px 0;">
+                            <small style="color: #666;">
+                                ${app.mainPhoto ? '📷 Есть фото' : ''}
+                                ${app.selfie ? ' • 🤳 Есть селфи' : ''}
+                            </small>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="action-buttons">
+                            ${status === 'pending' ? `
+                            <button class="btn btn-success" onclick="approveApplication(${app.id})">
+                                ✅ Одобрить
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectApplication(${app.id})">
+                                ❌ Отклонить
+                            </button>
                             ` : ''}
                             
-                            ${hasSelfie ? `
-                            <div class="photo-container">
-                                <img src="${user.selfie || 'https://via.placeholder.com/150?text=Селфи+есть+но+не+загружено'}" 
-                                     alt="Селфи" 
-                                     onclick="showPhotoModal('${user.selfie || ''}')">
-                                <div class="photo-label">Селфи для проверки</div>
-                            </div>
-                            ` : ''}
-                        </div>
-                        ` : '<p style="color: #888; font-size: 14px;">Фото не загружены</p>'}
-                        
-                        ${status === 'pending' ? `
-                        <div class="action-buttons">
-                            <button class="btn btn-approve" onclick="approveApplication(${user.id})">
-                                <i class="fas fa-check"></i> Одобрить
+                            <button class="btn btn-primary" onclick="viewApplicationDetails(${app.id})">
+                                👁️ Подробнее
                             </button>
-                            <button class="btn btn-reject" onclick="rejectApplication(${user.id})">
-                                <i class="fas fa-times"></i> Отклонить
-                            </button>
-                            <button class="btn btn-view" onclick="viewApplication(${user.id})">
-                                <i class="fas fa-eye"></i> Подробнее
-                            </button>
-                        </div>
-                        ` : `
-                        <div class="action-buttons">
-                            <button class="btn btn-view" onclick="viewApplication(${user.id})">
-                                <i class="fas fa-eye"></i> Подробнее
-                            </button>
-                            ${status === 'approved' ? `
-                            <button class="btn" style="background: #9C27B0; color: white;" onclick="sendToSwipes(${user.id})">
-                                <i class="fas fa-heart"></i> В свайпы
+                            
+                            ${status === 'pending' ? `
+                            <button class="btn" style="background: #9C27B0; color: white;" onclick="deleteApplication(${app.id})">
+                                🗑️ Удалить
                             </button>
                             ` : ''}
                         </div>
-                        `}
                     </div>
                 `;
             });
@@ -351,6 +535,7 @@
             container.innerHTML = html;
         }
         
+        // ПОИСК
         function searchApplications(status) {
             const searchTerm = document.getElementById(`search-${status}`).value.toLowerCase();
             const cards = document.querySelectorAll(`#${status}-list .application-card`);
@@ -367,170 +552,207 @@
             });
         }
         
-        function loadLogs() {
-            const logs = JSON.parse(localStorage.getItem('sia_admin_log') || '[]');
-            const container = document.getElementById('logs-list');
-            
-            if (logs.length === 0) {
-                container.innerHTML = '<div class="no-data"><p>Нет записей в логах</p></div>';
-                return;
-            }
-            
-            let html = '';
-            logs.reverse().forEach(log => { // Новые сверху
-                const time = new Date(log.timestamp).toLocaleString();
-                html += `
-                    <div class="log-entry ${log.success ? 'success' : 'failed'}">
-                        <div><span class="log-time">${time}</span> - 
-                        <span class="log-message">${log.success ? '✅ Успешный вход' : '❌ Неудачная попытка входа'}</span></div>
-                        <div style="font-size: 10px; color: #888; margin-top: 5px;">
-                            IP: ${log.ip} | Пароль: ${log.attemptedPassword}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-        
+        // ФУНКЦИИ ДЛЯ РАБОТЫ С ЗАЯВКАМИ
         function approveApplication(userId) {
-            if (!confirm('Одобрить эту заявку?')) return;
-            
-            updateApplicationStatus(userId, 'approved');
-            showTab('pending');
-            setTimeout(() => initAdminPanel(), 500); // Перезагружаем статистику
+            if (confirm('✅ Одобрить эту заявку?')) {
+                updateApplicationStatus(userId, 'approved');
+            }
         }
         
         function rejectApplication(userId) {
-            const reason = prompt('Укажите причину отклонения (необязательно):');
+            const reason = prompt('❌ Укажите причину отклонения (необязательно):');
             updateApplicationStatus(userId, 'rejected', reason);
-            showTab('pending');
-            setTimeout(() => initAdminPanel(), 500);
         }
         
         function updateApplicationStatus(userId, newStatus, reason = '') {
-            let pendingUsers = [];
+            let applications = [];
             try {
-                pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
+                const stored = localStorage.getItem('sia_pending_users');
+                if (stored) {
+                    applications = JSON.parse(stored);
+                }
             } catch (e) {
-                pendingUsers = [];
+                console.error('Ошибка:', e);
+                alert('❌ Ошибка загрузки данных');
+                return;
             }
             
-            const userIndex = pendingUsers.findIndex(u => u.id === userId);
-            
-            if (userIndex !== -1) {
-                pendingUsers[userIndex].status = newStatus;
-                pendingUsers[userIndex].moderatedAt = new Date().toISOString();
-                pendingUsers[userIndex].moderator = 'Администратор';
+            const index = applications.findIndex(u => u.id === userId);
+            if (index !== -1) {
+                applications[index].status = newStatus;
+                applications[index].moderatedAt = new Date().toISOString();
+                applications[index].moderator = 'Администратор';
+                
                 if (reason) {
-                    pendingUsers[userIndex].rejectionReason = reason;
+                    applications[index].rejectionReason = reason;
                 }
                 
-                localStorage.setItem('sia_pending_users', JSON.stringify(pendingUsers));
-                
-                // Если пользователь одобрен - добавляем в активные пользователи
+                // Если одобрено - добавляем в активные пользователи
                 if (newStatus === 'approved') {
-                    const user = pendingUsers[userIndex];
-                    let activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
-                    
-                    // Проверяем, нет ли уже такого пользователя в активных
-                    const userExists = activeUsers.some(u => u.id === userId);
-                    
-                    if (!userExists) {
-                        activeUsers.push({
-                            id: user.id,
-                            name: user.name,
-                            age: user.age,
-                            city: user.city,
-                            gender: user.gender,
-                            bio: user.bio || 'Пользователь SiaMatch',
-                            photo: user.mainPhoto || 'https://randomuser.me/api/portraits/men/' + (Math.floor(Math.random() * 50) + 1) + '.jpg'
-                        });
-                        localStorage.setItem('sia_active_users', JSON.stringify(activeUsers));
-                    }
+                    addToActiveUsers(applications[index]);
                 }
                 
-                alert(`✅ Заявка ${getStatusText(newStatus)}!`);
+                try {
+                    localStorage.setItem('sia_pending_users', JSON.stringify(applications));
+                    alert(`✅ Заявка ${getStatusText(newStatus)}!`);
+                    
+                    // Перезагружаем
+                    setTimeout(() => {
+                        initAdminPanel();
+                    }, 500);
+                    
+                } catch (e) {
+                    alert('❌ Ошибка сохранения: ' + e.message);
+                }
             } else {
-                alert('❌ Заявка не найдена!');
+                alert('❌ Заявка не найдена');
             }
         }
         
-        function viewApplication(userId) {
-            const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
-            const user = pendingUsers.find(u => u.id === userId);
+        function addToActiveUsers(user) {
+            try {
+                let activeUsers = JSON.parse(localStorage.getItem('sia_active_users') || '[]');
+                
+                // Проверяем, нет ли уже такого пользователя
+                if (!activeUsers.some(u => u.id === user.id)) {
+                    activeUsers.push({
+                        id: user.id,
+                        name: user.name,
+                        age: user.age,
+                        city: user.city,
+                        gender: user.gender,
+                        bio: user.bio,
+                        photo: user.mainPhoto || 'https://randomuser.me/api/portraits/lego/1.jpg'
+                    });
+                    
+                    localStorage.setItem('sia_active_users', JSON.stringify(activeUsers));
+                    console.log('✅ Пользователь добавлен в активные');
+                }
+            } catch (e) {
+                console.log('⚠️ Не удалось добавить в активные');
+            }
+        }
+        
+        function viewApplicationDetails(userId) {
+            let applications = [];
+            try {
+                const stored = localStorage.getItem('sia_pending_users');
+                if (stored) {
+                    applications = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Ошибка:', e);
+            }
             
-            if (user) {
-                let details = `📋 ЗАЯВКА #${user.applicationId || user.id}\n\n`;
-                details += `👤 Имя: ${user.name}\n`;
-                details += `🎂 Возраст: ${user.age} лет\n`;
-                details += `👫 Пол: ${user.gender === 'male' ? 'Мужчина' : 'Женщина'}\n`;
-                details += `🏙️ Город: ${user.city}\n`;
-                details += `📅 Дата подачи: ${new Date(user.submittedAt).toLocaleString()}\n`;
-                details += `📊 Статус: ${getStatusText(user.status)}\n\n`;
+            const app = applications.find(u => u.id === userId);
+            if (app) {
+                let details = `📋 ЗАЯВКА #${app.applicationId || app.id}\n\n`;
+                details += `👤 Имя: ${app.name}\n`;
+                details += `🎂 Возраст: ${app.age} лет\n`;
+                details += `👫 Пол: ${app.gender === 'male' ? 'Мужчина' : 'Женщина'}\n`;
+                details += `🏙️ Город: ${app.city}\n`;
+                details += `📅 Дата подачи: ${formatDate(app.submittedAt)}\n`;
+                details += `📊 Статус: ${getStatusText(app.status)}\n`;
                 
-                if (user.bio) details += `📝 Описание: ${user.bio}\n\n`;
+                if (app.bio) details += `\n📝 Описание:\n${app.bio}\n`;
                 
-                if (user.moderatedAt) {
-                    details += `✅ Проверено: ${new Date(user.moderatedAt).toLocaleString()}\n`;
-                    details += `👨‍💼 Модератор: ${user.moderator || 'Администратор'}\n`;
+                if (app.moderatedAt) {
+                    details += `\n✅ Проверено: ${formatDate(app.moderatedAt)}\n`;
                 }
                 
-                if (user.rejectionReason) {
-                    details += `❌ Причина отклонения: ${user.rejectionReason}\n`;
+                if (app.rejectionReason) {
+                    details += `\n❌ Причина отклонения:\n${app.rejectionReason}\n`;
+                }
+                
+                if (app.mainPhoto && app.mainPhoto.includes('http')) {
+                    details += `\n📷 Основное фото: ${app.mainPhoto.substring(0, 50)}...\n`;
+                }
+                
+                if (app.selfie && app.selfie.includes('http')) {
+                    details += `🤳 Селфи: ${app.selfie.substring(0, 50)}...\n`;
                 }
                 
                 alert(details);
-            }
-        }
-        
-        function sendToSwipes(userId) {
-            alert('✅ Пользователь добавлен в свайпы!');
-        }
-        
-        function showPhotoModal(photoUrl) {
-            if (photoUrl && photoUrl.includes('http')) {
-                document.getElementById('modal-image').src = photoUrl;
-                document.getElementById('photo-modal').style.display = 'flex';
             } else {
-                alert('Фото недоступно для просмотра');
+                alert('Заявка не найдена');
             }
         }
         
-        function closePhotoModal() {
-            document.getElementById('photo-modal').style.display = 'none';
-        }
-        
-        function getStatusText(status) {
-            const statusMap = {
-                'pending': 'На проверке',
-                'approved': 'Одобрено',
-                'rejected': 'Отклонено'
-            };
-            return statusMap[status] || status;
-        }
-        
-        function getTimeAgo(dateString) {
-            if (!dateString) return 'Неизвестно';
-            
-            try {
-                const date = new Date(dateString);
-                const now = new Date();
-                const diffMs = now - date;
-                const diffMins = Math.floor(diffMs / 60000);
-                const diffHours = Math.floor(diffMs / 3600000);
-                const diffDays = Math.floor(diffMs / 86400000);
-                
-                if (diffMins < 60) {
-                    return `${diffMins} мин назад`;
-                } else if (diffHours < 24) {
-                    return `${diffHours} ч назад`;
-                } else {
-                    return `${diffDays} дн назад`;
+        function deleteApplication(userId) {
+            if (confirm('🗑️ Удалить эту заявку? Это действие нельзя отменить.')) {
+                let applications = [];
+                try {
+                    const stored = localStorage.getItem('sia_pending_users');
+                    if (stored) {
+                        applications = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    console.error('Ошибка:', e);
                 }
-            } catch (e) {
-                return 'Неизвестно';
+                
+                const filtered = applications.filter(u => u.id !== userId);
+                
+                try {
+                    localStorage.setItem('sia_pending_users', JSON.stringify(filtered));
+                    alert('✅ Заявка удалена');
+                    initAdminPanel();
+                } catch (e) {
+                    alert('❌ Ошибка удаления');
+                }
             }
+        }
+        
+        // ЛОГИ
+        function loadLogs() {
+            try {
+                const logs = JSON.parse(localStorage.getItem('sia_admin_log') || '[]');
+                const container = document.getElementById('logs-list');
+                
+                if (!container) return;
+                
+                if (logs.length === 0) {
+                    container.innerHTML = '<div class="no-data">📭 Нет логов</div>';
+                    return;
+                }
+                
+                let html = '';
+                logs.reverse().forEach(log => {
+                    const time = new Date(log.timestamp).toLocaleString();
+                    html += `
+                        <div class="log-entry ${log.success ? 'success' : 'failed'}">
+                            <div><strong>${time}</strong> - 
+                            ${log.success ? '✅ Успешный вход' : '❌ Неудачная попытка'}</div>
+                            <div style="font-size: 12px; color: #666;">
+                                IP: ${log.ip || 'неизвестно'} | Пароль: ${log.attemptedPassword || 'не указан'}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (e) {
+                console.log('Ошибка загрузки логов');
+            }
+        }
+        
+        function searchLogs() {
+            const searchTerm = document.getElementById('search-logs').value.toLowerCase();
+            const entries = document.querySelectorAll('#logs-list .log-entry');
+            
+            entries.forEach(entry => {
+                const text = entry.textContent.toLowerCase();
+                entry.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+        
+        // УТИЛИТЫ
+        function checkAdminAuth() {
+            const session = localStorage.getItem('sia_admin_session');
+            if (!session || session !== 'active') {
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            return true;
         }
         
         function logoutAdmin() {
@@ -539,26 +761,152 @@
             window.location.href = 'admin-login.html';
         }
         
-        // Запускаем админ-панель при загрузке
+        function getStatusText(status) {
+            const map = {
+                'pending': 'На проверке',
+                'approved': 'Одобрено',
+                'rejected': 'Отклонено'
+            };
+            return map[status] || status;
+        }
+        
+        function getTimeAgo(dateString) {
+            if (!dateString) return 'недавно';
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+                
+                if (diffMins < 60) return `${diffMins} мин назад`;
+                if (diffHours < 24) return `${diffHours} ч назад`;
+                return `${diffDays} дн назад`;
+            } catch (e) {
+                return 'недавно';
+            }
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'не указано';
+            try {
+                return new Date(dateString).toLocaleString('ru-RU');
+            } catch (e) {
+                return 'не указано';
+            }
+        }
+        
+        // ОПТИМИЗАЦИЯ ХРАНИЛИЩА
+        function optimizeStorage() {
+            if (confirm('🗑️ Удалить фото из старых заявок для уменьшения размера данных?')) {
+                let applications = [];
+                try {
+                    const stored = localStorage.getItem('sia_pending_users');
+                    if (stored) {
+                        applications = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    alert('❌ Ошибка загрузки данных');
+                    return;
+                }
+                
+                // Удаляем фото из заявок старше 1 дня
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                
+                let optimizedCount = 0;
+                const optimized = applications.map(app => {
+                    try {
+                        const appDate = new Date(app.submittedAt);
+                        if (appDate < yesterday) {
+                            if (app.mainPhoto && app.mainPhoto.length > 100) {
+                                app.mainPhoto = '';
+                                optimizedCount++;
+                            }
+                            if (app.selfie && app.selfie.length > 100) {
+                                app.selfie = '';
+                                optimizedCount++;
+                            }
+                        }
+                    } catch (e) {
+                        // Игнорируем ошибки даты
+                    }
+                    return app;
+                });
+                
+                try {
+                    localStorage.setItem('sia_pending_users', JSON.stringify(optimized));
+                    alert(`✅ Оптимизировано! Удалено фото из ${optimizedCount} заявок`);
+                    initAdminPanel();
+                } catch (e) {
+                    alert('❌ Ошибка сохранения');
+                }
+            }
+        }
+        
+        // СОЗДАНИЕ ТЕСТОВОЙ ЗАЯВКИ
+        function createTestApplication() {
+            const testUser = {
+                id: Date.now(),
+                name: "Тест " + Math.floor(Math.random() * 1000),
+                age: 20 + Math.floor(Math.random() * 20),
+                city: ["Москва", "СПб", "Казань", "Екатеринбург"][Math.floor(Math.random() * 4)],
+                gender: Math.random() > 0.5 ? "male" : "female",
+                bio: "Тестовая заявка создана в админ-панели " + new Date().toLocaleTimeString(),
+                status: 'pending',
+                submittedAt: new Date().toISOString(),
+                applicationId: 'TEST-' + Date.now().toString().slice(-6)
+            };
+            
+            let applications = [];
+            try {
+                const stored = localStorage.getItem('sia_pending_users');
+                if (stored) {
+                    applications = JSON.parse(stored);
+                }
+            } catch (e) {
+                applications = [];
+            }
+            
+            applications.push(testUser);
+            
+            try {
+                localStorage.setItem('sia_pending_users', JSON.stringify(applications));
+                alert('✅ Тестовая заявка создана!');
+                initAdminPanel();
+            } catch (e) {
+                alert('❌ Ошибка: ' + e.message);
+            }
+        }
+        
+        // ПОКАЗ ТАБА
+        function showTab(tabName) {
+            // Скрыть все
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Показать выбранный
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Загрузить логи если нужно
+            if (tabName === 'logs') {
+                loadLogs();
+            }
+        }
+        
+        // ЗАПУСК ПРИ ЗАГРУЗКЕ
         document.addEventListener('DOMContentLoaded', function() {
-            // Даем время на загрузку utils.js
             setTimeout(initAdminPanel, 100);
         });
-        
-        // Закрытие модального окна по клику вне фото
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('photo-modal');
-            if (modal && e.target === modal) {
-                closePhotoModal();
-            }
-        });
-        
-        // Закрытие модального окна по Esc
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closePhotoModal();
-            }
-        });
     </script>
+    
+    <!-- FontAwesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </body>
 </html>
