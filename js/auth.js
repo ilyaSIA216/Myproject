@@ -15,37 +15,7 @@ let userProfile = {
 // Функция для показа уведомлений
 function showNotification(message, type = 'info') {
     console.log(`🔔 Уведомление (${type}): ${message}`);
-    
-    // Простая реализация через alert
     alert(message);
-    
-    // Альтернативный вариант с красивыми уведомлениями
-    /*
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        z-index: 9999;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        animation: slideIn 0.3s ease;
-        max-width: 300px;
-        font-size: 14px;
-    `;
-    
-    notification.innerHTML = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 3000);
-    */
 }
 
 // Экспортируем функцию
@@ -55,7 +25,6 @@ window.showNotification = showNotification;
 function startOnboarding() {
     console.log('Начинаем онбординг');
     
-    // Приветствие без использования данных Telegram
     const welcomeText = document.getElementById('welcome-text');
     if (welcomeText) {
         welcomeText.textContent = 'Привет, друг! Добро пожаловать в мир знакомств!';
@@ -286,46 +255,34 @@ function saveCity() {
 
 // ========== ШАГ 5: ОСНОВНОЕ ФОТО ==========
 
-function previewMainPhoto(event) {
-    console.log('Предпросмотр основного фото');
-    const file = event.target.files[0];
-    
-    if (!file) return;
-    
-    // Проверка размера (максимум 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        showNotification('Файл слишком большой (максимум 5MB)', 'error');
-        return;
-    }
-    
-    // Проверка типа файла
-    if (!file.type.startsWith('image/')) {
-        showNotification('Пожалуйста, выберите изображение', 'error');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const preview = document.getElementById('main-photo-preview');
-        if (preview) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        userProfile.mainPhoto = e.target.result;
-        console.log('Основное фото загружено');
-    };
-    reader.readAsDataURL(file);
-}
+// ВАЖНО: Эта функция не используется, т.к. previewMainPhoto уже определен в photo-utils.js
+// Но для совместимости оставляем здесь проверку
 
 function saveMainPhoto() {
     console.log('💾 Сохранение основного фото');
     
-    if (!userProfile.mainPhoto) {
+    // Проверяем обе возможные системы хранения фото
+    const hasPhoto1 = window.currentMainPhoto && window.currentMainPhoto.length > 0;
+    const hasPhoto2 = userProfile.mainPhoto && userProfile.mainPhoto.length > 0;
+    
+    console.log('Проверка фото:', {
+        windowCurrentMainPhoto: hasPhoto1,
+        userProfileMainPhoto: hasPhoto2,
+        currentMainPhotoExists: typeof window.currentMainPhoto !== 'undefined',
+        currentMainPhotoLength: window.currentMainPhoto ? window.currentMainPhoto.length : 0
+    });
+    
+    if (!hasPhoto1 && !hasPhoto2) {
         showNotification('⚠️ Пожалуйста, загрузите ваше фото');
         return;
     }
     
-    console.log('Основное фото сохранено');
+    // Синхронизируем данные
+    if (window.currentMainPhoto && !userProfile.mainPhoto) {
+        userProfile.mainPhoto = window.currentMainPhoto;
+    }
+    
+    console.log('Основное фото сохранено:', userProfile.mainPhoto ? 'есть' : 'нет');
     
     // Переходим к селфи
     goToStep(6);
@@ -333,50 +290,46 @@ function saveMainPhoto() {
 
 // ========== ШАГ 6: СЕЛФИ ДЛЯ ПОДТВЕРЖДЕНИЯ ==========
 
-function previewSelfie(event) {
-    console.log('Предпросмотр селфи');
-    const file = event.target.files[0];
-    
-    if (!file) return;
-    
-    // Проверка размера (максимум 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        showNotification('Файл слишком большой (максимум 5MB)', 'error');
-        return;
-    }
-    
-    // Проверка типа файла
-    if (!file.type.startsWith('image/')) {
-        showNotification('Пожалуйста, выберите изображение', 'error');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const preview = document.getElementById('selfie-preview');
-        if (preview) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        userProfile.selfie = e.target.result;
-        console.log('Селфи загружено');
-    };
-    reader.readAsDataURL(file);
-}
-
 function saveSelfie() {
     console.log('=== Начинаем сохранение и отправку анкеты ===');
-    console.log('Данные пользователя перед отправкой:', userProfile);
     
-    if (!userProfile.selfie) {
+    // Проверяем обе возможные системы хранения фото
+    const hasSelfie1 = window.currentSelfie && window.currentSelfie.length > 0;
+    const hasSelfie2 = userProfile.selfie && userProfile.selfie.length > 0;
+    const hasMainPhoto1 = window.currentMainPhoto && window.currentMainPhoto.length > 0;
+    const hasMainPhoto2 = userProfile.mainPhoto && userProfile.mainPhoto.length > 0;
+    
+    console.log('Проверка перед отправкой:', {
+        hasSelfieWindow: hasSelfie1,
+        hasSelfieProfile: hasSelfie2,
+        hasMainPhotoWindow: hasMainPhoto1,
+        hasMainPhotoProfile: hasMainPhoto2
+    });
+    
+    // Проверяем селфи
+    if (!hasSelfie1 && !hasSelfie2) {
         showNotification('⚠️ Пожалуйста, загрузите селфи для подтверждения');
         return;
     }
     
-    // Проверяем все обязательные поля
-    if (!userProfile.name || !userProfile.age || !userProfile.city || !userProfile.gender || !userProfile.mainPhoto) {
+    // Проверяем основное фото
+    if (!hasMainPhoto1 && !hasMainPhoto2) {
+        showNotification('⚠️ Пожалуйста, загрузите основное фото');
+        return;
+    }
+    
+    // Проверяем остальные обязательные поля
+    if (!userProfile.name || !userProfile.age || !userProfile.city || !userProfile.gender) {
         showNotification('Пожалуйста, заполните все обязательные поля', 'error');
         return;
+    }
+    
+    // Синхронизируем данные перед отправкой
+    if (window.currentMainPhoto && !userProfile.mainPhoto) {
+        userProfile.mainPhoto = window.currentMainPhoto;
+    }
+    if (window.currentSelfie && !userProfile.selfie) {
+        userProfile.selfie = window.currentSelfie;
     }
     
     // Блокируем кнопку
@@ -394,7 +347,15 @@ function saveSelfie() {
         userProfile.bio = "Пользователь SiaMatch";
         
         console.log('ID пользователя создан:', userId);
-        console.log('Данные для сохранения:', userProfile);
+        console.log('Данные для отправки:', {
+            id: userProfile.id,
+            name: userProfile.name,
+            age: userProfile.age,
+            city: userProfile.city,
+            gender: userProfile.gender,
+            hasMainPhoto: !!userProfile.mainPhoto,
+            hasSelfie: !!userProfile.selfie
+        });
         
         // Для мобильных устройств
         if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -425,7 +386,6 @@ function saveSelfie() {
             }
         } else {
             // Для десктопа сохраняем все
-            saveUser(userProfile);
             localStorage.setItem('sia_current_user_id', userProfile.id.toString());
         }
         
@@ -450,9 +410,12 @@ function saveSelfie() {
             // Проверяем, что заявка действительно сохранилась
             const pendingUsers = JSON.parse(localStorage.getItem('sia_pending_users') || '[]');
             console.log('Всего заявок в системе после отправки:', pendingUsers.length);
-            console.log('Последняя заявка:', pendingUsers[pendingUsers.length - 1]);
             
-            showNotification('✅ Анкета успешно отправлена на модерацию!', 'success');
+            if (pendingUsers.length > 0) {
+                console.log('Последняя заявка:', pendingUsers[pendingUsers.length - 1]);
+            }
+            
+            showNotification('✅ Анкета успешно отправлена на модерацию!');
             
             // Переходим к шагу модерации
             goToStep(7);
