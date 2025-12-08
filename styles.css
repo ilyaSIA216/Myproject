@@ -188,7 +188,7 @@ textarea {
 
 .candidate-photo-wrapper {
   width: 100%;
-  height: 180px;  /* Компактное фото */
+  height: 210px;
   overflow: hidden;
   background: #d1fae5;
   display: flex;
@@ -379,20 +379,24 @@ textarea {
   }
 }
 
-/* ✅ ФИНАЛЬНЫЕ РАЗМЕРЫ */
+/* ✅ ФИНАЛЬНЫЕ РАЗМЕРЫ (ЕДИНСТВЕННЫЙ БЛОК) */
 #screen-chats {
   min-height: 400px;
-  padding: 40px 10px;
-  max-width: 450px;
+  padding: 40px 8px;         /* ШИРЕ чаты */
+  max-width: 460px;          /* МАКСИМАЛЬНАЯ ширина */
   margin: 0 auto;
 }
 
 #screen-feed {
-  min-height: 450px;
-  padding: 10px;
+  min-height: 420px;
+  padding: 8px;              /* МЕНЬШЕ отступы */
 }
 
 #screen-profile {
   padding: 20px;
   min-height: 450px;
+}
+
+.candidate-photo-wrapper {
+  height: 180px !important;  /* КОРОЧЕ фото */
 }
