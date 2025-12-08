@@ -63,15 +63,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatsList = document.getElementById("chats-list");
   const chatsEmpty = document.getElementById("chats-empty");
 
-  // 🚀 РАДИКАЛЬНЫЙ iOS КНОПКА ФИКС - ПРОВЕРЕННЫЙ ПОРЯДОК
-  if (saveProfileBtn) {
-    saveProfileBtn.style.order = '-1'; // Наверх
-    
-    // Двойной клик для iOS
-    saveProfileBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
+  // 🚀 TELEGRAM MAINBUTTON для iOS сохранения
+  if (tg && saveProfileBtn) {
+    tg.MainButton.setText('🍀 Сохранить профиль');
+    tg.MainButton.onClick(() => {
       saveProfileBtn.click();
-    }, { passive: false });
+      tg.MainButton.hide();
+    });
+    tg.MainButton.show();
   }
   
   // Паддинг для карточки онбординга
