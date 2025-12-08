@@ -29,9 +29,11 @@ body {
   max-width: 420px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 24px;
-  padding: 20px 18px 100px;
+  padding: 20px 18px 120px 18px;  /* ← УВЕЛИЧИТЬ padding-bottom */
   box-shadow: 0 10px 25px rgba(22, 163, 74, 0.18);
   backdrop-filter: blur(8px);
+  min-height: calc(100vh - 144px);  /* ← ДОБАВИТЬ */
+  margin-bottom: 80px;              /* ← ДОБАВИТЬ */
 }
 
 .logo {
@@ -325,7 +327,7 @@ textarea {
   justify-content: space-around;
   align-items: center;
   padding: 0 8px;
-  z-index: 100;
+  z-index: 1000;  /* ← ВЫШЕ ВСЕГО */
 }
 
 .tab-btn {
@@ -399,4 +401,25 @@ textarea {
   .screen {
     padding: 10px;
   }
+}
+
+/* Контент не перекрывает табы */
+#app-root {
+  padding-bottom: 80px;  /* ← МЕСТО ПОД ТАБЫ */
+}
+
+/* Фикс высоты для экранов */
+#screen-chats {
+  min-height: 400px;
+  padding: 40px 20px;
+}
+
+#screen-feed {
+  min-height: 500px;
+  padding: 20px;
+}
+
+#screen-profile {
+  padding: 20px;
+  min-height: 450px;
 }
