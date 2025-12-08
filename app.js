@@ -219,25 +219,23 @@ btnDislike.addEventListener("click", () => {
 
 // === ТАБЫ ===
 function setActiveTab(tab) {
+  // ✅ СКРЫТЬ ВСЕ ЭКРАНЫ
   screenChats.classList.add("hidden");
   screenFeed.classList.add("hidden");
-  screenProfile.classList.add("hidden");
+  screenProfile.classList.add("hidden");  // ← ЭТО ОТСУТСТВОВАЛО!
   
-  // Показать логотип только на онбординге
-  const logo = document.querySelector('.logo');
-  const appName = document.querySelector('.app-name');
-  const h1 = document.querySelector('h1');
-  const username = document.getElementById('username');
-  
-  logo.style.display = 'none';
-  appName.style.display = 'none';
-  h1.style.display = 'none';
-  username.style.display = 'none';
+  // ✅ СКРЫТЬ ХЕДЕР
+  document.querySelector('.logo').style.display = 'none';
+  document.querySelector('.app-name').style.display = 'none';
+  document.querySelector('h1').style.display = 'none';
+  document.getElementById('username').style.display = 'none';
 
+  // ✅ АКТИВНАЯ КНОПКА
   tabButtons.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
 
+  // ✅ ПОКАЗАТЬ НУЖНЫЙ ЭКРАН
   if (tab === "chats") {
     screenChats.classList.remove("hidden");
   } else if (tab === "feed") {
