@@ -63,6 +63,23 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatsList = document.getElementById("chats-list");
   const chatsEmpty = document.getElementById("chats-empty");
 
+  // 🚀 РАДИКАЛЬНЫЙ iOS КНОПКА ФИКС - ПРОВЕРЕННЫЙ ПОРЯДОК
+  if (saveProfileBtn) {
+    saveProfileBtn.style.order = '-1'; // Наверх
+    
+    // Двойной клик для iOS
+    saveProfileBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      saveProfileBtn.click();
+    }, { passive: false });
+  }
+  
+  // Паддинг для карточки онбординга
+  const onboardingCard = document.querySelector('#onboarding-screen #card');
+  if (onboardingCard) {
+    onboardingCard.style.paddingBottom = '120px';
+  }
+
   // Telegram user - ФИКС 1
   let user = tg?.initDataUnsafe?.user || null;
   if (user && usernameElem) {
@@ -365,24 +382,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') document.activeElement?.blur();
-  });
-
-  // УМНАЯ КНОПКА — скрывается при вводе
-  const primaryBtn = document.querySelector('.primary');
-  ['focusin', 'focus'].forEach(event => {
-    document.addEventListener(event, (e) => {
-      if (e.target.closest('input, textarea, select')) {
-        primaryBtn?.classList.add('hide-on-input');
-      }
-    }, true);
-  });
-
-  ['blur', 'click'].forEach(event => {
-    document.addEventListener(event, (e) => {
-      if (!e.target.closest('input, textarea, select')) {
-        primaryBtn?.classList.remove('hide-on-input');
-      }
-    }, true);
   });
 
   // Безопасные addEventListener
