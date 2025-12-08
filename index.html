@@ -3,12 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>SiaMatch - Dating</title>
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
-  />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -16,7 +11,6 @@
     <div id="card">
       <div class="logo">🍀</div>
       <div class="app-name">SiaMatch</div>
-
       <h1>Welcome to SiaMatch</h1>
       <div id="username">Loading user info...</div>
 
@@ -33,7 +27,14 @@
         <div class="field">
           <label for="gender">Пол</label>
           <select id="gender">
-                    <div class="field">
+            <option value="male">Мужской</option>
+            <option value="female">Женский</option>
+            <option value="other">Другое</option>
+          </select>
+        </div>
+
+        <!-- НОВЫЕ ПОЛЯ -->
+        <div class="field">
           <label for="city">Город <span style="color:#ef4444;">*</span></label>
           <select id="city" required>
             <option value="">Выберите город</option>
@@ -53,20 +54,9 @@
           <input type="number" id="longitude" step="any" placeholder="37.6176" />
         </div>
 
-            <option value="male">Мужской</option>
-            <option value="female">Женский</option>
-            <option value="other">Другое</option>
-          </select>
-        </div>
-
         <div class="field">
           <label for="bio">О себе</label>
-          <textarea
-            id="bio"
-            rows="3"
-            maxlength="300"
-            placeholder="Коротко о себе и кого хотите встретить 🍀"
-          ></textarea>
+          <textarea id="bio" rows="3" maxlength="300" placeholder="Коротко о себе и кого хотите встретить 🍀"></textarea>
           <div class="hint">Минимум 10 символов, максимум 300</div>
         </div>
 
@@ -76,9 +66,7 @@
       <!-- ЭКРАН: ЧАТЫ -->
       <div id="screen-chats" class="screen hidden">
         <h2 class="screen-title">Чаты 💬</h2>
-        <div id="chats-empty" class="hint">
-          У вас пока нет активных чатов. Лайкните пару анкет, чтобы появились совпадения.
-        </div>
+        <div id="chats-empty" class="hint">У вас пока нет активных чатов.</div>
         <ul id="chats-list"></ul>
       </div>
 
@@ -95,6 +83,7 @@
               <span id="candidate-age"></span>
             </div>
             <div id="candidate-city" class="candidate-city"></div>
+            <div id="candidate-distance"></div>
             <div id="candidate-bio" class="candidate-bio"></div>
           </div>
         </div>
@@ -105,7 +94,7 @@
         <div id="feed-status" class="feed-status"></div>
       </div>
 
-      <!-- ЭКРАН: ПРОФИЛЬ/НАСТРОЙКИ -->
+      <!-- ЭКРАН: ПРОФИЛЬ -->
       <div id="screen-profile" class="screen hidden">
         <h2 class="screen-title">Мой профиль ✏️</h2>
 
@@ -124,18 +113,31 @@
         </div>
 
         <div class="field">
+          <label for="profile-city">Город</label>
+          <select id="profile-city">
+            <option value="Москва">Москва</option>
+            <option value="Санкт-Петербург">Санкт-Петербург</option>
+            <option value="Казань">Казань</option>
+            <option value="Новосибирск">Новосибирск</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="profile-latitude">Широта</label>
+          <input type="number" id="profile-latitude" step="any" placeholder="55.7558" />
+        </div>
+        <div class="field">
+          <label for="profile-longitude">Долгота</label>
+          <input type="number" id="profile-longitude" step="any" placeholder="37.6176" />
+        </div>
+
+        <div class="field">
           <label for="profile-bio">О себе</label>
           <textarea id="profile-bio" rows="3" maxlength="300"></textarea>
         </div>
 
-        <!-- Заготовка под подписку -->
+        <!-- ФИЛЬТРЫ -->
         <div class="field">
-          <label>Подписка</label>
-          <div class="hint">
-            В будущем здесь появится возможность покупать Premium (больше лайков, бусты и т.п.).
-          </div>
-        </div>
-                <div class="field">
           <label>Фильтр по возрасту</label>
           <div class="age-range">
             <input type="number" id="profile-min-age" min="18" max="60" value="18" />
@@ -147,7 +149,6 @@
           <label for="profile-max-distance">Максимум расстояние (км)</label>
           <input type="number" id="profile-max-distance" min="1" max="500" value="50" />
         </div>
-
 
         <button id="updateProfileBtn" class="primary">Сохранить изменения ✏️</button>
       </div>
