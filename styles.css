@@ -113,12 +113,16 @@ textarea {
   margin-top: 2px;
 }
 
-/* Основные кнопки — iPhone ФИКС */
+/* 🚀 .primary iPhone 100% */
 .primary {
-  position: relative !important;
-  z-index: 999 !important;
-  margin: 20px auto !important;
+  position: fixed !important;  /* ← fixed вместо relative */
+  bottom: 100px !important;   /* ← над табами */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 10000 !important;  /* ← МАКСИМУМ */
   width: 90% !important;
+  max-width: 320px !important;
+  
   display: block !important;
   touch-action: manipulation !important;
   -webkit-tap-highlight-color: transparent !important;
@@ -135,8 +139,7 @@ textarea {
 }
 
 .primary:active {
-  position: relative !important;
-  transform: translateY(1px);
+  transform: translateX(-50%) translateY(1px) !important;
   box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
   background: linear-gradient(135deg, #16a34a, #15803d);
 }
@@ -427,4 +430,20 @@ button {
   -webkit-appearance: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* 🚀 iOS VIEWPORT + КЛАВИАТУРА ФИКС */
+body {
+  position: relative !important;
+  overflow-x: hidden !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+}
+
+#card {
+  position: relative !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  padding-bottom: 140px !important;
 }
