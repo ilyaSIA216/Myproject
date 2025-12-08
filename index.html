@@ -131,7 +131,7 @@
       border-radius: 999px;
       cursor: pointer;
       user-select: none;
-      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s.ease;
       margin-top: 18px;
       width: 100%;
       max-width: 260px;
@@ -205,6 +205,25 @@
     const profileForm = document.getElementById("profile-form");
     const mainBtn = document.getElementById("mainButton");
 
+    function loadProfileFromStorage() {
+      try {
+        const raw = localStorage.getItem("siamatch_profile");
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error("Failed to parse profile from storage", e);
+        return null;
+      }
+    }
+
+    function saveProfileToStorage(profile) {
+      try {
+        localStorage.setItem("siamatch_profile", JSON.stringify(profile));
+      } catch (e) {
+        console.error("Failed to save profile", e);
+      }
+    }
+
     if (user) {
       const name = user.first_name || user.username || "друг";
       usernameElem.textContent = `Привет, ${name}!`;
@@ -212,11 +231,21 @@
       usernameElem.textContent = "Информация о пользователе недоступна.";
     }
 
-    mainBtn.onclick = () => {
+    const storedProfile = loadProfileFromStorage();
+    if (storedProfile) {
       profileForm.style.display = "block";
+      document.getElementById("age").value = storedProfile.age || "";
+      document.getElementById("gender").value = storedProfile.gender || "other";
+      document.getElementById("bio").value = storedProfile.bio || "";
       mainBtn.textContent = "Сохранить профиль 🍀";
       mainBtn.onclick = saveProfile;
-    };
+    } else {
+      mainBtn.onclick = () => {
+        profileForm.style.display = "block";
+        mainBtn.textContent = "Сохранить профиль 🍀";
+        mainBtn.onclick = saveProfile;
+      };
+    }
 
     function saveProfile() {
       const ageValue = Number(document.getElementById("age").value);
@@ -243,8 +272,17 @@
       };
 
       console.log("Profile data:", profileData);
-      alert("Профиль сохранён! В следующем шаге добавим поиск и мэтчи 🍀");
+      saveProfileToStorage(profileData);
+
+      // Заглушка под будущий запрос на бэкенд
+      // TODO: заменить на реальный fetch к Node/Postgres серверу
+      // sendProfileToServer(profileData);
+
+      alert("Профиль сохранён! Дальше добавим ленту знакомств и мэтчи 🍀");
     }
-  </script>
-</body>
-</html>
+
+    /*
+    async function sendProfileToServer(profile) {
+      try {
+        const resp = await fetch("https://your-backend-url/api/profile", {
+          method: "POST",
