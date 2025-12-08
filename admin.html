@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>SiaMatch Admin</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+  />
+  <style>
+    :root {
+      --bg: #020617;
+      --card-bg: #0f172a;
+      --accent: #22c55e;
+      --accent-dark: #16a34a;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #ef4444;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 60%, #000 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    #admin-root {
+      width: 100%;
+      max-width: 640px;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 18px;
+      padding: 20px 18px 22px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .logo {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .field {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5);
+    }
+    .primary {
+      width: 100%;
+      border: none;
+      margin-top: 6px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+    .primary:active {
+      transform: translateY(1px);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+    .error {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--danger);
+      min-height: 16px;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .hidden {
+      display: none;
+    }
+
+    /* Админ-панель */
+
+    #admin-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 8px;
+    }
+    #admin-panel-header .left {
+      display: flex;
+      flex-direction: column;
+    }
+    #admin-panel-header h2 {
+      font-size: 18px;
+      margin: 0 0 2px;
+    }
+    #admin-panel-header span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    #logout-btn {
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    #search-input {
+      flex: 1;
+    }
+    #search-btn {
+      white-space: nowrap;
+    }
+    #results-info {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    #users-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .user-item {
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid #1f2937;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      background: #020617;
+      font-size: 13px;
+    }
+    .user-main {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .user-name {
+      font-weight: 500;
+    }
+    .user-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .user-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .link-btn {
+      border: none;
+      background: none;
+      color: var(--accent);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .block-btn {
+      border: none;
+      background: none;
+      color: var(--danger);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="admin-root">
+    <!-- Экран логина -->
+    <div id="login-card" class="card">
+      <div class="logo">🍀</div>
+      <div class="title">SiaMatch Admin</div>
+      <div class="subtitle">Доступ только для администратора</div>
+
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input type="password" id="password" autocomplete="off" />
+        <div class="hint">Введите админ‑пароль, чтобы открыть панель управления.</div>
+      </div>
+
+      <button id="login-btn" class="primary">Войти</button>
+      <div id="login-error" class="error"></div>
+    </div>
+
+    <!-- Экран админ‑панели -->
+    <div id="admin-card" class="card hidden">
+      <div id="admin-panel-header">
+        <div class="left">
+          <h2>Панель администратора</h2>
+          <span>Поиск и модерация анкет</span>
+        </div>
+        <button id="logout-btn">Выйти</button>
+      </div>
+
+      <div id="search-row">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Поиск по @username, ID, имени..."
+        />
+        <button id="search-btn" class="primary">Поиск</button>
+      </div>
+
+      <div id="results-info">Пока ничего не искали.</div>
+      <ul id="users-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    // Простой "хардкод" пароля на фронте (временно, до реального бэкенда)
+    const ADMIN_PASSWORD = "s21i06a95";
+
+    const loginCard = document.getElementById("login-card");
+    const adminCard = document.getElementById("admin-card");
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const passwordInput = document.getElementById("password");
+    const loginError = document.getElementById("login-error");
+
+    const searchInput = document.getElementById("search-input");
+    const searchBtn = document.getElementById("search-btn");
+    const resultsInfo = document.getElementById("results-info");
+    const usersList = document.getElementById("users-list");
+
+    // Псевдо‑данные пользователей для демонстрации (потом заменишь на запросы к API)
+    const demoUsers = [
+      {
+        id: 1,
+        name: "Алина",
+        age: 24,
+        gender: "female",
+        username: "alina_example",
+        city: "Москва",
+        blocked: false
+      },
+      {
+        id: 2,
+        name: "Дмитрий",
+        age: 28,
+        gender: "male",
+        username: "dmitry_228",
+        city: "Санкт-Петербург",
+        blocked: false
+      }
+    ];
+
+    function renderUsers(list, query) {
+      usersList.innerHTML = "";
+      if (!list.length) {
+        resultsInfo.textContent = query
+          ? `По запросу «${query}» ничего не найдено.`
+          : "Результатов нет.";
+        return;
+      }
+      resultsInfo.textContent = `Найдено анкет: ${list.length}`;
+      list.forEach((u) => {
+        const li = document.createElement("li");
+        li.className = "user-item";
+
+        const main = document.createElement("div");
+        main.className = "user-main";
+        main.innerHTML = `
+          <span class="user-name">${u.name}, ${u.age}</span>
+          <span class="user-meta">@${u.username || "—"} · ID: ${u.id} · ${u.city}</span>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "user-actions";
+
+        const openBtn = document.createElement("button");
+        openBtn.className = "link-btn";
+        openBtn.textContent = "Открыть в Telegram";
+        openBtn.onclick = () => {
+          if (u.username) {
+            window.open("https://t.me/" + u.username, "_blank");
+          } else {
+            alert("У пользователя нет username.");
+          }
+        };
+
+        const blockBtn = document.createElement("button");
+        blockBtn.className = "block-btn";
+        blockBtn.textContent = u.blocked ? "Разблокировать" : "Заблокировать";
+        blockBtn.onclick = () => {
+          u.blocked = !u.blocked;
+          blockBtn.textContent = u.blocked ? "Разблокировать" : "Заблокировать";
+          alert(
+            u.blocked
+              ? "Анкета заблокирована (демо, без бэкенда)."
+              : "Анкета разблокирована (демо)."
+          );
+        };
+
+        actions.appendChild(openBtn);
+        actions.appendChild(blockBtn);
+
+        li.appendChild(main);
+        li.appendChild(actions);
+        usersList.appendChild(li);
+      });
+    }
+
+    function doSearch() {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) {
+        renderUsers([], "");
+        return;
+      }
+      const filtered = demoUsers.filter((u) => {
+        return (
+          String(u.id) === q ||
+          (u.username && u.username.toLowerCase().includes(q)) ||
+          (u.name && u.name.toLowerCase().includes(q))
+        );
+      });
+      renderUsers(filtered, q);
+    }
+
+    // Логин
+    loginBtn.onclick = () => {
+      const value = passwordInput.value;
+      if (value === ADMIN_PASSWORD) {
+        loginError.textContent = "";
+        loginCard.classList.add("hidden");
+        adminCard.classList.remove("hidden");
+        // опционально запомним, что админ залогинен (простая сессия в localStorage)
+        localStorage.setItem("siamatch_admin_logged_in", "1");
+      } else {
+        loginError.textContent = "Неверный пароль.";
+      }
+    };
+
+    passwordInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loginBtn.click();
+    });
+
+    // Логаут
+    logoutBtn.onclick = () => {
+      localStorage.removeItem("siamatch_admin_logged_in");
+      adminCard.classList.add("hidden");
+      loginCard.classList.remove("hidden");
+      passwordInput.value = "";
+    };
+
+    // Поиск
+    searchBtn.onclick = doSearch;
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doSearch();
+    });
+
+    // Авто‑логин по localStorage (примитивно)
+    (function init() {
+      if (localStorage.getItem("siamatch_admin_logged_in") === "1") {
+        loginCard.classList.add("hidden");
+        adminCard.classList.remove("hidden");
+      }
+    })();
+  </script>
+</body>
+</html>
