@@ -31,12 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // DOM элементы
   const usernameElem = document.getElementById("username");
   const onboardingScreen = document.getElementById("onboarding-screen");
-  const saveProfileBtn = document.getElementById("saveProfileBtn");
   const tabBar = document.getElementById("tab-bar");
   const tabButtons = document.querySelectorAll(".tab-btn");
-  const screenChats = document.getElementById("screen-chats");
-  const screenFeed = document.getElementById("screen-feed");
-  const screenProfile = document.getElementById("screen-profile");
 
   // Лента
   const candidatePhoto = document.getElementById("candidate-photo");
@@ -63,24 +59,58 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatsList = document.getElementById("chats-list");
   const chatsEmpty = document.getElementById("chats-empty");
 
-  // 🚀 MainButton ДИНАМИЧЕСКИЙ ПЕРЕКЛЮЧАТЕЛЬ
+  // 🚀 MAINBUTTON СОХРАНЯЕТ ПРОФИЛЬ НАПРЯМУЮ
   function updateMainButton() {
     if (tg) {
       tg.MainButton.hide();
       
-      // Онбординг активен?
-      const isOnboardingVisible = !onboardingScreen.classList.contains('hidden') && 
-                                  onboardingScreen.style.display !== 'none';
-      
-      if (isOnboardingVisible) {
+      if (!onboardingScreen.classList.contains('hidden') && 
+          onboardingScreen.style.display !== 'none') {
+        
         tg.MainButton.setText('🍀 Сохранить профиль');
         tg.MainButton.onClick(() => {
-          saveProfileBtn.click();
+          // ✅ ЛОГИКА СОХРАНЕНИЯ НАПРЯМУЮ
+          const ageValue = Number(document.getElementById("age").value);
+          const gender = document.getElementById("gender").value;
+          const city = document.getElementById("city").value;
+          const bio = document.getElementById("bio").value.trim();
+
+          if (!ageValue || ageValue < 18 || ageValue > 99) return alert("Возраст 18-99");
+          if (!gender) return alert("Выберите пол");
+          if (!city) return alert("Выберите город");
+          if (bio.length < 10) return alert("О себе минимум 10 символов");
+
+          profileData = {
+            tg_id: user?.id || 1,
+            first_name: user?.first_name || "Тестовый",
+            username: user?.username || "user",
+            age: ageValue, gender, city, bio,
+            min_age_filter: 18, max_age_filter: 35, max_distance_km: 50,
+            use_geolocation: false
+          };
+
+          saveProfile(profileData);
+          
+          // Заполняем профиль
+          if (profileAge) profileAge.value = ageValue;
+          if (profileGender) profileGender.value = gender;
+          if (profileCity) profileCity.value = city;
+          if (profileBio) profileBio.value = bio;
+          if (profileMinAge) profileMinAge.value = 18;
+          if (profileMaxAge) profileMaxAge.value = 35;
+          if (profileMaxDistance) profileMaxDistance.value = 50;
+
+          onboardingScreen.style.display = "none";
+          tabBar.classList.remove("hidden");
+          setActiveTab("feed");
+          tg.MainButton.hide();
+          alert("✅ Профиль сохранён! Добро пожаловать 🍀");
         });
         tg.MainButton.show();
+        
       } else {
         tg.MainButton.setText('🍀 SiaMatch');
-        tg.MainButton.onClick(null); // Очищаем предыдущий обработчик
+        tg.MainButton.onClick(null);
         tg.MainButton.show();
       }
     }
@@ -283,47 +313,6 @@ document.addEventListener('DOMContentLoaded', function() {
   tabButtons.forEach((btn, i) => {
     console.log(`Кнопка ${i}:`, btn.dataset.tab);
     btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
-  });
-
-  // === ОНБОРДИНГ ===
-  saveProfileBtn.addEventListener("click", () => {
-    const ageValue = Number(document.getElementById("age").value);
-    const gender = document.getElementById("gender").value;
-    const city = document.getElementById("city").value;
-    const bio = document.getElementById("bio").value.trim();
-
-    if (!ageValue || ageValue < 18 || ageValue > 99) return alert("Возраст 18-99");
-    if (!gender) return alert("Выберите пол");
-    if (!city) return alert("Выберите город");
-    if (bio.length < 10) return alert("О себе минимум 10 символов");
-
-    profileData = {
-      tg_id: user ? user.id : null,
-      first_name: user ? user.first_name : null,
-      username: user ? user.username : null,
-      age: ageValue, gender, city, bio,
-      min_age_filter: 18, max_age_filter: 35, max_distance_km: 50,
-      use_geolocation: false
-    };
-
-    saveProfile(profileData);
-
-    // Заполняем профиль
-    profileAge.value = ageValue;
-    profileGender.value = gender;
-    profileCity.value = city;
-    profileBio.value = bio;
-    profileMinAge.value = 18;
-    profileMaxAge.value = 35;
-    profileMaxDistance.value = 50;
-
-    onboardingScreen.style.display = "none";
-    tabBar.classList.remove("hidden");
-    setActiveTab("feed");
-    alert("Профиль сохранён! Добро пожаловать 🍀");
-    
-    // Переключить на SiaMatch после сохранения
-    updateMainButton();
   });
 
   // === РЕДАКТИРОВАНИЕ ПРОФИЛЯ ===
