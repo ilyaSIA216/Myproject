@@ -383,27 +383,30 @@ textarea {
   height: 180px !important;
 }
 
-/* 🚀 СИЛОВОЕ РАСШИРЕНИЕ ЭКРАНОВ */
-#screen-chats {
+/* 🚀 ТЕЛЕГРАМ FULLSCREEN + СИЛОВОЙ ФИКС */
+body { padding: 0 !important; margin: 0 !important; }
+
+#screen-chats:not(.hidden) {
   width: 100vw !important;
-  position: relative !important;
-  left: calc(-50vw + 50%) !important;
   max-width: 900px !important;
-  padding: 40px 16px !important;
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  padding: 40px 20px !important;
   margin: 0 !important;
-  box-sizing: border-box !important;
   min-height: 400px;
+  box-sizing: border-box !important;
 }
 
-#screen-feed {
+#screen-feed:not(.hidden) {
   max-width: 396px !important;
   width: 396px !important;
   margin: 0 auto !important;
-  padding: 8px !important;
+  padding: 20px 8px !important;
   min-height: 420px;
 }
 
-#screen-profile {
+#screen-profile:not(.hidden) {
   padding: 20px !important;
   min-height: 450px !important;
 }
@@ -414,8 +417,4 @@ textarea {
   margin: 0 auto 16px !important;
 }
 
-/* Фикс body flex для чатов */
-body:has(#screen-chats) {
-  padding: 0 !important;
-  justify-content: flex-start !important;
-}
+#card { max-width: none !important; }
