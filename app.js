@@ -219,6 +219,13 @@ btnDislike.addEventListener("click", () => {
 
 // === ТАБЫ ===
 function setActiveTab(tab) {
+  console.log("setActiveTab called with:", tab);  // ← ДИАГНОСТИКА
+  
+  // Силовое скрытие
+  document.querySelectorAll('.screen').forEach(screen => {
+    screen.style.display = 'none';
+  });
+  
   // ✅ СКРЫТЬ ВСЕ ЭКРАНЫ
   screenChats.classList.add("hidden");
   screenFeed.classList.add("hidden");
@@ -238,11 +245,14 @@ function setActiveTab(tab) {
   // ✅ ПОКАЗАТЬ НУЖНЫЙ ЭКРАН
   if (tab === "chats") {
     screenChats.classList.remove("hidden");
+    screenChats.style.display = 'block';
   } else if (tab === "feed") {
     screenFeed.classList.remove("hidden");
+    screenFeed.style.display = 'block';
     showCurrentCandidate();
   } else if (tab === "profile") {
     screenProfile.classList.remove("hidden");
+    screenProfile.style.display = 'block';
   }
 }
 
