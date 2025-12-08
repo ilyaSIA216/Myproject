@@ -5,7 +5,15 @@ try {
   if (window.Telegram && Telegram.WebApp) {
     tg = Telegram.WebApp;
     tg.ready();
-    tg.expand();
+    
+    // Telegram WebApp ПОЛНЫЙ ЭКРАН
+    if (tg) {
+      tg.expand();                    // ← Полноэкранный режим
+      tg.requestViewport();          // ← Telegram viewport
+      document.body.style.padding = '0';
+      document.body.style.margin = '0';
+      document.body.style.alignItems = 'stretch';  // ← КРИТИЧНО!
+    }
     
     // Адаптация под Telegram
     if (tg) {
