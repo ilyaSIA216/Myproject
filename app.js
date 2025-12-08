@@ -367,6 +367,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Escape') document.activeElement?.blur();
   });
 
+  // УМНАЯ КНОПКА — скрывается при вводе
+  const primaryBtn = document.querySelector('.primary');
+  ['focusin', 'focus'].forEach(event => {
+    document.addEventListener(event, (e) => {
+      if (e.target.closest('input, textarea, select')) {
+        primaryBtn?.classList.add('hide-on-input');
+      }
+    }, true);
+  });
+
+  ['blur', 'click'].forEach(event => {
+    document.addEventListener(event, (e) => {
+      if (!e.target.closest('input, textarea, select')) {
+        primaryBtn?.classList.remove('hide-on-input');
+      }
+    }, true);
+  });
+
   // Безопасные addEventListener
   const safeAddEvent = (el, event, handler) => {
     if (el) el.addEventListener(event, handler);
