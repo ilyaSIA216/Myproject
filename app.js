@@ -6,6 +6,14 @@ try {
     tg = Telegram.WebApp;
     tg.ready();
     tg.expand();
+    
+    // Адаптация под Telegram
+    if (tg) {
+      tg.MainButton.setText('🍀 SiaMatch').show();
+      window.addEventListener('resize', () => {
+        document.body.style.height = window.innerHeight + 'px';
+      });
+    }
   }
 } catch (e) {
   console.error("Telegram WebApp init error:", e);
