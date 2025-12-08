@@ -62,28 +62,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatsList = document.getElementById("chats-list");
   const chatsEmpty = document.getElementById("chats-empty");
 
-  // Telegram user
-  let user = null;
-  try {
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      user = tg.initDataUnsafe.user;
-    }
-  } catch (e) {
-    console.error("Cannot read initDataUnsafe.user:", e);
-  }
-
-  if (user) {
+  // Telegram user - ФИКС 1
+  let user = tg?.initDataUnsafe?.user || null;
+  if (user && usernameElem) {
     const name = user.first_name || user.username || "друг";
     usernameElem.textContent = `Привет, ${name}!`;
-    
-    // Telegram фото автоматически
-    if (user?.photo_url) {
-      profileData = loadProfile() || {};  // ← loadProfile() вместо null
-      profileData.telegram_photo_url = user.photo_url;
-      saveProfile(profileData);
-    }
   } else {
-    usernameElem.textContent = "Информация о пользователе недоступна.";
+    usernameElem.textContent = "Привет, друг! 👋";
+    user = { id: 1, first_name: "Тестовый", username: "user" }; // ДЕМО
+  }
+
+  // Telegram фото автоматически
+  if (user?.photo_url) {
+    profileData = loadProfile() || {};  // ← loadProfile() вместо null
+    profileData.telegram_photo_url = user.photo_url;
+    saveProfile(profileData);
   }
 
   // === localStorage ===
@@ -119,29 +112,16 @@ document.addEventListener('DOMContentLoaded', function() {
   let userLocation = null;
   let profileData = null;
 
-  // === ФИЛЬТРАЦИЯ КАНДИДАТОВ ===
+  // === ФИЛЬТРАЦИЯ КАНДИДАТОВ - ФИКС 3 ===
   function getFilteredCandidates() {
-    if (!profileData) return [];
-    
-    const oppositeGender = profileData.gender === 'male' ? 'female' : 'male';
-    let filtered = candidates.filter(c => 
-      c.gender === oppositeGender &&
-      c.age >= profileData.min_age_filter &&
-      c.age <= profileData.max_age_filter &&
-      !likedIds.includes(c.id)
-    );
-
-    // ГЕОЛОКАЦИЯ ВКЛЮЧЕНА
-    if (profileData.use_geolocation && userLocation && profileData.max_distance_km) {
-      filtered = filtered.filter(c => {
-        if (!c.latitude || !c.longitude) return false;
-        const dist = calculateDistance(userLocation.lat, userLocation.lon, c.latitude, c.longitude);
-        return dist <= profileData.max_distance_km;
-      });
-    } else {
-      filtered = filtered.filter(c => c.city === profileData.city);
+    if (!profileData) {
+      console.log("❌ profileData пустой!");
+      return []; 
     }
     
+    // ДЕМО: всегда показывать всех для теста
+    let filtered = candidates.filter(c => !likedIds.includes(c.id));
+    console.log("📊 Найдено кандидатов:", filtered.length);
     return filtered;
   }
 
@@ -196,7 +176,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const c = filtered[currentIndex];
-    candidatePhoto.src = c.custom_photo_url || c.telegram_photo_url || 'default-avatar.png';
+    // ФИКС 2 - дефолт фото
+    candidatePhoto.src = c.photo || 'https://via.placeholder.com/300x400/22c55e/f0fdf4?text=🍀';
     candidateName.textContent = c.name;
     candidateAge.textContent = c.age;
     candidateCity.textContent = c.city;
