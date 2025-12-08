@@ -113,28 +113,29 @@ textarea {
   margin-top: 2px;
 }
 
-/* 🚀 УМНАЯ КНОПКА iOS — скрывается при вводе */
+/* 🚀 РАДИКАЛЬНЫЙ iOS ФИКС — кнопка ВНУТРИ формы */
 .primary {
-  position: fixed !important;
-  bottom: 100px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 10000 !important;
-  width: 90% !important;
-  max-width: 320px !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+  position: relative !important;  /* НЕ fixed! */
+  margin: 20px auto 40px !important;  /* Внутри #card */
+  width: 95% !important;
+  z-index: 1 !important;  /* Низкий z-index */
   
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #ffffff;
   border: none;
-  padding: 13px 32px;
+  padding: 15px 32px;
   font-size: 17px;
   border-radius: 999px;
   cursor: pointer;
   touch-action: manipulation !important;
   -webkit-tap-highlight-color: transparent !important;
-  transition: all 0.2s ease !important;
+  display: block !important;
+  font-weight: 600 !important;
+}
+
+.primary:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
 }
 
 /* ✅ КНОПКА СКРЫВАЕТСЯ при вводе! */
@@ -142,12 +143,6 @@ textarea {
   opacity: 0 !important;
   visibility: hidden !important;
   transform: translateX(-50%) translateY(-20px) !important;
-}
-
-.primary:active {
-  transform: translateX(-50%) translateY(1px) !important;
-  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
-  background: linear-gradient(135deg, #16a34a, #15803d);
 }
 
 /* Кнопка основная (старый стиль для совместимости) */
@@ -452,4 +447,8 @@ body {
   max-height: none !important;
   overflow-y: auto !important;
   padding-bottom: 140px !important;
+}
+
+#onboarding-screen #card {
+  padding-bottom: 160px !important;
 }
