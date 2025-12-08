@@ -1,6 +1,5 @@
-// ===== SiaMatch app.js: онбординг + 3 вкладки =====
+// ===== SiaMatch app.js: онбординг + фильтры + 3 вкладки =====
 
-// Аккуратно инициализируем Telegram WebApp
 let tg = null;
 try {
   if (window.Telegram && Telegram.WebApp) {
@@ -12,14 +11,10 @@ try {
   console.error("Telegram WebApp init error:", e);
 }
 
-// DOM
+// DOM элементы
 const usernameElem = document.getElementById("username");
-
-// Onboarding
 const onboardingScreen = document.getElementById("onboarding-screen");
 const saveProfileBtn = document.getElementById("saveProfileBtn");
-
-// Табы
 const tabBar = document.getElementById("tab-bar");
 const tabButtons = document.querySelectorAll(".tab-btn");
 const screenChats = document.getElementById("screen-chats");
@@ -31,22 +26,29 @@ const candidatePhoto = document.getElementById("candidate-photo");
 const candidateName = document.getElementById("candidate-name");
 const candidateAge = document.getElementById("candidate-age");
 const candidateCity = document.getElementById("candidate-city");
+const candidateDistance = document.getElementById("candidate-distance");
 const candidateBio = document.getElementById("candidate-bio");
 const btnLike = document.getElementById("btn-like");
 const btnDislike = document.getElementById("btn-dislike");
 const feedStatus = document.getElementById("feed-status");
 
-// Профиль/редактирование
+// Профиль
 const profileAge = document.getElementById("profile-age");
 const profileGender = document.getElementById("profile-gender");
+const profileCity = document.getElementById("profile-city");
+const profileLatitude = document.getElementById("profile-latitude");
+const profileLongitude = document.getElementById("profile-longitude");
 const profileBio = document.getElementById("profile-bio");
+const profileMinAge = document.getElementById("profile-min-age");
+const profileMaxAge = document.getElementById("profile-max-age");
+const profileMaxDistance = document.getElementById("profile-max-distance");
 const updateProfileBtn = document.getElementById("updateProfileBtn");
 
-// Чаты (заглушка)
+// Чаты
 const chatsList = document.getElementById("chats-list");
 const chatsEmpty = document.getElementById("chats-empty");
 
-// Пользователь Telegram
+// Telegram user
 let user = null;
 try {
   if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -63,8 +65,7 @@ if (user) {
   usernameElem.textContent = "Информация о пользователе недоступна.";
 }
 
-// === Работа с localStorage ===
-
+// === localStorage ===
 function loadProfile() {
   try {
     const raw = localStorage.getItem("siamatch_profile");
@@ -84,64 +85,99 @@ function saveProfile(obj) {
   }
 }
 
-// === Мок-данные кандидатов ===
-
+// === Демо-данные с городами ===
 const candidates = [
   {
-    id: 1,
-    name: "Алина",
-    age: 24,
-    city: "Москва",
-    bio: "Люблю путешествия, кофе и долгие разговоры.",
-    photo:
-      "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&w=800"
+    id: 1, name: "Алина", age: 24, gender: "female", city: "Москва",
+    latitude: 55.7558, longitude: 37.6176,
+    bio: "Люблю путешествия, кофе и долгие разговоры. Москва ❤️",
+    photo: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&w=800"
   },
   {
-    id: 2,
-    name: "Дмитрий",
-    age: 28,
-    city: "Санкт-Петербург",
-    bio: "Инженер, обожаю походы и настолки.",
-    photo:
-      "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&w=800"
+    id: 2, name: "Дмитрий", age: 28, gender: "male", city: "Санкт-Петербург",
+    latitude: 59.9343, longitude: 30.3351,
+    bio: "Инженер, обожаю походы и настолки. СПб!",
+    photo: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&w=800"
   },
   {
-    id: 3,
-    name: "Екатерина",
-    age: 26,
-    city: "Казань",
-    bio: "Фотограф, коты и книги — моя слабость.",
-    photo:
-      "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&w=800"
+    id: 3, name: "Екатерина", age: 26, gender: "female", city: "Москва",
+    latitude: 55.7558, longitude: 37.6176,
+    bio: "Фотограф, коты и книги — моя слабость. Ищу интересного собеседника.",
+    photo: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&w=800"
+  },
+  {
+    id: 4, name: "Алексей", age: 30, gender: "male", city: "Казань",
+    latitude: 55.8304, longitude: 49.0661,
+    bio: "Спорт, музыка, путешествия. Казань.",
+    photo: "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&w=800"
   }
 ];
 
 let currentIndex = 0;
-const likedIds = [];
+let likedIds = [];
+let profileData = null;
 
-// === Лента ===
+// === ФИЛЬТРАЦИЯ КАНДИДАТОВ ===
+function getFilteredCandidates() {
+  if (!profileData) return [];
+  
+  const oppositeGender = profileData.gender === 'male' ? 'female' : 'male';
+  return candidates.filter(c => 
+    c.gender === oppositeGender &&
+    c.city === profileData.city &&
+    c.age >= profileData.min_age_filter &&
+    c.age <= profileData.max_age_filter &&
+    !likedIds.includes(c.id)
+  );
+}
 
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Радиус Земли в км
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// === ЛЕНТА ===
 function showCurrentCandidate() {
-  if (currentIndex >= candidates.length) {
+  const filtered = getFilteredCandidates();
+  
+  if (currentIndex >= filtered.length) {
     candidatePhoto.src = "";
     candidateName.textContent = "";
     candidateAge.textContent = "";
     candidateCity.textContent = "";
+    candidateDistance.textContent = "";
     candidateBio.textContent = "";
-    feedStatus.textContent =
-      likedIds.length > 0
-        ? `На сегодня всё! Лайков: ${likedIds.length}.`
-        : "На сегодня всё! Новые люди появятся позже.";
+    feedStatus.textContent = filtered.length > 0 
+      ? `На сегодня всё! Лайков: ${likedIds.length}.`
+      : "Нет подходящих анкет по вашим фильтрам. Измените настройки в профиле.";
     btnLike.disabled = true;
     btnDislike.disabled = true;
     return;
   }
 
-  const c = candidates[currentIndex];
+  const c = filtered[currentIndex];
   candidatePhoto.src = c.photo;
   candidateName.textContent = c.name;
   candidateAge.textContent = c.age;
   candidateCity.textContent = c.city;
+  
+  // Расстояние
+  if (profileData.latitude && profileData.longitude && c.latitude && c.longitude) {
+    const dist = calculateDistance(
+      profileData.latitude, profileData.longitude, 
+      c.latitude, c.longitude
+    );
+    candidateDistance.textContent = `${Math.round(dist)} км`;
+  } else {
+    candidateDistance.textContent = "";
+  }
+  
   candidateBio.textContent = c.bio;
   feedStatus.textContent = "";
   btnLike.disabled = false;
@@ -149,135 +185,128 @@ function showCurrentCandidate() {
 }
 
 btnLike.addEventListener("click", () => {
-  if (currentIndex >= candidates.length) return;
-  likedIds.push(candidates[currentIndex].id);
-  currentIndex += 1;
-  showCurrentCandidate();
+  const filtered = getFilteredCandidates();
+  if (currentIndex < filtered.length) {
+    likedIds.push(filtered[currentIndex].id);
+    currentIndex += 1;
+    showCurrentCandidate();
+  }
 });
 
 btnDislike.addEventListener("click", () => {
-  if (currentIndex >= candidates.length) return;
-  currentIndex += 1;
-  showCurrentCandidate();
+  const filtered = getFilteredCandidates();
+  if (currentIndex < filtered.length) {
+    currentIndex += 1;
+    showCurrentCandidate();
+  }
 });
 
-// === Табы ===
-
+// === ТАБЫ ===
 function setActiveTab(tab) {
-  // все экраны скрыть
   screenChats.classList.add("hidden");
   screenFeed.classList.add("hidden");
   screenProfile.classList.add("hidden");
 
-  tabButtons.forEach((btn) => {
-    if (btn.dataset.tab === tab) btn.classList.add("active");
-    else btn.classList.remove("active");
+  tabButtons.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
   });
 
-  if (tab === "chats") {
-    screenChats.classList.remove("hidden");
-  } else if (tab === "feed") {
+  if (tab === "chats") screenChats.classList.remove("hidden");
+  else if (tab === "feed") {
     screenFeed.classList.remove("hidden");
-  } else if (tab === "profile") {
-    screenProfile.classList.remove("hidden");
+    showCurrentCandidate();
   }
+  else if (tab === "profile") screenProfile.classList.remove("hidden");
 }
 
-tabButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const tab = btn.dataset.tab;
-    setActiveTab(tab);
-  });
+tabButtons.forEach(btn => {
+  btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
 });
 
-// === Переход из онбординга в полноценное приложение ===
-
+// === ОНБОРДИНГ ===
 saveProfileBtn.addEventListener("click", () => {
   const ageValue = Number(document.getElementById("age").value);
   const gender = document.getElementById("gender").value;
+  const city = document.getElementById("city").value;
+  const latitude = parseFloat(document.getElementById("latitude").value) || null;
+  const longitude = parseFloat(document.getElementById("longitude").value) || null;
   const bio = document.getElementById("bio").value.trim();
 
-  if (!ageValue || ageValue < 18 || ageValue > 99) {
-    alert("Укажите возраст от 18 до 99 лет");
-    return;
-  }
-  if (bio.length < 10) {
-    alert("Напишите о себе хотя бы 10 символов");
-    return;
-  }
+  if (!ageValue || ageValue < 18 || ageValue > 99) return alert("Возраст 18-99");
+  if (!gender) return alert("Выберите пол");
+  if (!city) return alert("Выберите город");
+  if (bio.length < 10) return alert("О себе минимум 10 символов");
 
-  const profileData = {
+  profileData = {
     tg_id: user ? user.id : null,
     first_name: user ? user.first_name : null,
     username: user ? user.username : null,
-    age: ageValue,
-    gender,
-    bio
+    age: ageValue, gender, city, latitude, longitude, bio,
+    min_age_filter: 18, max_age_filter: 35, max_distance_km: 50
   };
 
   saveProfile(profileData);
 
-  // Заполняем поля в экране редактирования
+  // Заполняем профиль
   profileAge.value = ageValue;
   profileGender.value = gender;
+  profileCity.value = city;
+  if (latitude) profileLatitude.value = latitude;
+  if (longitude) profileLongitude.value = longitude;
   profileBio.value = bio;
+  profileMinAge.value = 18;
+  profileMaxAge.value = 35;
+  profileMaxDistance.value = 50;
 
-  // Скрываем онбординг, показываем таб-бар и стартуем с ленты
   onboardingScreen.style.display = "none";
   tabBar.classList.remove("hidden");
   setActiveTab("feed");
-  showCurrentCandidate();
-
-  alert("Профиль сохранён! Добро пожаловать в SiaMatch 🍀");
+  alert("Профиль сохранён! Добро пожаловать 🍀");
 });
 
-// === Экран «Мой профиль» (редактирование) ===
-
+// === РЕДАКТИРОВАНИЕ ПРОФИЛЯ ===
 updateProfileBtn.addEventListener("click", () => {
-  const ageValue = Number(profileAge.value);
-  const gender = profileGender.value;
-  const bio = profileBio.value.trim();
+  if (!profileData) return alert("Сначала заполните профиль!");
 
-  if (!ageValue || ageValue < 18 || ageValue > 99) {
-    alert("Укажите возраст от 18 до 99 лет");
-    return;
-  }
-  if (bio.length < 10) {
-    alert("Напишите о себе хотя бы 10 символов");
-    return;
-  }
+  profileData.age = Number(profileAge.value);
+  profileData.gender = profileGender.value;
+  profileData.city = profileCity.value;
+  profileData.latitude = parseFloat(profileLatitude.value) || null;
+  profileData.longitude = parseFloat(profileLongitude.value) || null;
+  profileData.bio = profileBio.value.trim();
+  profileData.min_age_filter = Number(profileMinAge.value);
+  profileData.max_age_filter = Number(profileMaxAge.value);
+  profileData.max_distance_km = Number(profileMaxDistance.value);
 
-  const existing = loadProfile() || {};
-  const updated = {
-    ...existing,
-    age: ageValue,
-    gender,
-    bio
-  };
-  saveProfile(updated);
-  alert("Профиль обновлён ✏️");
+  saveProfile(profileData);
+  alert("Профиль обновлён! Фильтры применены ✏️");
 });
 
-// === При старте: если профиль уже есть, сразу показываем табы ===
-
+// === ИНИЦИАЛИЗАЦИЯ ===
 (function initOnStart() {
-  const stored = loadProfile();
-  if (!stored) {
-    // первый запуск — остаёмся на онбординге
-    return;
-  }
+  profileData = loadProfile();
+  if (!profileData) return;
 
-  // заполняем онбординг и экран профиля
-  document.getElementById("age").value = stored.age || "";
-  document.getElementById("gender").value = stored.gender || "other";
-  document.getElementById("bio").value = stored.bio || "";
+  // Заполняем онбординг
+  document.getElementById("age").value = profileData.age || "";
+  document.getElementById("gender").value = profileData.gender || "";
+  document.getElementById("city").value = profileData.city || "";
+  if (profileData.latitude) document.getElementById("latitude").value = profileData.latitude;
+  if (profileData.longitude) document.getElementById("longitude").value = profileData.longitude;
+  document.getElementById("bio").value = profileData.bio || "";
 
-  profileAge.value = stored.age || "";
-  profileGender.value = stored.gender || "other";
-  profileBio.value = stored.bio || "";
+  // Заполняем профиль
+  profileAge.value = profileData.age || "";
+  profileGender.value = profileData.gender || "";
+  profileCity.value = profileData.city || "";
+  if (profileData.latitude) profileLatitude.value = profileData.latitude;
+  if (profileData.longitude) profileLongitude.value = profileData.longitude;
+  profileBio.value = profileData.bio || "";
+  profileMinAge.value = profileData.min_age_filter || 18;
+  profileMaxAge.value = profileData.max_age_filter || 35;
+  profileMaxDistance.value = profileData.max_distance_km || 50;
 
   onboardingScreen.style.display = "none";
   tabBar.classList.remove("hidden");
   setActiveTab("feed");
-  showCurrentCandidate();
 })();
