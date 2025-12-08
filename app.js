@@ -234,39 +234,36 @@ btnDislike.addEventListener("click", () => {
 
 // === ТАБЫ ===
 function setActiveTab(tab) {
-  console.log("setActiveTab called with:", tab);  // ← ДИАГНОСТИКА
+  console.log("setActiveTab called with:", tab);
   
-  // Силовое скрытие
-  document.querySelectorAll('.screen').forEach(screen => {
-    screen.style.display = 'none';
-  });
+  // ✅ 1. УБРАТЬ hidden КЛАССЫ СО ВСЕХ
+  screenChats.classList.remove("hidden");
+  screenFeed.classList.remove("hidden");
+  screenProfile.classList.remove("hidden");
   
-  // ✅ СКРЫТЬ ВСЕ ЭКРАНЫ
-  screenChats.classList.add("hidden");
-  screenFeed.classList.add("hidden");
-  screenProfile.classList.add("hidden");  // ← ЭТО ОТСУТСТВОВАЛО!
+  // ✅ 2. display: none ВСЕМ
+  screenChats.style.display = 'none';
+  screenFeed.style.display = 'none';
+  screenProfile.style.display = 'none';
   
-  // ✅ СКРЫТЬ ХЕДЕР
+  // ✅ 3. СКРЫТЬ ХЕДЕР
   document.querySelector('.logo').style.display = 'none';
   document.querySelector('.app-name').style.display = 'none';
   document.querySelector('h1').style.display = 'none';
   document.getElementById('username').style.display = 'none';
 
-  // ✅ АКТИВНАЯ КНОПКА
+  // ✅ 4. АКТИВНАЯ КНОПКА
   tabButtons.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
 
-  // ✅ ПОКАЗАТЬ НУЖНЫЙ ЭКРАН
+  // ✅ 5. ПОКАЗАТЬ ТОЛЬКО ОДИН
   if (tab === "chats") {
-    screenChats.classList.remove("hidden");
     screenChats.style.display = 'block';
   } else if (tab === "feed") {
-    screenFeed.classList.remove("hidden");
     screenFeed.style.display = 'block';
     showCurrentCandidate();
   } else if (tab === "profile") {
-    screenProfile.classList.remove("hidden");
     screenProfile.style.display = 'block';
   }
 }
