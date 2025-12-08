@@ -113,19 +113,17 @@ textarea {
   margin-top: 2px;
 }
 
-/* 🚀 .primary iPhone 100% */
+/* 🚀 УМНАЯ КНОПКА iOS — скрывается при вводе */
 .primary {
-  position: fixed !important;  /* ← fixed вместо relative */
-  bottom: 100px !important;   /* ← над табами */
+  position: fixed !important;
+  bottom: 100px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  z-index: 10000 !important;  /* ← МАКСИМУМ */
+  z-index: 10000 !important;
   width: 90% !important;
   max-width: 320px !important;
-  
-  display: block !important;
-  touch-action: manipulation !important;
-  -webkit-tap-highlight-color: transparent !important;
+  opacity: 1 !important;
+  visibility: visible !important;
   
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #ffffff;
@@ -134,8 +132,16 @@ textarea {
   font-size: 17px;
   border-radius: 999px;
   cursor: pointer;
-  user-select: none;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+/* ✅ КНОПКА СКРЫВАЕТСЯ при вводе! */
+.primary.hide-on-input {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateX(-50%) translateY(-20px) !important;
 }
 
 .primary:active {
