@@ -40,7 +40,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* FIX: Главный контейнер с безопасными отступами */
+/* FIX: Главный контейнер */
 #app-root {
   width: 100%;
   height: 100%;
@@ -51,12 +51,7 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* УБИРАЕМ старый верхний блок - он нам не нужен */
-.header-block {
-  display: none !important;
-}
-
-/* FIX: Основной контейнер контента */
+/* Основной контейнер контента */
 #card {
   flex: 1;
   width: 100%;
@@ -68,6 +63,12 @@ html, body {
   padding: 0;
   height: 100%;
   border-radius: 0;
+  transition: transform 0.3s ease; /* Анимация для клавиатуры */
+}
+
+/* FIX: При открытой клавиатуре */
+body.keyboard-open #card {
+  transform: translateY(-150px); /* Поднимаем контент над клавиатурой */
 }
 
 /* ===== ЭКРАН ПРИВЕТСТВИЯ ===== */
@@ -181,8 +182,14 @@ html, body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 20px 16px 100px; /* FIX: Большой отступ снизу для кнопки */
+  padding: 20px 16px 100px;
   padding-top: max(20px, env(safe-area-inset-top, 20px));
+  transition: padding-bottom 0.3s ease; /* Плавное изменение отступа */
+}
+
+/* FIX: Больше отступ снизу при клавиатуре */
+body.keyboard-open .screen-content {
+  padding-bottom: 250px;
 }
 
 /* ЗАГОЛОВОК ЭКРАНА */
@@ -201,7 +208,7 @@ html, body {
 
 /* ===== ЭКРАН ОНБОРДИНГА (анкета) ===== */
 #onboarding-screen .screen-content {
-  padding: max(20px, env(safe-area-inset-top, 20px)) 16px 150px; /* FIX: Еще больше снизу */
+  padding: max(20px, env(safe-area-inset-top, 20px)) 16px 150px;
 }
 
 .field {
@@ -251,7 +258,7 @@ textarea {
   color: #666;
 }
 
-/* FIX: КНОПКА СОХРАНИТЬ ПРОФИЛЬ - ВСЕГДА ВИДНА */
+/* FIX: КНОПКА СОХРАНИТЬ ПРОФИЛЬ - ВСЕГДА ВИДНА И ПЕРЕМЕЩАЕТСЯ С КОНТЕНТОМ */
 #saveProfileBtn {
   position: fixed;
   bottom: max(90px, calc(env(safe-area-inset-bottom, 0px) + 90px));
@@ -266,15 +273,26 @@ textarea {
   border-radius: 16px;
   cursor: pointer;
   touch-action: manipulation;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
   z-index: 1000;
+  transform: translateY(0);
+}
+
+/* FIX: При открытой клавиатуре поднимаем кнопку выше */
+body.keyboard-open #saveProfileBtn {
+  bottom: max(250px, calc(env(safe-area-inset-bottom, 0px) + 250px));
+  transform: translateY(-150px);
 }
 
 #saveProfileBtn:active {
-  transform: scale(0.97);
+  transform: scale(0.97) translateY(0);
   opacity: 0.9;
   box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+}
+
+body.keyboard-open #saveProfileBtn:active {
+  transform: scale(0.97) translateY(-150px);
 }
 
 /* ===== ЛЕНТА СВАЙПОВ ===== */
@@ -435,15 +453,26 @@ textarea {
   border-radius: 16px;
   cursor: pointer;
   touch-action: manipulation;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
   z-index: 1000;
+  transform: translateY(0);
+}
+
+/* FIX: При открытой клавиатуре поднимаем кнопку выше */
+body.keyboard-open #updateProfileBtn {
+  bottom: max(250px, calc(env(safe-area-inset-bottom, 0px) + 250px));
+  transform: translateY(-150px);
 }
 
 #updateProfileBtn:active {
-  transform: scale(0.97);
+  transform: scale(0.97) translateY(0);
   opacity: 0.9;
   box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+}
+
+body.keyboard-open #updateProfileBtn:active {
+  transform: scale(0.97) translateY(-150px);
 }
 
 /* ===== ФОТО ПРОФИЛЯ ===== */
@@ -480,6 +509,14 @@ textarea {
   padding: 0 20px;
   z-index: 1000;
   box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease; /* Плавное скрытие при клавиатуре */
+}
+
+/* FIX: Скрываем таб-бар при открытой клавиатуре */
+body.keyboard-open #tab-bar {
+  transform: translateY(100px);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .tab-btn {
@@ -507,11 +544,6 @@ textarea {
 /* Предотвращаем bounce в iOS */
 .no-bounce {
   overscroll-behavior: none;
-}
-
-/* FIX для клавиатуры iOS */
-.keyboard-open {
-  padding-bottom: 300px !important; /* Добавляем место для клавиатуры */
 }
 
 /* FIX для safe areas */
@@ -564,5 +596,11 @@ textarea {
   #saveProfileBtn,
   #updateProfileBtn {
     bottom: max(85px, calc(env(safe-area-inset-bottom, 0px) + 85px));
+  }
+  
+  body.keyboard-open #saveProfileBtn,
+  body.keyboard-open #updateProfileBtn {
+    bottom: max(220px, calc(env(safe-area-inset-bottom, 0px) + 220px));
+    transform: translateY(-120px);
   }
 }
