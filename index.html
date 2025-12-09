@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru" data-color-mode="auto" data-light-theme="light" data-dark-theme="dark">
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <title>SiaMatch - Dating</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+  <!-- КРИТИЧЕСКИЕ МЕТА-ТЕГИ ДЛЯ iOS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -22,7 +25,7 @@
       </div>
 
       <!-- ЭКРАН 0: первичная анкета (onboarding) -->
-      <div id="onboarding-screen" class="hidden">
+      <div id="onboarding-screen" class="screen hidden">
         <h2 class="screen-title">Ваш профиль 🍀</h2>
 
         <div class="field">
@@ -59,7 +62,10 @@
           <div class="hint">Минимум 10 символов, максимум 300</div>
         </div>
 
-        <button id="saveProfileBtn" class="primary">Сохранить профиль 🍀</button>
+        <!-- КНОПКА ВНУТРИ КОНТЕЙНЕРА С ФИКСИРОВАННЫМ ПОЛОЖЕНИЕМ -->
+        <div class="button-container">
+          <button id="saveProfileBtn" class="primary">Сохранить профиль 🍀</button>
+        </div>
       </div>
 
       <!-- ЭКРАН: ЧАТЫ -->
@@ -70,7 +76,7 @@
       </div>
 
       <!-- ЭКРАН: ЛЕНТА -->
-      <div id="screen-feed" class="screen screen-clean hidden">
+      <div id="screen-feed" class="screen hidden">
         <h2 class="screen-title">Познакомьтесь 🍀</h2>
         <div id="candidate-card">
           <div class="candidate-photo-wrapper">
@@ -94,7 +100,7 @@
       </div>
 
       <!-- ЭКРАН: ПРОФИЛЬ -->
-      <div id="screen-profile" class="screen screen-clean hidden">
+      <div id="screen-profile" class="screen hidden">
         <h2 class="screen-title">Мой профиль ✏️</h2>
 
         <div class="field">
@@ -128,7 +134,7 @@
           <textarea id="profile-bio" rows="3" maxlength="300"></textarea>
         </div>
 
-        <!-- ДОБАВЛЕНО: Поле для загрузки фото профиля -->
+        <!-- ФОТО ПРОФИЛЯ -->
         <div class="field">
           <label>Фото профиля 📸</label>
           <input type="file" id="profile-photo" accept="image/*" />
@@ -158,7 +164,9 @@
           <input type="number" id="profile-max-distance" min="1" max="500" value="50" />
         </div>
 
-        <button id="updateProfileBtn" class="primary">Сохранить изменения ✏️</button>
+        <div class="button-container">
+          <button id="updateProfileBtn" class="primary">Сохранить изменения ✏️</button>
+        </div>
       </div>
     </div>
 
