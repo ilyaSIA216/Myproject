@@ -11,6 +11,7 @@
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
+  touch-action: manipulation;
 }
 
 *:focus {
@@ -22,66 +23,117 @@ input, textarea, select {
   user-select: text;
   -webkit-appearance: none;
   appearance: none;
+  font-size: 16px !important; /* Предотвращает зум в iOS */
 }
 
-body {
+html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   background: radial-gradient(circle at top, #d9f99d 0, #f4fff7 45%, #ecfdf3 100%);
   color: var(--tg-theme-text-color);
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  position: fixed;
-  -webkit-overflow-scrolling: touch;
 }
 
 #app-root {
-  height: 100vh;
-  width: 100vw;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
+/* FIX: Отступ для Telegram верхней панели */
 #card {
   flex: 1;
   width: 100%;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 0;
-  padding: 20px 18px;
+  padding: env(safe-area-inset-top, 20px) 16px calc(env(safe-area-inset-bottom, 20px) + 80px) 16px;
   backdrop-filter: blur(8px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
-  padding-bottom: 100px;
 }
 
-#onboarding-screen #card {
-  padding-bottom: 140px;
+/* FIX: Особые отступы для экрана приветствия */
+#welcome-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 20px));
+  padding: 20px;
+  text-align: center;
 }
 
 .logo {
-  font-size: 40px;
-  margin-bottom: 8px;
+  font-size: 50px;
+  margin-bottom: 10px;
 }
 
 .app-name {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--siamatch-green-dark);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 h1 {
   font-size: 24px;
-  margin: 4px 0 8px;
+  margin: 6px 0 10px;
+  color: #063b1f;
 }
 
 #username {
   font-size: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
+  color: #666;
+}
+
+/* ЭКРАН ПРИВЕТСТВИЯ */
+#welcome-screen h2 {
+  font-size: 22px;
+  margin: 0 0 12px 0;
+  color: var(--siamatch-green-dark);
+}
+
+#welcome-screen p {
+  font-size: 15px;
+  color: #666;
+  margin: 0 0 30px 0;
+  line-height: 1.4;
+  max-width: 300px;
+}
+
+/* КНОПКА НАЧАТЬ ОБЩЕНИЕ - FIX для iOS */
+#startBtn {
+  width: 100%;
+  max-width: 280px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  border: none;
+  padding: 18px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s;
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
+  margin: 20px auto;
+  display: block;
+  position: relative;
+  z-index: 10;
+}
+
+#startBtn:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.4);
 }
 
 /* Анкета */
@@ -101,22 +153,24 @@ h1 {
 
 label {
   display: block;
-  font-size: 14px;
-  margin-bottom: 4px;
+  font-size: 15px;
+  margin-bottom: 6px;
+  font-weight: 500;
 }
 
 input[type="number"],
 select,
 textarea {
   width: 100%;
-  padding: 12px 14px;
+  padding: 14px 16px;
   font-size: 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 2px solid #bbf7d0;
   background-color: #ffffff;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   -webkit-appearance: none;
   appearance: none;
+  color: #000;
 }
 
 input[type="number"]:focus,
@@ -131,25 +185,26 @@ textarea {
 }
 
 .field {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .hint {
   font-size: 13px;
   opacity: 0.7;
   margin-top: 4px;
+  color: #666;
 }
 
-/* КНОПКА - iOS FIX */
+/* КНОПКА СОХРАНИТЬ ПРОФИЛЬ */
 .button-container {
   position: sticky;
-  bottom: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
   left: 0;
   right: 0;
   padding: 16px;
   background: linear-gradient(to top, rgba(255,255,255,0.95) 70%, transparent);
   z-index: 100;
-  margin-top: auto;
+  margin-top: 40px;
 }
 
 .primary {
@@ -157,44 +212,88 @@ textarea {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #ffffff;
   border: none;
-  padding: 16px 24px;
+  padding: 18px 24px;
   font-size: 17px;
   font-weight: 600;
-  border-radius: 14px;
+  border-radius: 16px;
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform 0.1s, opacity 0.1s;
-  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+  transition: all 0.2s;
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
 }
 
 .primary:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
   opacity: 0.9;
 }
 
-/* Лента знакомств */
+/* Скрытые элементы */
 .hidden {
   display: none !important;
 }
 
-#feed {
-  margin-top: 16px;
-  text-align: left;
+/* Нижняя навигация (табы) */
+#tab-bar {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  right: 0;
+  height: 65px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 1000;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08);
 }
 
-.feed-title {
-  font-size: 20px;
-  margin-bottom: 10px;
-  text-align: center;
+.tab-btn {
+  flex: 1;
+  height: 50px;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  border-radius: 12px;
+  margin: 0 4px;
+  transition: background-color 0.2s;
+}
+
+.tab-btn.active {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--siamatch-green);
+}
+
+/* ЭКРАНЫ */
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-bottom: 80px;
+}
+
+.screen-title {
+  font-size: 22px;
+  font-weight: 600;
   color: var(--siamatch-green-dark);
+  margin-bottom: 20px;
+  text-align: center;
+  padding-top: 10px;
 }
 
+/* ЛЕНТА */
 #candidate-card {
   border-radius: 20px;
   overflow: hidden;
   background: #ffffff;
   border: 2px solid #bbf7d0;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
@@ -280,7 +379,7 @@ textarea {
   padding: 0 16px;
 }
 
-/* Фильтры профиля */
+/* ПРОФИЛЬ */
 .age-range {
   display: flex;
   align-items: center;
@@ -300,7 +399,7 @@ textarea {
   font-size: 18px;
 }
 
-/* Чекбокс геолокации */
+/* Чекбокс */
 .checkbox-field {
   display: flex;
   align-items: center;
@@ -323,80 +422,11 @@ textarea {
   font-weight: 600;
 }
 
-/* Расстояние в карточке */
 #candidate-distance {
   font-size: 14px;
   color: var(--siamatch-green);
   font-weight: 600;
   margin: 8px 0;
-}
-
-/* Нижняя навигация (табы) */
-#tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 70px;
-  background: #ffffff;
-  border-top: 2px solid #e5e7eb;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0 16px;
-  z-index: 1000;
-  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08);
-}
-
-.tab-btn {
-  flex: 1;
-  height: 50px;
-  border: none;
-  background: transparent;
-  font-size: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  touch-action: manipulation;
-  border-radius: 12px;
-  margin: 0 4px;
-  transition: background-color 0.2s;
-}
-
-.tab-btn.active {
-  background: rgba(34, 197, 94, 0.12);
-  color: var(--siamatch-green);
-}
-
-/* Скрыть хедер на экранах */
-.screen .logo, 
-.screen .app-name, 
-.screen h1, 
-.screen #username {
-  display: none;
-}
-
-.screen-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--siamatch-green-dark);
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.screen {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding-bottom: 80px;
-}
-
-/* Карточка кандидата */
-#candidate-card {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto 20px;
 }
 
 /* Адаптив для маленьких экранов */
@@ -412,73 +442,61 @@ textarea {
   }
   
   #tab-bar {
-    height: 65px;
+    height: 60px;
   }
   
-  .primary {
-    padding: 14px 20px;
+  #startBtn, .primary {
+    padding: 16px 20px;
+  }
+  
+  .logo {
+    font-size: 40px;
   }
 }
 
-/* iOS specific fixes */
-@supports (-webkit-touch-callout: none) {
-  body {
-    height: -webkit-fill-available;
-  }
-  
-  #app-root {
-    height: -webkit-fill-available;
-  }
-  
-  input, textarea, select {
-    font-size: 16px !important; /* Предотвращает масштабирование в iOS */
-  }
-  
-  .btn-circle, .primary, .tab-btn {
-    cursor: pointer;
-  }
-}
-
-/* Safari specific fixes */
-_::-webkit-full-page-media, _:future, :root .safari_only {
+/* iOS safe area fixes */
+@supports (padding: max(0px)) {
   #card {
-    padding-bottom: env(safe-area-inset-bottom, 100px);
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
   }
   
   #tab-bar {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    height: calc(70px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
   }
 }
 
-/* Улучшения для темной темы Telegram */
-@media (prefers-color-scheme: dark) {
-  body {
-    background: #1a1a1a;
+/* Предотвращение bounce в iOS */
+.no-bounce {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* FIX для активных состояний на iOS */
+@media (hover: none) and (pointer: coarse) {
+  button:active, .primary:active, .btn-circle:active, .tab-btn:active {
+    opacity: 0.7;
+    transform: scale(0.97);
+    transition: none;
   }
-  
-  #card {
-    background: rgba(30, 30, 30, 0.95);
-    color: #ffffff;
-  }
-  
-  input, textarea, select {
-    background-color: #2a2a2a;
-    border-color: #444;
-    color: #ffffff;
-  }
-  
-  #candidate-card {
-    background: #2a2a2a;
-    border-color: #444;
-  }
-  
-  #tab-bar {
-    background: #2a2a2a;
-    border-top-color: #444;
-  }
-  
-  .button-container {
-    background: linear-gradient(to top, rgba(42,42,42,0.95) 70%, transparent);
-  }
+}
+
+/* ЧАТЫ */
+#chats-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 15px;
+}
+
+/* Фото профиля */
+#photo-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-top: 8px;
+  border: 2px solid var(--siamatch-green);
+  object-fit: cover;
+  display: none;
 }
