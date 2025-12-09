@@ -8,32 +8,58 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+*:focus {
+  outline: none;
+}
+
+input, textarea, select {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 body {
   margin: 0;
-  padding: 20px;
+  padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   background: radial-gradient(circle at top, #d9f99d 0, #f4fff7 45%, #ecfdf3 100%);
   color: var(--tg-theme-text-color);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;
+  -webkit-overflow-scrolling: touch;
+}
+
+#app-root {
+  height: 100vh;
+  width: 100vw;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+  overflow: hidden;
 }
 
 #card {
+  flex: 1;
   width: 100%;
-  max-width: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 24px;
-  padding: 20px 18px 120px 18px;
-  box-shadow: 0 10px 25px rgba(22, 163, 74, 0.18);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0;
+  padding: 20px 18px;
   backdrop-filter: blur(8px);
-  min-height: calc(100vh - 144px);
-  margin: 0 auto 80px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  padding-bottom: 100px;
+}
+
+#onboarding-screen #card {
+  padding-bottom: 140px;
 }
 
 .logo {
@@ -59,7 +85,6 @@ h1 {
 }
 
 /* Анкета */
-
 #profile-form {
   display: none;
   width: 100%;
@@ -84,19 +109,21 @@ input[type="number"],
 select,
 textarea {
   width: 100%;
-  padding: 9px 10px;
-  font-size: 14px;
-  border-radius: 10px;
-  border: 1px solid #bbf7d0;
-  outline: none;
-  background-color: #f0fdf4;
+  padding: 12px 14px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 2px solid #bbf7d0;
+  background-color: #ffffff;
+  margin-bottom: 8px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 input[type="number"]:focus,
 select:focus,
 textarea:focus {
   border-color: var(--siamatch-green);
-  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.35);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 textarea {
@@ -104,68 +131,50 @@ textarea {
 }
 
 .field {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .hint {
-  font-size: 12px;
+  font-size: 13px;
   opacity: 0.7;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
-/* 🚀 РАДИКАЛЬНЫЙ iOS ФИКС — кнопка ВНУТРИ формы */
+/* КНОПКА - iOS FIX */
+.button-container {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(to top, rgba(255,255,255,0.95) 70%, transparent);
+  z-index: 100;
+  margin-top: auto;
+}
+
 .primary {
-  position: relative !important;  /* НЕ fixed! */
-  margin: 20px auto 40px !important;  /* Внутри #card */
-  width: 95% !important;
-  z-index: 1 !important;  /* Низкий z-index */
-  
+  width: 100%;
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #ffffff;
   border: none;
-  padding: 15px 32px;
+  padding: 16px 24px;
   font-size: 17px;
-  border-radius: 999px;
+  font-weight: 600;
+  border-radius: 14px;
   cursor: pointer;
-  touch-action: manipulation !important;
-  -webkit-tap-highlight-color: transparent !important;
-  display: block !important;
-  font-weight: 600 !important;
+  touch-action: manipulation;
+  transition: transform 0.1s, opacity 0.1s;
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
 }
 
 .primary:active {
-  transform: translateY(2px) !important;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
-}
-
-/* УДАЛЕНЫ стили скрытия кнопки при вводе */
-
-/* Кнопка основная (старый стиль для совместимости) */
-#mainButton {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #ffffff;
-  border: none;
-  padding: 13px 32px;
-  font-size: 17px;
-  border-radius: 999px;
-  cursor: pointer;
-  user-select: none;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
-  margin-top: 18px;
-  width: 100%;
-  max-width: 260px;
-}
-
-#mainButton:active {
-  transform: translateY(1px);
-  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
-  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 /* Лента знакомств */
-
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #feed {
@@ -181,16 +190,17 @@ textarea {
 }
 
 #candidate-card {
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  margin-bottom: 12px;
+  background: #ffffff;
+  border: 2px solid #bbf7d0;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
 .candidate-photo-wrapper {
   width: 100%;
-  height: 210px;
+  height: 280px;
   overflow: hidden;
   background: #d1fae5;
   display: flex;
@@ -205,50 +215,51 @@ textarea {
 }
 
 .candidate-info {
-  padding: 10px 12px 12px;
+  padding: 16px;
 }
 
 .candidate-name-age {
   font-weight: 600;
-  font-size: 17px;
-  margin-bottom: 4px;
-}
-
-.candidate-city {
-  font-size: 13px;
-  opacity: 0.8;
+  font-size: 18px;
   margin-bottom: 6px;
 }
 
-.candidate-bio {
+.candidate-city {
   font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.candidate-bio {
+  font-size: 15px;
+  line-height: 1.4;
 }
 
 .actions {
   display: flex;
   justify-content: center;
-  gap: 18px;
-  margin-top: 8px;
+  gap: 24px;
+  margin-top: 20px;
+  padding: 0 16px;
 }
 
 .btn-circle {
-  width: 54px;
-  height: 54px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: none;
-  font-size: 24px;
+  font-size: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  user-select: none;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  touch-action: manipulation;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s;
 }
 
 .btn-circle:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+  transform: scale(0.92);
 }
 
 .btn-like {
@@ -262,28 +273,31 @@ textarea {
 }
 
 .feed-status {
-  margin-top: 6px;
-  font-size: 13px;
+  margin-top: 12px;
+  font-size: 14px;
   text-align: center;
   opacity: 0.8;
+  padding: 0 16px;
 }
 
 /* Фильтры профиля */
 .age-range {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .age-range input {
-  width: 60px !important;
-  padding: 6px 8px;
+  width: 80px !important;
+  padding: 10px 12px;
+  text-align: center;
 }
 
 .age-range span {
   color: var(--siamatch-green-dark);
   font-weight: 500;
+  font-size: 18px;
 }
 
 /* Чекбокс геолокации */
@@ -292,28 +306,29 @@ textarea {
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  font-size: 14px;
-  padding: 8px 0;
+  font-size: 15px;
+  padding: 10px 0;
 }
 
 .checkbox-field input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   margin: 0;
   accent-color: var(--siamatch-green);
+  flex-shrink: 0;
 }
 
 #distance-value {
   color: var(--siamatch-green);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Расстояние в карточке */
 #candidate-distance {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--siamatch-green);
-  font-weight: 500;
-  margin: 4px 0;
+  font-weight: 600;
+  margin: 8px 0;
 }
 
 /* Нижняя навигация (табы) */
@@ -322,30 +337,36 @@ textarea {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: 70px;
   background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  border-top: 2px solid #e5e7eb;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 16px;
   z-index: 1000;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08);
 }
 
 .tab-btn {
   flex: 1;
-  height: 44px;
+  height: 50px;
   border: none;
   background: transparent;
-  font-size: 24px;
+  font-size: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  touch-action: manipulation;
+  border-radius: 12px;
+  margin: 0 4px;
+  transition: background-color 0.2s;
 }
 
 .tab-btn.active {
-  background: rgba(34, 197, 94, 0.08);
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--siamatch-green);
 }
 
 /* Скрыть хедер на экранах */
@@ -356,131 +377,108 @@ textarea {
   display: none;
 }
 
-/* Общие стили экранов — БЕЗ flex и высоты */
-.screen {
-  padding: 20px;
-  box-sizing: border-box;
+.screen-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--siamatch-green-dark);
+  margin-bottom: 20px;
+  text-align: center;
 }
 
-/* Контент не перекрывает табы */
-#app-root {
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding-bottom: 80px;
 }
 
-/* Карточка кандидата на всю ширину */
+/* Карточка кандидата */
 #candidate-card {
   width: 100%;
-  max-width: 360px;
-  margin: 0 auto 16px;
+  max-width: 400px;
+  margin: 0 auto 20px;
 }
 
 /* Адаптив для маленьких экранов */
-@media (max-height: 600px) {
-  .screen {
-    padding: 10px;
+@media (max-height: 700px) {
+  .candidate-photo-wrapper {
+    height: 220px !important;
+  }
+  
+  .btn-circle {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+  
+  #tab-bar {
+    height: 65px;
+  }
+  
+  .primary {
+    padding: 14px 20px;
   }
 }
 
-.candidate-photo-wrapper {
-  height: 180px !important;
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  body {
+    height: -webkit-fill-available;
+  }
+  
+  #app-root {
+    height: -webkit-fill-available;
+  }
+  
+  input, textarea, select {
+    font-size: 16px !important; /* Предотвращает масштабирование в iOS */
+  }
+  
+  .btn-circle, .primary, .tab-btn {
+    cursor: pointer;
+  }
 }
 
-/* 🚀 ТЕЛЕГРАМ FULLSCREEN + СИЛОВОЙ ФИКС */
-body { padding: 0 !important; margin: 0 !important; }
-
-/* УДАЛЕННЫЕ БЛОКИ:
-#screen-chats:not(.hidden) { ... }
-#screen-feed:not(.hidden) { ... }
-#screen-profile:not(.hidden) { ... }
-*/
-
-#candidate-card {
-  max-width: 396px !important;
-  width: 100% !important;
-  margin: 0 auto 16px !important;
+/* Safari specific fixes */
+_::-webkit-full-page-media, _:future, :root .safari_only {
+  #card {
+    padding-bottom: env(safe-area-inset-bottom, 100px);
+  }
+  
+  #tab-bar {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(70px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
-#card { max-width: none !important; }
-
-/* ДОБАВЛЕННЫЕ СТИЛИ ДЛЯ ФОТО ПРОФИЛЯ */
-#photo-preview {
-  object-fit: cover;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
-}
-
-#profile-photo {
-  background: #f0fdf4;
-}
-
-/* 🚀 ФИНАЛЬНЫЙ ТАБ ФИКС */
-#tab-bar { z-index: 9999 !important; }
-.tab-btn { z-index: 9999 !important; }
-
-/* iOS MOBILE ФИКСЫ */
-input, textarea, select {
-  -webkit-appearance: none;
-  touch-action: manipulation;
-}
-
-button {
-  -webkit-appearance: none;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* 🚀 iOS VIEWPORT + КЛАВИАТУРА ФИКС */
-body {
-  position: relative !important;
-  overflow-x: hidden !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
-}
-
-#card {
-  position: relative !important;
-  height: auto !important;
-  max-height: none !important;
-  overflow-y: auto !important;
-  padding-bottom: 140px !important;
-}
-
-#onboarding-screen #card {
-  padding-bottom: 160px !important;
-}
-
-/* 🚀 ФИНАЛЬНЫЙ iOS ФИКС — FLEX онбординг */
-#onboarding-screen {
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100vh !important;
-  overflow: hidden !important;
-}
-
-#onboarding-screen #card {
-  flex: 1 !important;
-  overflow-y: auto !important;
-  padding-bottom: 200px !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-/* ✅ ПРАВИЛЬНОЕ ПОЗИЦИОНИРОВАНИЕ КНОПКИ */
-.primary {
-  position: sticky !important;
-  top: 20px !important;
-  margin: 20px auto 40px !important;
-  width: 95% !important;
-  z-index: 10 !important;
-}
-
-#onboarding-screen #card {
-  padding-top: 80px !important;  /* Место под sticky кнопку */
-  padding-bottom: 200px !important;
-}
-
-body {
-  height: 100vh !important;
-  overflow: hidden !important;
-  position: fixed !important;
-  width: 100% !important;
+/* Улучшения для темной темы Telegram */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #1a1a1a;
+  }
+  
+  #card {
+    background: rgba(30, 30, 30, 0.95);
+    color: #ffffff;
+  }
+  
+  input, textarea, select {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #ffffff;
+  }
+  
+  #candidate-card {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+  
+  #tab-bar {
+    background: #2a2a2a;
+    border-top-color: #444;
+  }
+  
+  .button-container {
+    background: linear-gradient(to top, rgba(42,42,42,0.95) 70%, transparent);
+  }
 }
