@@ -30,7 +30,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // DOM элементы
   const usernameElem = document.getElementById("username");
+  const welcomeScreen = document.getElementById("welcome-screen");
+  const startBtn = document.getElementById("startBtn");
   const onboardingScreen = document.getElementById("onboarding-screen");
+  const saveProfileBtn = document.getElementById("saveProfileBtn");
   const tabBar = document.getElementById("tab-bar");
   const tabButtons = document.querySelectorAll(".tab-btn");
 
@@ -59,66 +62,33 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatsList = document.getElementById("chats-list");
   const chatsEmpty = document.getElementById("chats-empty");
 
-  // 🚀 MAINBUTTON СОХРАНЯЕТ ПРОФИЛЬ НАПРЯМУЮ
+  // === БЕЗОПАСНЫЕ ОБРАБОТЧИКИ ===
+  const safeAddEvent = (el, event, handler) => {
+    if (el) el.addEventListener(event, handler);
+  };
+
+  // 🚀 ОБНОВЛЕННАЯ MAINBUTTON
   function updateMainButton() {
-    if (tg) {
+    if (!tg) return;
+
+    // если пользователь ещё в онбординге или приветствии — вообще скрываем MainButton
+    const onboardingVisible =
+      onboardingScreen && onboardingScreen.style.display !== "none" &&
+      !onboardingScreen.classList.contains("hidden");
+    const welcomeVisible =
+      welcomeScreen && !welcomeScreen.classList.contains("hidden");
+
+    if (onboardingVisible || welcomeVisible) {
       tg.MainButton.hide();
-      
-      if (!onboardingScreen.classList.contains('hidden') && 
-          onboardingScreen.style.display !== 'none') {
-        
-        tg.MainButton.setText('🍀 Сохранить профиль');
-        tg.MainButton.onClick(() => {
-          // ✅ ЛОГИКА СОХРАНЕНИЯ НАПРЯМУЮ
-          const ageValue = Number(document.getElementById("age").value);
-          const gender = document.getElementById("gender").value;
-          const city = document.getElementById("city").value;
-          const bio = document.getElementById("bio").value.trim();
-
-          if (!ageValue || ageValue < 18 || ageValue > 99) return alert("Возраст 18-99");
-          if (!gender) return alert("Выберите пол");
-          if (!city) return alert("Выберите город");
-          if (bio.length < 10) return alert("О себе минимум 10 символов");
-
-          profileData = {
-            tg_id: user?.id || 1,
-            first_name: user?.first_name || "Тестовый",
-            username: user?.username || "user",
-            age: ageValue, gender, city, bio,
-            min_age_filter: 18, max_age_filter: 35, max_distance_km: 50,
-            use_geolocation: false
-          };
-
-          saveProfile(profileData);
-          
-          // Заполняем профиль
-          if (profileAge) profileAge.value = ageValue;
-          if (profileGender) profileGender.value = gender;
-          if (profileCity) profileCity.value = city;
-          if (profileBio) profileBio.value = bio;
-          if (profileMinAge) profileMinAge.value = 18;
-          if (profileMaxAge) profileMaxAge.value = 35;
-          if (profileMaxDistance) profileMaxDistance.value = 50;
-
-          onboardingScreen.style.display = "none";
-          tabBar.classList.remove("hidden");
-          setActiveTab("feed");
-          tg.MainButton.hide();
-          alert("✅ Профиль сохранён! Добро пожаловать 🍀");
-        });
-        tg.MainButton.show();
-        
-      } else {
-        tg.MainButton.setText('🍀 SiaMatch');
-        tg.MainButton.onClick(null);
-        tg.MainButton.show();
-      }
+      return;
     }
+
+    // иначе можно показывать просто бренд-кнопку, без обработчика
+    tg.MainButton.setText("🍀 SiaMatch");
+    tg.MainButton.onClick(null);
+    tg.MainButton.show();
   }
 
-  // Инициализация
-  updateMainButton();
-  
   // Паддинг для карточки онбординга
   const onboardingCard = document.querySelector('#onboarding-screen #card');
   if (onboardingCard) {
@@ -280,8 +250,12 @@ document.addEventListener('DOMContentLoaded', function() {
   function setActiveTab(tab) {
     console.log("🔥 TAB:", tab);
     
-    // 1. СКРЫТЬ ОНБОРДИНГ
-    document.getElementById('onboarding-screen').style.display = 'none';
+    // 1. СКРЫТЬ ОНБОРДИНГ И ПРИВЕТСТВИЕ
+    if (welcomeScreen) welcomeScreen.classList.add("hidden");
+    if (onboardingScreen) {
+      onboardingScreen.classList.add("hidden");
+      onboardingScreen.style.display = 'none';
+    }
     
     // 2. СКРЫТЬ ВСЕ ЭКРАНЫ display: none!
     document.querySelectorAll('.screen').forEach(screen => {
@@ -334,11 +308,81 @@ document.addEventListener('DOMContentLoaded', function() {
     alert("Профиль обновлён! Фильтры применены ✏️");
   });
 
+  // Обработчик для кнопки "Начать общение"
+  safeAddEvent(startBtn, "click", () => {
+    // скрыть приветствие, показать онбординг
+    if (welcomeScreen) welcomeScreen.classList.add("hidden");
+    if (onboardingScreen) {
+      onboardingScreen.classList.remove("hidden");
+      onboardingScreen.style.display = "block";
+    }
+    // скрыть таб-бар до заполнения анкеты
+    if (tabBar) tabBar.classList.add("hidden");
+    // обновить состояние основной кнопки Telegram при необходимости
+    updateMainButton();
+  });
+
+  // Обработчик для кнопки сохранения профиля
+  safeAddEvent(saveProfileBtn, "click", () => {
+    const ageValue = Number(document.getElementById("age").value);
+    const gender = document.getElementById("gender").value;
+    const city = document.getElementById("city").value;
+    const bio = document.getElementById("bio").value.trim();
+
+    if (!ageValue || ageValue < 18 || ageValue > 99) return alert("Возраст 18-99");
+    if (!gender) return alert("Выберите пол");
+    if (!city) return alert("Выберите город");
+    if (bio.length < 10) return alert("О себе минимум 10 символов");
+
+    profileData = {
+      tg_id: user?.id || 1,
+      first_name: user?.first_name || "Тестовый",
+      username: user?.username || "user",
+      age: ageValue,
+      gender,
+      city,
+      bio,
+      min_age_filter: 18,
+      max_age_filter: 35,
+      max_distance_km: 50,
+      use_geolocation: false
+    };
+
+    saveProfile(profileData);
+
+    // заполняем экран профиля
+    if (profileAge) profileAge.value = ageValue;
+    if (profileGender) profileGender.value = gender;
+    if (profileCity) profileCity.value = city;
+    if (profileBio) profileBio.value = bio;
+    if (profileMinAge) profileMinAge.value = 18;
+    if (profileMaxAge) profileMaxAge.value = 35;
+    if (profileMaxDistance) profileMaxDistance.value = 50;
+
+    // скрываем онбординг, показываем табы и ленту
+    if (onboardingScreen) onboardingScreen.style.display = "none";
+    if (tabBar) tabBar.classList.remove("hidden");
+    setActiveTab("feed");
+    if (tg) tg.MainButton.hide();
+    alert("✅ Профиль сохранён! Добро пожаловать 🍀");
+  });
+
   // === ИНИЦИАЛИЗАЦИЯ ===
   (function initOnStart() {
     profileData = loadProfile();
-    if (!profileData) return;
+    if (!profileData) {
+      // нет сохранённого профиля: показываем приветствие
+      if (welcomeScreen) welcomeScreen.classList.remove("hidden");
+      if (onboardingScreen) {
+        onboardingScreen.classList.add("hidden");
+        onboardingScreen.style.display = "none";
+      }
+      if (tabBar) tabBar.classList.add("hidden");
+      updateMainButton();
+      return;
+    }
 
+    // ... твой существующий код заполнения полей ...
     // Заполняем онбординг
     document.getElementById("age").value = profileData.age || "";
     document.getElementById("gender").value = profileData.gender || "";
@@ -366,10 +410,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    if (welcomeScreen) welcomeScreen.classList.add("hidden");
     onboardingScreen.style.display = "none";
     tabBar.classList.remove("hidden");
-    
-    // Обновляем MainButton
+    setActiveTab("feed");
     updateMainButton();
   })();
 
@@ -394,11 +438,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') document.activeElement?.blur();
   });
-
-  // Безопасные addEventListener
-  const safeAddEvent = (el, event, handler) => {
-    if (el) el.addEventListener(event, handler);
-  };
 
   safeAddEvent(document.getElementById("profile-use-geolocation"), "change", (e) => {
     if (profileData) {
