@@ -417,17 +417,21 @@ document.addEventListener('DOMContentLoaded', function() {
     updateMainButton();
   })();
 
-  // 🚀 СУПЕР КЛАВИАТУРА iOS
-  ['click', 'touchend'].forEach(event => {
-    document.addEventListener(event, (e) => {
-      if (!e.target.closest('input, textarea, select, .primary')) {
-        e.preventDefault();
-        document.activeElement?.blur();
-        if (tg) tg.HapticFeedback?.selectionChanged();
-        setTimeout(() => window.scrollTo(0, 0), 100); // iOS scroll fix
-      }
-    }, true);
-  });
+  // 🚀 ИСПРАВЛЕННЫЙ ГЛОБАЛЬНЫЙ ОБРАБОТЧИК КЛИКОВ ДЛЯ iOS
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+
+    // Не трогаем клики по кнопкам и формам
+    if (target.closest('button, .primary, input, textarea, select')) {
+      return;
+    }
+
+    document.activeElement?.blur();
+    if (tg && tg.HapticFeedback?.selectionChanged) {
+      tg.HapticFeedback.selectionChanged();
+    }
+    setTimeout(() => window.scrollTo(0, 0), 100);
+  }, true);
 
   // iOS resize fix
   window.addEventListener('resize', () => {
