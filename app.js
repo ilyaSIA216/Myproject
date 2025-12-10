@@ -579,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function submitVerification() {
     if (!verificationPhoto) {
-      alert('Сначала загрузите селфи  фото');
+      alert('Сначала загрузите селфи фото');
       return;
     }
     
@@ -925,44 +925,84 @@ document.addEventListener('DOMContentLoaded', function() {
     profileData = loadProfile();
     
     if (profileData) {
-      document.getElementById("profile-age").value = profileData.age || "";
-      document.getElementById("profile-gender").value = profileData.gender || "";
-      document.getElementById("profile-city").value = profileData.city || "";
-      document.getElementById("profile-bio").value = profileData.bio || "";
-      document.getElementById("profile-min-age").value = profileData.min_age_filter || 18;
-      document.getElementById("profile-max-age").value = profileData.max_age_filter || 35;
-      document.getElementById("profile-max-distance").value = profileData.max_distance_km || 50;
+      // Обновляем информацию в профиле
+      updateProfileDisplay();
       
-      const geoCheckbox = document.getElementById("profile-use-geolocation");
-      if (geoCheckbox) {
-        geoCheckbox.checked = profileData.use_geolocation || false;
-      }
-      
-      if (profileData.custom_photo_url) {
-        const preview = document.getElementById('photo-preview');
-        if (preview) {
-          preview.src = profileData.custom_photo_url;
-          preview.style.display = 'block';
-        }
-      }
-    }
-    
-    const updateBtn = document.getElementById("updateProfileBtn");
-    if (updateBtn) {
-      updateBtn.onclick = null;
-      updateBtn.addEventListener('click', handleUpdateProfile);
-      updateBtn.style.display = 'block';
-    }
-    
-    const photoInput = document.getElementById('profile-photo');
-    if (photoInput) {
-      photoInput.addEventListener('change', handlePhotoUpload);
+      // Обновляем информацию в форме редактирования
+      updateEditForm();
     }
     
     updateVerificationUI();
   }
   
-  function handleUpdateProfile() {
+  function updateProfileDisplay() {
+    // Обновляем отображаемую информацию в профиле
+    const profileNameElem = document.getElementById('profile-name');
+    const profileAgeElem = document.getElementById('profile-age-display');
+    const profileCityElem = document.getElementById('profile-city-display');
+    const profilePhotoElem = document.getElementById('profile-photo-preview');
+    
+    if (profileNameElem) {
+      profileNameElem.textContent = profileData.first_name || "Пользователь";
+    }
+    
+    if (profileAgeElem) {
+      profileAgeElem.textContent = profileData.age ? `${profileData.age} лет` : "";
+    }
+    
+    if (profileCityElem) {
+      profileCityElem.textContent = profileData.city || "";
+    }
+    
+    if (profilePhotoElem && profileData.custom_photo_url) {
+      profilePhotoElem.src = profileData.custom_photo_url;
+      profilePhotoElem.style.display = 'block';
+    }
+  }
+  
+  function updateEditForm() {
+    // Обновляем данные в форме редактирования
+    const editAgeElem = document.getElementById("edit-age");
+    const editGenderElem = document.getElementById("edit-gender");
+    const editCityElem = document.getElementById("edit-city");
+    const editBioElem = document.getElementById("edit-bio");
+    const editMinAgeElem = document.getElementById("edit-min-age");
+    const editMaxAgeElem = document.getElementById("edit-max-age");
+    const editMaxDistanceElem = document.getElementById("edit-max-distance");
+    const editGeoCheckbox = document.getElementById("edit-use-geolocation");
+    const editPhotoElem = document.getElementById('edit-photo-preview');
+    
+    if (editAgeElem) editAgeElem.value = profileData.age || "";
+    if (editGenderElem) editGenderElem.value = profileData.gender || "";
+    if (editCityElem) editCityElem.value = profileData.city || "";
+    if (editBioElem) editBioElem.value = profileData.bio || "";
+    if (editMinAgeElem) editMinAgeElem.value = profileData.min_age_filter || 18;
+    if (editMaxAgeElem) editMaxAgeElem.value = profileData.max_age_filter || 35;
+    if (editMaxDistanceElem) editMaxDistanceElem.value = profileData.max_distance_km || 50;
+    
+    if (editGeoCheckbox) {
+      editGeoCheckbox.checked = profileData.use_geolocation || false;
+    }
+    
+    if (editPhotoElem && profileData.custom_photo_url) {
+      editPhotoElem.src = profileData.custom_photo_url;
+      editPhotoElem.style.display = 'block';
+    }
+  }
+  
+  function handleEditProfile() {
+    // Показываем экран редактирования
+    document.getElementById('profile-display').classList.add('hidden');
+    document.getElementById('profile-edit').classList.remove('hidden');
+    
+    if (tg?.HapticFeedback) {
+      try {
+        tg.HapticFeedback.selectionChanged();
+      } catch (e) {}
+    }
+  }
+  
+  function handleSaveProfileChanges() {
     document.activeElement?.blur();
     document.body.classList.remove('keyboard-open');
     if (card) card.style.transform = 'translateY(0)';
@@ -973,20 +1013,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      profileData.age = Number(document.getElementById("profile-age").value);
-      profileData.gender = document.getElementById("profile-gender").value;
-      profileData.city = document.getElementById("profile-city").value;
-      profileData.bio = document.getElementById("profile-bio").value.trim();
-      profileData.min_age_filter = Number(document.getElementById("profile-min-age").value);
-      profileData.max_age_filter = Number(document.getElementById("profile-max-age").value);
-      profileData.max_distance_km = Number(document.getElementById("profile-max-distance").value);
+      // Получаем значения из формы редактирования
+      profileData.age = Number(document.getElementById("edit-age").value);
+      profileData.gender = document.getElementById("edit-gender").value;
+      profileData.city = document.getElementById("edit-city").value;
+      profileData.bio = document.getElementById("edit-bio").value.trim();
+      profileData.min_age_filter = Number(document.getElementById("edit-min-age").value);
+      profileData.max_age_filter = Number(document.getElementById("edit-max-age").value);
+      profileData.max_distance_km = Number(document.getElementById("edit-max-distance").value);
       
-      const geoCheckbox = document.getElementById("profile-use-geolocation");
-      if (geoCheckbox) {
-        profileData.use_geolocation = geoCheckbox.checked;
+      const editGeoCheckbox = document.getElementById("edit-use-geolocation");
+      if (editGeoCheckbox) {
+        profileData.use_geolocation = editGeoCheckbox.checked;
       }
       
       if (saveProfile(profileData)) {
+        // Обновляем отображение профиля
+        updateProfileDisplay();
+        
+        // Возвращаемся к отображению профиля
+        document.getElementById('profile-display').classList.remove('hidden');
+        document.getElementById('profile-edit').classList.add('hidden');
+        
         alert("✅ Профиль обновлён!");
         
         if (tg?.HapticFeedback) {
@@ -1000,6 +1048,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 300);
   }
   
+  function handleCancelEdit() {
+    // Возвращаемся к отображению профиля без сохранения
+    document.getElementById('profile-display').classList.remove('hidden');
+    document.getElementById('profile-edit').classList.add('hidden');
+  }
+  
   function handlePhotoUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -1011,18 +1065,32 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const reader = new FileReader();
     reader.onload = function(event) {
-      const preview = document.getElementById('photo-preview');
-      if (preview) {
-        preview.src = event.target.result;
-        preview.style.display = 'block';
-      }
+      // Определяем, на каком экране мы находимся
+      const isEditMode = !document.getElementById('profile-edit').classList.contains('hidden');
       
-      if (profileData) {
+      if (isEditMode) {
+        // В режиме редактирования
+        const preview = document.getElementById('edit-photo-preview');
+        if (preview) {
+          preview.src = event.target.result;
+          preview.style.display = 'block';
+        }
+        
+        // Сохраняем в промежуточные данные
+        profileData.custom_photo_url = event.target.result;
+      } else {
+        // В режиме просмотра профиля
+        const preview = document.getElementById('profile-photo-preview');
+        if (preview) {
+          preview.src = event.target.result;
+          preview.style.display = 'block';
+        }
+        
+        // Сохраняем сразу
         profileData.custom_photo_url = event.target.result;
         saveProfile(profileData);
+        alert('Фото загружено! 📸');
       }
-      
-      alert('Фото загружено! 📸');
     };
     reader.readAsDataURL(file);
   }
@@ -1037,6 +1105,33 @@ document.addEventListener('DOMContentLoaded', function() {
     initTelegram();
     setupStartButton();
     setupTabButtons();
+    
+    // Устанавливаем обработчики для профиля
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+    const saveChangesBtn = document.getElementById('save-profile-changes');
+    const cancelEditBtn = document.getElementById('cancel-profile-edit');
+    const profilePhotoInput = document.getElementById('profile-photo-upload');
+    const editPhotoInput = document.getElementById('edit-photo-upload');
+    
+    if (editProfileBtn) {
+      editProfileBtn.addEventListener('click', handleEditProfile);
+    }
+    
+    if (saveChangesBtn) {
+      saveChangesBtn.addEventListener('click', handleSaveProfileChanges);
+    }
+    
+    if (cancelEditBtn) {
+      cancelEditBtn.addEventListener('click', handleCancelEdit);
+    }
+    
+    if (profilePhotoInput) {
+      profilePhotoInput.addEventListener('change', handlePhotoUpload);
+    }
+    
+    if (editPhotoInput) {
+      editPhotoInput.addEventListener('change', handlePhotoUpload);
+    }
     
     profileData = loadProfile();
     
