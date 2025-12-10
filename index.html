@@ -142,61 +142,134 @@
       <!-- ЭКРАН ПРОФИЛЯ -->
       <div id="screen-profile" class="screen hidden">
         <div class="screen-content">
-          <h2 class="screen-title">Мой профиль ✏️</h2>
-
-          <div class="field">
-            <label for="profile-age">Возраст</label>
-            <input type="number" id="profile-age" min="18" max="99" />
-          </div>
-
-          <div class="field">
-            <label for="profile-gender">Пол</label>
-            <select id="profile-gender">
-              <option value="">Выберите пол</option>
-              <option value="male">Мужской</option>
-              <option value="female">Женский</option>
-              <option value="other">Другое</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="profile-city">Город</label>
-            <select id="profile-city">
-              <option value="">Выберите город</option>
-              <option value="Москва">Москва</option>
-              <option value="Санкт-Петербург">Санкт-Петербург</option>
-              <option value="Казань">Казань</option>
-              <option value="Новосибирск">Новосибирск</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="profile-bio">О себе</label>
-            <textarea id="profile-bio" rows="4" maxlength="300"></textarea>
-          </div>
-
-          <div class="field">
-            <label>Фото профиля 📸</label>
-            <input type="file" id="profile-photo" accept="image/*" />
-            <div class="hint">Выберите фото (до 5MB)</div>
-            <img id="photo-preview" />
-          </div>
-
-          <!-- ===== СЕКЦИЯ ВЕРИФИКАЦИИ ===== -->
-          <div class="field verification-section">
-            <label>Верификация анкеты 🔐</label>
-            
-            <!-- Статус верификации -->
-            <div id="verification-status" class="profile-verification-status not-verified">
-              Анкета не верифицирована
+          <!-- ОТОБРАЖЕНИЕ ПРОФИЛЯ -->
+          <div id="profile-display">
+            <div class="profile-header">
+              <h2 class="screen-title">Мой профиль</h2>
+              <button id="edit-profile-btn" class="settings-btn">⚙️</button>
             </div>
             
-            <!-- Кнопка для неверифицированных -->
-            <button id="verifyProfileBtn" class="primary" style="margin-top: 12px; width: 100%;">
+            <!-- ФОТО И ОСНОВНАЯ ИНФОРМАЦИЯ -->
+            <div class="profile-info-card">
+              <div class="profile-photo-section">
+                <img id="profile-photo-preview" class="profile-main-photo" />
+                <div class="profile-upload-btn">
+                  <label for="profile-photo-upload" class="photo-upload-label">
+                    📸 Изменить фото
+                  </label>
+                  <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" />
+                </div>
+              </div>
+              
+              <div class="profile-details">
+                <div class="profile-name">
+                  <h3 id="profile-name">Пользователь</h3>
+                </div>
+                
+                <div class="profile-info-row">
+                  <span class="info-label">Возраст:</span>
+                  <span id="profile-age-display" class="info-value">—</span>
+                </div>
+                
+                <div class="profile-info-row">
+                  <span class="info-label">Город:</span>
+                  <span id="profile-city-display" class="info-value">—</span>
+                </div>
+                
+                <!-- СТАТУС ВЕРИФИКАЦИИ -->
+                <div class="profile-info-row">
+                  <span class="info-label">Верификация:</span>
+                  <span id="verification-status" class="profile-verification-status not-verified">
+                    Анкета не верифицирована
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- КНОПКА ВЕРИФИКАЦИИ -->
+            <button id="verifyProfileBtn" class="primary verification-btn">
               🔐 Верифицировать анкету
             </button>
             
-            <!-- Секция загрузки фото (скрыта по умолчанию) -->
+            <!-- СЕКЦИЯ ЗАДАНИЙ -->
+            <div class="profile-section">
+              <h3 class="section-title">📋 Задания</h3>
+              <div class="tasks-list">
+                <div class="task-item">
+                  <div class="task-icon">✅</div>
+                  <div class="task-content">
+                    <div class="task-title">Заполните профиль на 100%</div>
+                    <div class="task-reward">+10 свайпов</div>
+                  </div>
+                  <button class="task-btn">Выполнить</button>
+                </div>
+                
+                <div class="task-item">
+                  <div class="task-icon">🌟</div>
+                  <div class="task-content">
+                    <div class="task-title">Пройти верификацию</div>
+                    <div class="task-reward">+20 свайпов</div>
+                  </div>
+                  <button class="task-btn">Выполнить</button>
+                </div>
+                
+                <div class="task-item">
+                  <div class="task-icon">📱</div>
+                  <div class="task-content">
+                    <div class="task-title">Пригласите друга</div>
+                    <div class="task-reward">+15 свайпов за друга</div>
+                  </div>
+                  <button class="task-btn">Поделиться</button>
+                </div>
+                
+                <div class="task-item">
+                  <div class="task-icon">🎯</div>
+                  <div class="task-content">
+                    <div class="task-title">Сделайте 20 свайпов в день</div>
+                    <div class="task-reward">+5 свайпов ежедневно</div>
+                  </div>
+                  <button class="task-btn">Начать</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- МАГАЗИН -->
+            <div class="profile-section">
+              <h3 class="section-title">🛒 Shop</h3>
+              <div class="shop-items">
+                <div class="shop-item">
+                  <div class="shop-item-icon">💎</div>
+                  <div class="shop-item-content">
+                    <div class="shop-item-title">Premium подписка</div>
+                    <div class="shop-item-description">Безлимитные свайпы, видимость выше, скрытый режим</div>
+                    <div class="shop-item-price">299 ₽/месяц</div>
+                  </div>
+                  <button class="shop-btn primary">Купить</button>
+                </div>
+                
+                <div class="shop-item">
+                  <div class="shop-item-icon">💝</div>
+                  <div class="shop-item-content">
+                    <div class="shop-item-title">Пакет 100 свайпов</div>
+                    <div class="shop-item-description">Расширьте свои возможности</div>
+                    <div class="shop-item-price">149 ₽</div>
+                  </div>
+                  <button class="shop-btn primary">Купить</button>
+                </div>
+                
+                <div class="shop-item">
+                  <div class="shop-item-icon">⚡</div>
+                  <div class="shop-item-content">
+                    <div class="shop-item-title">Буст профиля</div>
+                    <div class="shop-item-description">Ваш профиль показывается первым в ленте на 24 часа</div>
+                    <div class="shop-item-price">199 ₽</div>
+                  </div>
+                  <button class="shop-btn primary">Купить</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- СЕКЦИЯ ВЕРИФИКАЦИИ (скрыта по умолчанию) -->
             <div id="verification-section-content" class="verification-section-content hidden">
               <h3>🔐 Верификация анкеты</h3>
               <div class="verification-instruction">
@@ -254,31 +327,75 @@
               </button>
             </div>
           </div>
-          <!-- ===== КОНЕЦ СЕКЦИИ ВЕРИФИКАЦИИ ===== -->
-
-          <div class="field">
-            <label class="checkbox-field">
-              <input type="checkbox" id="profile-use-geolocation" />
-              Использовать мою геолокацию для поиска поблизости
-            </label>
-          </div>
-
-          <div class="field">
-            <label>Возрастной диапазон</label>
-            <div class="age-range">
-              <input type="number" id="profile-min-age" min="18" max="60" value="18" />
-              <span>—</span>
-              <input type="number" id="profile-max-age" min="18" max="60" value="35" />
+          
+          <!-- РЕДАКТИРОВАНИЕ ПРОФИЛЯ -->
+          <div id="profile-edit" class="hidden">
+            <div class="profile-edit-header">
+              <h2 class="screen-title">Редактирование профиля</h2>
+              <button id="save-profile-changes" class="save-edit-btn">💾</button>
             </div>
-          </div>
+            
+            <div class="field">
+              <label for="edit-age">Возраст</label>
+              <input type="number" id="edit-age" min="18" max="99" />
+            </div>
 
-          <div class="field">
-            <label for="profile-max-distance">Максимум расстояние (км)</label>
-            <input type="number" id="profile-max-distance" min="1" max="500" value="50" />
-          </div>
+            <div class="field">
+              <label for="edit-gender">Пол</label>
+              <select id="edit-gender">
+                <option value="">Выберите пол</option>
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+                <option value="other">Другое</option>
+              </select>
+            </div>
 
-          <!-- FIX: Кнопка всегда видна -->
-          <button id="updateProfileBtn">Сохранить изменения ✏️</button>
+            <div class="field">
+              <label for="edit-city">Город</label>
+              <select id="edit-city">
+                <option value="">Выберите город</option>
+                <option value="Москва">Москва</option>
+                <option value="Санкт-Петербург">Санкт-Петербург</option>
+                <option value="Казань">Казань</option>
+                <option value="Новосибирск">Новосибирск</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="edit-bio">О себе</label>
+              <textarea id="edit-bio" rows="4" maxlength="300"></textarea>
+            </div>
+
+            <div class="field">
+              <label>Фото профиля 📸</label>
+              <input type="file" id="edit-photo-upload" accept="image/*" />
+              <div class="hint">Выберите фото (до 5MB)</div>
+              <img id="edit-photo-preview" class="edit-photo-preview" />
+            </div>
+
+            <div class="field">
+              <label class="checkbox-field">
+                <input type="checkbox" id="edit-use-geolocation" />
+                Использовать мою геолокацию для поиска поблизости
+              </label>
+            </div>
+
+            <div class="field">
+              <label>Возрастной диапазон</label>
+              <div class="age-range">
+                <input type="number" id="edit-min-age" min="18" max="60" value="18" />
+                <span>—</span>
+                <input type="number" id="edit-max-age" min="18" max="60" value="35" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="edit-max-distance">Максимум расстояние (км)</label>
+              <input type="number" id="edit-max-distance" min="1" max="500" value="50" />
+            </div>
+            
+            <button id="cancel-profile-edit" class="cancel-edit-btn">Отмена</button>
+          </div>
         </div>
       </div>
     </div>
