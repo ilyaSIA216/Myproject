@@ -477,10 +477,108 @@ body.keyboard-open #saveProfileBtn {
 
 .verification-btn {
   width: 100%;
-  margin: 20px 0 30px 0;
+  margin: 20px 0;
   padding: 18px;
   font-size: 18px;
   border-radius: 16px;
+}
+
+/* ФОРМА ВЕРИФИКАЦИИ */
+.verification-form-section {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 25px;
+  border: 2px solid #bbf7d0;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.verification-form-section .section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--siamatch-green-dark);
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.verification-instruction {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.verification-steps {
+  background: rgba(34, 197, 94, 0.05);
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.verification-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.verification-step:last-child {
+  margin-bottom: 0;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  background: var(--siamatch-green);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-text {
+  font-size: 14px;
+  color: #333;
+  padding-top: 2px;
+}
+
+.verification-photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  border: 2px solid var(--siamatch-green);
+  object-fit: cover;
+  margin-top: 12px;
+  display: none;
+}
+
+#submit-verification {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.secondary-btn {
+  background: #f3f4f6;
+  color: #666;
+  border: none;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.secondary-btn:active {
+  background: #e5e7eb;
+  transform: scale(0.98);
 }
 
 /* СЕКЦИИ ПРОФИЛЯ */
@@ -1004,107 +1102,6 @@ select:focus {
   }
 }
 
-/* ===== СТИЛИ ВЕРИФИКАЦИИ ===== */
-.verification-section-content {
-  margin-top: 16px;
-  padding: 16px;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid rgba(34, 197, 94, 0.1);
-}
-
-.verification-section-content h3 {
-  margin: 0 0 12px;
-  color: var(--siamatch-green-dark);
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.verification-instruction {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 16px;
-  line-height: 1.5;
-}
-
-.verification-steps {
-  background: rgba(34, 197, 94, 0.05);
-  padding: 14px;
-  border-radius: 10px;
-  margin-bottom: 16px;
-}
-
-.verification-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.verification-step:last-child {
-  margin-bottom: 0;
-}
-
-.step-number {
-  width: 24px;
-  height: 24px;
-  background: var(--siamatch-green);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.step-text {
-  font-size: 14px;
-  color: #333;
-  padding-top: 2px;
-}
-
-#verification-preview {
-  width: 120px;
-  height: 120px;
-  border-radius: 12px;
-  border: 2px solid var(--siamatch-green);
-  object-fit: cover;
-  margin-top: 12px;
-  display: none;
-}
-
-#submit-verification {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
-  border: none;
-  padding: 14px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 12px;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 16px;
-}
-
-#cancel-verification {
-  background: transparent;
-  color: #666;
-  border: 1px solid #ddd;
-  padding: 12px;
-  font-size: 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  width: 100%;
-}
-
-#retry-verification {
-  width: 100%;
-}
-
 /* Статусы верификации */
 .profile-verification-status {
   display: inline-flex;
@@ -1139,25 +1136,24 @@ select:focus {
 
 /* Секции статусов */
 .verification-status-section {
-  padding: 20px;
-  border-radius: 12px;
-  margin: 16px 0;
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 25px;
+  border: 2px solid #bbf7d0;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
   text-align: center;
-  border: 2px solid;
 }
 
 .verification-status-section.pending {
-  background: rgba(245, 158, 11, 0.1);
   border-color: rgba(245, 158, 11, 0.3);
 }
 
 .verification-status-section.verified {
-  background: rgba(34, 197, 94, 0.1);
   border-color: rgba(34, 197, 94, 0.3);
 }
 
 .verification-status-section.rejected {
-  background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.3);
 }
 
@@ -1172,7 +1168,7 @@ select:focus {
 }
 
 .verification-status-section p {
-  margin: 0;
+  margin: 0 0 16px;
   font-size: 14px;
   color: #666;
   line-height: 1.5;
@@ -1306,7 +1302,9 @@ select:focus {
   }
   
   .profile-info-card,
-  .profile-section {
+  .profile-section,
+  .verification-form-section,
+  .verification-status-section {
     padding: 18px;
   }
   
