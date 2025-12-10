@@ -11,101 +11,48 @@ document.addEventListener('DOMContentLoaded', function() {
   let keyboardHeight = 0;
   let originalHeight = window.innerHeight;
   
-  // НОВОЕ: Система матчей и лайков
-  let matches = []; // {id, userId, name, age, photo, lastMessage, lastMessageTime, unread, messages}
-  let totalLikes = 0; // Общее количество лайков профиля
-  let currentChat = null; // Текущий открытый чат
-  let currentTab = "feed"; // Текущий активный таб
-  
-  // Верификация
-  let verificationStatus = 'not_verified';
+  // Добавляем состояние верификации
+  let verificationStatus = 'not_verified'; // 'not_verified', 'pending', 'verified', 'rejected'
   let verificationPhoto = null;
   
-  // Обновленные демо-данные кандидатов
+  // Обновляем демо-данные с верификацией
   const candidates = [
     {
-      id: 1, name: "Алина", age: 24, gender: "female", city: "Москва",
-      bio: "Люблю кофе ☕ Москва ❤️ Ищу серьезные отношения", 
-      photo: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=800",
-      verified: true, 
-      likes: 45, 
-      distance: 2.3,
-      interests: ["Кофе", "Путешествия", "Искусство"]
-    },
-    {
-      id: 2, name: "Дмитрий", age: 28, gender: "male", city: "Санкт-Петербург",
-      bio: "Инженер СПб. Люблю спорт и путешествия. Ищу активную девушку.", 
-      photo: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800",
-      verified: false, 
-      likes: 28, 
-      distance: 5.7,
-      interests: ["Спорт", "Технологии", "Авто"]
-    },
-    {
-      id: 3, name: "Екатерина", age: 26, gender: "female", city: "Москва",
-      bio: "Фотограф ❤️ Ищу интересного собеседника. Люблю природу и животных.", 
-      photo: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=800",
-      verified: true, 
-      likes: 89, 
-      distance: 1.2,
-      interests: ["Фотография", "Природа", "Йога"]
-    },
-    {
-      id: 4, name: "Максим", age: 30, gender: "male", city: "Казань",
-      bio: "Предприниматель. Увлекаюсь автоспортом и инвестициями. Ищу умную девушку.", 
-      photo: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=800",
-      verified: false, 
-      likes: 34, 
-      distance: 15.5,
-      interests: ["Бизнес", "Авто", "Инвестиции"]
-    },
-    {
-      id: 5, name: "София", age: 23, gender: "female", city: "Москва",
-      bio: "Студентка МГУ. Люблю книги, театр и хорошее кино. Ищу интеллигентного парня.", 
-      photo: "https://images.pexels.com/photos/1239288/pexels-photo-1239288.jpeg?auto=compress&cs=tinysrgb&w=800",
-      verified: true, 
-      likes: 67, 
-      distance: 3.1,
-      interests: ["Книги", "Театр", "Наука"]
-    }
-  ];
-  
-  // Демо-данные матчей
-  const demoMatches = [
-    {
       id: 1,
-      userId: 2,
-      name: "Дмитрий",
-      age: 28,
-      city: "Санкт-Петербург",
-      photo: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800",
-      lastMessage: "Привет! Как дела?",
-      lastMessageTime: "10:30",
-      unread: 2,
-      messages: [
-        { id: 1, text: "Привет! Как дела?", time: "10:30", isOwn: false },
-        { id: 2, text: "Привет! Всё отлично, а у тебя?", time: "10:32", isOwn: true },
-        { id: 3, text: "Тоже хорошо! Как выходные?", time: "10:33", isOwn: false }
-      ]
+      name: "Алина",
+      age: 24,
+      gender: "female",
+      city: "Москва",
+      bio: "Люблю кофе ☕ Москва ❤️",
+      photo: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=800",
+      verified: true, // ✅ Верифицирована
+      verification_status: 'verified'
     },
     {
       id: 2,
-      userId: 3,
+      name: "Дмитрий",
+      age: 28,
+      gender: "male",
+      city: "Санкт-Петербург",
+      bio: "Инженер СПб",
+      photo: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800",
+      verified: false,
+      verification_status: 'pending' // ⏳ На проверке
+    },
+    {
+      id: 3,
       name: "Екатерина",
       age: 26,
+      gender: "female",
       city: "Москва",
+      bio: "Фотограф ❤️",
       photo: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=800",
-      lastMessage: "Спасибо за лайк! ❤️",
-      lastMessageTime: "Вчера",
-      unread: 0,
-      messages: [
-        { id: 1, text: "Спасибо за лайк! ❤️", time: "Вчера", isOwn: false },
-        { id: 2, text: "Очень красивая анкета!", time: "Вчера", isOwn: true }
-      ]
-    }
+      verified: true, // ✅ Верифицирована
+      verification_status: 'verified'
+    },
   ];
   
-  // DOM ЭЛЕМЕНТЫ
+  // ===== DOM ЭЛЕМЕНТЫ =====
   const welcomeScreen = document.getElementById("welcome-screen");
   const startBtn = document.getElementById("startBtn");
   const usernameElem = document.getElementById("username");
@@ -114,22 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const tabBar = document.getElementById("tab-bar");
   const appRoot = document.getElementById("app-root");
   const card = document.getElementById("card");
-  
-  // НОВЫЕ ЭЛЕМЕНТЫ
-  const likesCounter = document.getElementById("likes-counter");
-  const likesCount = document.getElementById("likes-count");
-  const matchesList = document.getElementById("matches-list");
-  const matchesEmpty = document.getElementById("matches-empty");
-  const chatScreen = document.getElementById("chat-screen");
-  const backToMatchesBtn = document.getElementById("back-to-matches");
-  const chatMessages = document.getElementById("chat-messages");
-  const messageInput = document.getElementById("message-input");
-  const sendMessageBtn = document.getElementById("send-message");
-  const chatPartnerInfo = document.getElementById("chat-partner-info");
-  
-  // Новые счетчики для ленты
-  let likesCounterFeed = null;
-  let likesCountFeed = null;
   
   // ===== ИНИЦИАЛИЗАЦИЯ TELEGRAM =====
   function initTelegram() {
@@ -169,11 +100,19 @@ document.addEventListener('DOMContentLoaded', function() {
   function setupKeyboardHandlers() {
     console.log('⌨️ Настраиваю обработчики клавиатуры');
     
+    // Сохраняем оригинальную высоту
     originalHeight = window.innerHeight;
     
+    // Обработчик изменения размера окна
     window.addEventListener('resize', handleResize);
+    
+    // Обработчик фокуса на поле ввода
     document.addEventListener('focusin', handleFocusIn);
+    
+    // Обработчик потери фокуса
     document.addEventListener('focusout', handleFocusOut);
+    
+    // Обработчик тапа вне поля ввода
     document.addEventListener('touchstart', handleTouchOutside);
   }
   
@@ -183,6 +122,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (heightDiff > 100) {
       keyboardHeight = heightDiff;
+      console.log('⌨️ Клавиатура открылась, высота:', keyboardHeight);
+      
       document.body.classList.add('keyboard-open');
       
       if (card) {
@@ -201,6 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } 
     else if (Math.abs(originalHeight - newHeight) < 50) {
+      console.log('⌨️ Клавиатура закрылась');
+      
       document.body.classList.remove('keyboard-open');
       
       if (card) {
@@ -220,6 +163,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function handleFocusIn(e) {
     if (e.target.matches('input, textarea, select')) {
+      console.log('🎯 Фокус на поле ввода:', e.target.id || e.target.name);
+      
       if (isIOS) {
         setTimeout(() => {
           document.body.classList.add('keyboard-open');
@@ -230,10 +175,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function handleFocusOut(e) {
     if (e.target.matches('input, textarea, select')) {
+      console.log('🎯 Потеря фокуса с поля ввода');
+      
       if (isIOS) {
         setTimeout(() => {
           const activeElement = document.activeElement;
           if (!activeElement || !activeElement.matches('input, textarea, select')) {
+            console.log('✅ Все поля ввода потеряли фокус, закрываем клавиатуру');
             document.body.classList.remove('keyboard-open');
             if (card) card.style.transform = 'translateY(0)';
           }
@@ -273,9 +221,12 @@ document.addEventListener('DOMContentLoaded', function() {
   function initVerification() {
     console.log('🔐 Инициализирую систему верификации');
     
+    // Загружаем статус верификации
     loadVerificationStatus();
     
+    // Настройка элементов верификации
     const verifyBtn = document.getElementById('verifyProfileBtn');
+    const verificationSection = document.getElementById('verification-section-content');
     const verificationPhotoInput = document.getElementById('verification-photo');
     const submitBtn = document.getElementById('submit-verification');
     const cancelBtn = document.getElementById('cancel-verification');
@@ -301,6 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
       retryBtn.addEventListener('click', retryVerification);
     }
     
+    // Обновляем UI
     updateVerificationUI();
   }
   
@@ -342,13 +294,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!verifyBtn || !verificationStatusElem) return;
     
+    // Скрываем все секции сначала
     if (verificationSection) verificationSection.classList.add('hidden');
     if (verificationPendingSection) verificationPendingSection.classList.add('hidden');
     if (verificationVerifiedSection) verificationVerifiedSection.classList.add('hidden');
     if (verificationRejectedSection) verificationRejectedSection.classList.add('hidden');
     
+    // Настраиваем кнопку верификации
     verifyBtn.style.display = verificationStatus === 'not_verified' || verificationStatus === 'rejected' ? 'block' : 'none';
     
+    // Обновляем статус
     switch(verificationStatus) {
       case 'not_verified':
         verificationStatusElem.textContent = 'Анкета не верифицирована';
@@ -385,6 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
       verificationSection.classList.remove('hidden');
       verifyBtn.style.display = 'none';
       
+      // Сброс превью
       const preview = document.getElementById('verification-preview');
       if (preview) {
         preview.style.display = 'none';
@@ -411,6 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
     reader.onload = function(event) {
       verificationPhoto = event.target.result;
       
+      // Показываем превью
       const preview = document.getElementById('verification-preview');
       if (preview) {
         preview.src = verificationPhoto;
@@ -429,6 +386,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('📤 Отправка запроса на верификацию...');
+    
+    // В реальном приложении здесь будет отправка на сервер
+    // В демо-режиме меняем статус локально
     
     verificationStatus = 'pending';
     saveVerificationStatus();
@@ -471,487 +431,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const preview = document.getElementById('verification-preview');
     if (preview) preview.style.display = 'none';
-  }
-  
-  // ===== СИСТЕМА МАТЧЕЙ И ЛАЙКОВ =====
-  function initMatchesSystem() {
-    console.log('❤️ Инициализирую систему матчей и лайков');
-    
-    loadMatchesData();
-    updateLikesCounter();
-    renderMatchesList();
-    initWebSocket();
-    
-    // Добавляем бейдж на кнопку матчей если есть непрочитанные
-    updateMatchesBadge();
-    
-    // Добавляем демо-лайки при первом запуске
-    setTimeout(() => {
-      if (totalLikes === 0) {
-        totalLikes = Math.floor(Math.random() * 50) + 20;
-        updateLikesCounter();
-        saveMatchesData();
-      }
-    }, 1000);
-  }
-  
-  function loadMatchesData() {
-    try {
-      const savedMatches = localStorage.getItem("siamatch_matches");
-      if (savedMatches) {
-        matches = JSON.parse(savedMatches);
-      } else {
-        matches = [...demoMatches];
-      }
-      
-      const savedLikes = localStorage.getItem("siamatch_total_likes");
-      if (savedLikes) {
-        totalLikes = parseInt(savedLikes);
-      } else {
-        totalLikes = Math.floor(Math.random() * 50) + 20;
-      }
-      
-      console.log(`📂 Загружено: ${matches.length} матчей, ${totalLikes} лайков`);
-    } catch (e) {
-      console.error("❌ Ошибка загрузки данных матчей:", e);
-      matches = [...demoMatches];
-      totalLikes = 45;
-    }
-  }
-  
-  function saveMatchesData() {
-    try {
-      localStorage.setItem("siamatch_matches", JSON.stringify(matches));
-      localStorage.setItem("siamatch_total_likes", totalLikes.toString());
-    } catch (e) {
-      console.error("❌ Ошибка сохранения данных матчей:", e);
-    }
-  }
-  
-  function updateLikesCounter() {
-    // Обновляем счетчик в ленте
-    if (likesCounterFeed && likesCountFeed) {
-      if (totalLikes > 0) {
-        likesCounterFeed.style.display = 'flex';
-        likesCountFeed.textContent = totalLikes;
-        
-        likesCountFeed.style.transform = 'scale(1.2)';
-        setTimeout(() => {
-          likesCountFeed.style.transform = 'scale(1)';
-        }, 300);
-      } else {
-        likesCounterFeed.style.display = 'none';
-      }
-    }
-    
-    // Удаляем общий счетчик из шапки (больше не нужен)
-    if (likesCounter) {
-      likesCounter.style.display = 'none';
-    }
-  }
-  
-  function addLike() {
-    totalLikes++;
-    updateLikesCounter();
-    saveMatchesData();
-    
-    if (tg?.HapticFeedback) {
-      try {
-        tg.HapticFeedback.impactOccurred('light');
-      } catch (e) {}
-    }
-  }
-  
-  // Функция для обновления бейджа на кнопке матчей
-  function updateMatchesBadge() {
-    const totalUnread = matches.reduce((sum, match) => sum + match.unread, 0);
-    const matchesTab = document.querySelector('.tab-btn[data-tab="matches"]');
-    
-    if (matchesTab) {
-      // Удаляем старый бейдж если есть
-      const oldBadge = matchesTab.querySelector('.tab-badge');
-      if (oldBadge) oldBadge.remove();
-      
-      // Добавляем новый бейдж если есть непрочитанные
-      if (totalUnread > 0) {
-        const badge = document.createElement('span');
-        badge.className = 'tab-badge';
-        badge.textContent = totalUnread > 9 ? '9+' : totalUnread;
-        badge.style.cssText = `
-          position: absolute;
-          top: 5px;
-          right: 5px;
-          background: #ef4444;
-          color: white;
-          font-size: 10px;
-          font-weight: bold;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        `;
-        matchesTab.style.position = 'relative';
-        matchesTab.appendChild(badge);
-      }
-    }
-  }
-  
-  // ===== ОБРАБОТКА МАТЧЕЙ =====
-  function handleLike(candidateId) {
-    console.log(`❤️ Лайк пользователю ${candidateId}`);
-    
-    addLike();
-    
-    const candidate = candidates.find(c => c.id === candidateId);
-    if (candidate && Math.random() > 0.7) {
-      createMatch(candidate);
-    }
-    
-    likedIds.push(candidateId);
-    currentIndex++;
-    showCurrentCandidate();
-  }
-  
-  function createMatch(candidate) {
-    console.log(`💘 Создаем матч с ${candidate.name}`);
-    
-    const existingMatch = matches.find(m => m.userId === candidate.id);
-    if (existingMatch) return;
-    
-    const newMatch = {
-      id: Date.now(),
-      userId: candidate.id,
-      name: candidate.name,
-      age: candidate.age,
-      city: candidate.city,
-      photo: candidate.photo,
-      lastMessage: "Вы понравились друг другу! Начните общение ❤️",
-      lastMessageTime: "Только что",
-      unread: 1,
-      messages: [
-        {
-          id: 1,
-          text: "Вы понравились друг другу! Начните общение ❤️",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isOwn: false
-        }
-      ]
-    };
-    
-    matches.unshift(newMatch);
-    saveMatchesData();
-    renderMatchesList();
-    
-    showMatchNotification(candidate.name);
-    
-    if (tg?.HapticFeedback) {
-      try {
-        tg.HapticFeedback.notificationOccurred('success');
-      } catch (e) {}
-    }
-  }
-  
-  function showMatchNotification(name) {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 80px;
-      left: 20px;
-      right: 20px;
-      background: linear-gradient(135deg, #f472b6, #db2777);
-      color: white;
-      padding: 16px;
-      border-radius: 16px;
-      z-index: 3000;
-      text-align: center;
-      box-shadow: 0 8px 25px rgba(219, 39, 119, 0.4);
-      animation: slideDown 0.5s ease-out;
-    `;
-    
-    notification.innerHTML = `
-      <div style="font-size: 40px; margin-bottom: 8px;">💘</div>
-      <div style="font-weight: 700; font-size: 18px;">У вас новый матч!</div>
-      <div style="font-size: 14px; opacity: 0.9; margin-top: 4px;">Вы понравились ${name}</div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.style.animation = 'slideUp 0.5s ease-out forwards';
-      setTimeout(() => notification.remove(), 500);
-    }, 3000);
-  }
-  
-  function renderMatchesList() {
-    if (!matchesList) return;
-    
-    matchesList.innerHTML = '';
-    
-    if (matches.length === 0) {
-      matchesEmpty.style.display = 'block';
-      return;
-    }
-    
-    matchesEmpty.style.display = 'none';
-    
-    matches.forEach((match, index) => {
-      const matchCard = document.createElement('div');
-      matchCard.className = 'match-card';
-      matchCard.dataset.matchId = match.id;
-      
-      if (index === 0 && match.unread > 0) {
-        matchCard.classList.add('new-match');
-      }
-      
-      matchCard.innerHTML = `
-        <img src="${match.photo}" alt="${match.name}" class="match-photo" onerror="this.src='https://via.placeholder.com/70x70?text=Фото'" />
-        <div class="match-info">
-          <div class="match-name">${match.name}, ${match.age}</div>
-          <div class="match-details">${match.city}</div>
-          <div class="match-last-message">${match.lastMessage}</div>
-          <div class="match-status">${match.lastMessageTime}</div>
-        </div>
-        ${match.unread > 0 ? `<div class="unread-badge">${match.unread}</div>` : ''}
-      `;
-      
-      matchCard.addEventListener('click', () => openChat(match));
-      matchesList.appendChild(matchCard);
-    });
-    
-    // Обновляем бейдж на кнопке табов
-    updateMatchesBadge();
-  }
-  
-  // ===== ЧАТЫ =====
-  function openChat(match) {
-    console.log(`💬 Открываем чат с ${match.name}`);
-    
-    currentChat = match;
-    match.unread = 0;
-    saveMatchesData();
-    renderMatchesList(); // Это обновит и бейдж
-    
-    if (chatScreen) {
-      chatScreen.classList.remove('hidden');
-    }
-    
-    if (chatPartnerInfo) {
-      chatPartnerInfo.innerHTML = `
-        <div class="chat-partner">
-          <img src="${match.photo}" alt="${match.name}" class="chat-partner-photo" onerror="this.src='https://via.placeholder.com/45x45?text=Фото'" />
-          <div>
-            <div class="chat-partner-name">${match.name}, ${match.age}</div>
-            <div class="chat-partner-status">в сети</div>
-          </div>
-        </div>
-      `;
-    }
-    
-    renderChatMessages();
-    
-    setTimeout(() => {
-      if (messageInput) messageInput.focus();
-    }, 300);
-  }
-  
-  function renderChatMessages() {
-    if (!chatMessages || !currentChat) return;
-    
-    chatMessages.innerHTML = '';
-    
-    currentChat.messages.forEach(message => {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${message.isOwn ? 'sent' : 'received'}`;
-      
-      messageDiv.innerHTML = `
-        <div>${message.text}</div>
-        <div class="message-time">${message.time}</div>
-      `;
-      
-      chatMessages.appendChild(messageDiv);
-    });
-    
-    setTimeout(() => {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 100);
-  }
-  
-  function sendMessage() {
-    if (!messageInput || !messageInput.value.trim() || !currentChat) return;
-    
-    const text = messageInput.value.trim();
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const newMessage = {
-      id: Date.now(),
-      text: text,
-      time: time,
-      isOwn: true
-    };
-    
-    currentChat.messages.push(newMessage);
-    currentChat.lastMessage = text;
-    currentChat.lastMessageTime = time;
-    
-    renderChatMessages();
-    renderMatchesList();
-    saveMatchesData();
-    
-    messageInput.value = '';
-    
-    setTimeout(() => {
-      simulateReply();
-    }, Math.random() * 2000 + 1000);
-    
-    if (tg?.HapticFeedback) {
-      try {
-        tg.HapticFeedback.selectionChanged();
-      } catch (e) {}
-    }
-  }
-  
-  function simulateReply() {
-    if (!currentChat) return;
-    
-    const replies = [
-      "Привет! Как дела?",
-      "Очень рад матчу! 😊",
-      "Чем занимаешься?",
-      "Как твои выходные?",
-      "Классная анкета!",
-      "Хочешь пообщаться?",
-      "Какой у тебя план на сегодня?",
-      "Люблю такие знакомства!",
-      "Что нового?",
-      "Как настроение? 😊"
-    ];
-    
-    const randomReply = replies[Math.floor(Math.random() * replies.length)];
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const replyMessage = {
-      id: Date.now(),
-      text: randomReply,
-      time: time,
-      isOwn: false
-    };
-    
-    currentChat.messages.push(replyMessage);
-    currentChat.lastMessage = randomReply;
-    currentChat.lastMessageTime = time;
-    currentChat.unread = 0;
-    
-    renderChatMessages();
-    renderMatchesList(); // Обновит бейдж
-    
-    if (currentTab !== 'matches' && document.hidden) {
-      showMessageNotification(currentChat.name, randomReply);
-    }
-  }
-  
-  function showMessageNotification(name, message) {
-    if (tg?.showPopup) {
-      tg.showPopup({
-        title: `Новое сообщение от ${name}`,
-        message: message,
-        buttons: [{ type: 'ok', text: 'Открыть' }]
-      }, (buttonId) => {
-        if (buttonId === 'ok') {
-          setActiveTab('matches');
-        }
-      });
-    }
-  }
-  
-  function initWebSocket() {
-    console.log('📡 WebSocket инициализирован (демо-режим)');
-    
-    setInterval(() => {
-      if (matches.length > 0 && Math.random() > 0.9) {
-        const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-        if (randomMatch !== currentChat) {
-          randomMatch.unread++;
-          saveMatchesData();
-          renderMatchesList(); // Обновит бейдж
-          
-          if (currentTab !== 'matches') {
-            showMessageNotification(randomMatch.name, "Привет! 😊");
-          }
-        }
-      }
-    }, 30000);
-  }
-  
-  // ===== УПРАВЛЕНИЕ ТАБАМИ =====
-  function setActiveTab(tab) {
-    console.log('🔘 Активирую таб:', tab);
-    currentTab = tab;
-    
-    // Управляем отображением шапки
-    const header = document.getElementById("header");
-    if (header) {
-      if (tab === 'feed') {
-        header.classList.remove('hidden');
-      } else {
-        header.classList.add('hidden');
-      }
-    }
-    
-    // Управляем экраном чата
-    if (chatScreen && tab !== 'chat') {
-      chatScreen.classList.add('hidden');
-      currentChat = null;
-    }
-    
-    // Скрываем все экраны
-    document.querySelectorAll('.screen').forEach(screen => {
-      if (screen.id !== 'welcome-screen' && !screen.id.includes('chat')) {
-        screen.classList.add('hidden');
-      }
-    });
-    
-    // Показываем нужный экран
-    const screenId = tab === 'matches' ? 'screen-matches' : 'screen-' + tab;
-    const screen = document.getElementById(screenId);
-    if (screen) {
-      screen.classList.remove('hidden');
-    }
-    
-    // Обновляем активные кнопки табов
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-    
-    // Инициализация экрана
-    if (tab === 'feed') {
-      initFeed();
-    } else if (tab === 'profile') {
-      initProfile();
-    } else if (tab === 'matches') {
-      renderMatchesList();
-    }
-    
-    // Прокрутка вверх
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 50);
-  }
-  
-  function setupTabButtons() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const tab = this.dataset.tab;
-        setActiveTab(tab);
-        
-        if (tg?.HapticFeedback) {
-          try {
-            tg.HapticFeedback.selectionChanged();
-          } catch (e) {}
-        }
-      });
-    });
   }
   
   // ===== ОБРАБОТЧИК КНОПКИ "НАЧАТЬ ЗНАКОМСТВО" =====
@@ -1033,16 +512,20 @@ document.addEventListener('DOMContentLoaded', function() {
   function handleSaveProfile() {
     console.log('💾 Сохраняю профиль...');
     
+    // Сначала скрываем клавиатуру если открыта
     document.activeElement?.blur();
     document.body.classList.remove('keyboard-open');
     if (card) card.style.transform = 'translateY(0)';
     
+    // Ждем немного чтобы клавиатура закрылась
     setTimeout(() => {
+      // Получаем значения
       const ageValue = Number(document.getElementById("age").value);
       const gender = document.getElementById("gender").value;
       const city = document.getElementById("city").value;
       const bio = document.getElementById("bio").value.trim();
       
+      // Валидация
       if (!ageValue || ageValue < 18 || ageValue > 99) {
         alert("Возраст должен быть от 18 до 99 лет");
         return;
@@ -1060,6 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
+      // Создаем профиль
       const user = tg?.initDataUnsafe?.user || { id: 1, first_name: "Пользователь" };
       profileData = {
         tg_id: user.id,
@@ -1076,6 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
         verification_status: 'not_verified'
       };
       
+      // Сохраняем
       if (saveProfile(profileData)) {
         console.log('✅ Профиль сохранен');
         
@@ -1085,8 +570,9 @@ document.addEventListener('DOMContentLoaded', function() {
           } catch (e) {}
         }
         
+        // Инициализируем верификацию
         initVerification();
-        initMatchesSystem();
+        
         showMainApp();
         
         setTimeout(() => {
@@ -1109,10 +595,56 @@ document.addEventListener('DOMContentLoaded', function() {
       tabBar.classList.remove("hidden");
     }
     
+    // Инициализируем верификацию
     initVerification();
-    initMatchesSystem();
     
     setActiveTab("feed");
+  }
+  
+  // ===== УПРАВЛЕНИЕ ТАБАМИ =====
+  function setActiveTab(tab) {
+    console.log('🔘 Активирую таб:', tab);
+    
+    document.querySelectorAll('.screen').forEach(screen => {
+      if (screen.id !== 'welcome-screen') {
+        screen.classList.add('hidden');
+      }
+    });
+    
+    const screenId = 'screen-' + tab;
+    const screen = document.getElementById(screenId);
+    if (screen) {
+      screen.classList.remove('hidden');
+    }
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    
+    if (tab === 'feed') {
+      initFeed();
+    } else if (tab === 'profile') {
+      initProfile();
+    }
+    
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 50);
+  }
+  
+  function setupTabButtons() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const tab = this.dataset.tab;
+        setActiveTab(tab);
+        
+        if (tg?.HapticFeedback) {
+          try {
+            tg.HapticFeedback.selectionChanged();
+          } catch (e) {}
+        }
+      });
+    });
   }
   
   // ===== ЛЕНТА СВАЙПОВ =====
@@ -1127,12 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (btnLike) {
       btnLike.onclick = null;
-      btnLike.addEventListener('click', () => {
-        const filtered = candidates.filter(c => !likedIds.includes(c.id));
-        if (currentIndex < filtered.length) {
-          handleLike(filtered[currentIndex].id);
-        }
-      });
+      btnLike.addEventListener('click', handleLike);
     }
     
     if (btnDislike) {
@@ -1151,9 +678,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById("candidate-bio").textContent = "";
       document.getElementById("candidate-photo").src = "";
       
-      const likesInfo = document.getElementById("candidate-likes");
-      if (likesInfo) likesInfo.style.display = 'none';
-      
+      // Скрываем значок верификации
       const verifiedBadge = document.getElementById('candidate-verified');
       if (verifiedBadge) verifiedBadge.classList.add('hidden');
       
@@ -1166,27 +691,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById("candidate-name").textContent = candidate.name;
     document.getElementById("candidate-age").textContent = candidate.age;
-    document.getElementById("candidate-city").textContent = `${candidate.city} • ${candidate.distance} км`;
+    document.getElementById("candidate-city").textContent = candidate.city;
     document.getElementById("candidate-bio").textContent = candidate.bio;
     document.getElementById("candidate-photo").src = candidate.photo;
-    
-    const likesInfo = document.getElementById("candidate-likes");
-    if (!likesInfo) {
-      const candidateInfo = document.querySelector('.candidate-info');
-      if (candidateInfo) {
-        const likesDiv = document.createElement('div');
-        likesDiv.id = "candidate-likes";
-        likesDiv.className = "candidate-likes";
-        likesDiv.textContent = `❤️ ${candidate.likes} лайков`;
-        candidateInfo.insertBefore(likesDiv, document.getElementById("candidate-bio"));
-      }
-    } else {
-      likesInfo.textContent = `❤️ ${candidate.likes} лайков`;
-      likesInfo.style.display = 'block';
-    }
-    
     document.getElementById("feed-status").textContent = "";
     
+    // Показываем/скрываем значок верификации
     const verifiedBadge = document.getElementById('candidate-verified');
     if (verifiedBadge) {
       if (candidate.verified) {
@@ -1194,6 +704,23 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         verifiedBadge.classList.add('hidden');
       }
+    }
+  }
+  
+  function handleLike() {
+    console.log('❤️ Лайк!');
+    
+    if (tg?.HapticFeedback) {
+      try {
+        tg.HapticFeedback.impactOccurred('light');
+      } catch (e) {}
+    }
+    
+    const filtered = candidates.filter(c => !likedIds.includes(c.id));
+    if (currentIndex < filtered.length) {
+      likedIds.push(filtered[currentIndex].id);
+      currentIndex++;
+      showCurrentCandidate();
     }
   }
   
@@ -1254,12 +781,14 @@ document.addEventListener('DOMContentLoaded', function() {
       photoInput.addEventListener('change', handlePhotoUpload);
     }
     
+    // Обновляем UI верификации
     updateVerificationUI();
   }
   
   function handleUpdateProfile() {
     console.log('📝 Обновляю профиль...');
     
+    // Сначала скрываем клавиатуру если открыта
     document.activeElement?.blur();
     document.body.classList.remove('keyboard-open');
     if (card) card.style.transform = 'translateY(0)';
@@ -1324,23 +853,6 @@ document.addEventListener('DOMContentLoaded', function() {
     reader.readAsDataURL(file);
   }
   
-  // ===== НАСТРОЙКА НОВЫХ КНОПОК =====
-  function setupNewButtons() {
-    if (backToMatchesBtn) {
-      backToMatchesBtn.addEventListener('click', () => {
-        if (chatScreen) chatScreen.classList.add('hidden');
-        setActiveTab('matches');
-      });
-    }
-    
-    if (sendMessageBtn && messageInput) {
-      sendMessageBtn.addEventListener('click', sendMessage);
-      messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-      });
-    }
-  }
-  
   // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
   function initApp() {
     if (hasInitialized) return;
@@ -1351,19 +863,16 @@ document.addEventListener('DOMContentLoaded', function() {
     initTelegram();
     setupStartButton();
     setupTabButtons();
-    setupNewButtons();
-    
-    // Инициализируем счетчики лайков
-    likesCounterFeed = document.getElementById("likes-counter-feed");
-    likesCountFeed = document.getElementById("likes-count-feed");
     
     profileData = loadProfile();
     
+    // ВСЕГДА показываем приветственный экран первым
     if (welcomeScreen) {
       welcomeScreen.classList.remove("hidden");
       console.log('👋 Показываю приветственный экран');
     }
     
+    // Скрываем все остальные экраны
     if (onboardingScreen) onboardingScreen.classList.add("hidden");
     document.querySelectorAll('.screen').forEach(screen => {
       if (screen.id !== 'welcome-screen') {
