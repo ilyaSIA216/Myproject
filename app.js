@@ -127,8 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const likesCountElement = document.getElementById('likes-count');
   const likesCountBadge = document.getElementById('likes-count-badge');
   const newLikesNotification = document.getElementById('new-likes-notification');
-  const motivationMessage = document.getElementById('motivation-message');
-  const motivationCount = document.getElementById('motivation-count');
   const tabChatsBadge = document.getElementById('tab-chats-badge');
   
   // ===== ИНИЦИАЛИЗАЦИЯ TELEGRAM =====
@@ -343,22 +341,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Обновляем счетчик в мотивационном сообщении
-    if (motivationCount) {
-      motivationCount.textContent = count;
-    }
-    
     // Обновляем бейдж на табе чатов
     updateTabChatsBadge();
-    
-    // Показываем/скрываем мотивационное сообщение
-    if (motivationMessage) {
-      if (count > 0) {
-        motivationMessage.classList.remove('hidden');
-      } else {
-        motivationMessage.classList.add('hidden');
-      }
-    }
     
     // Проверяем наличие новых лайков
     checkForNewLikes();
@@ -595,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function submitVerification() {
     if (!verificationPhoto) {
-      alert('Сначала загрузите селфи-фото');
+      alert('Сначала загрузите селфи  фото');
       return;
     }
     
