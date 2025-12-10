@@ -191,6 +191,63 @@
               🔐 Верифицировать анкету
             </button>
             
+            <!-- ФОРМА ВЕРИФИКАЦИИ (скрыта по умолчанию) -->
+            <div id="verification-form-section" class="verification-form-section hidden">
+              <h3 class="section-title">🔐 Верификация анкеты</h3>
+              <div class="verification-instruction">
+                Для верификации необходимо отправить селфи-фото. Администратор сравнит его с фото в вашем профиле.
+              </div>
+              
+              <div class="verification-steps">
+                <div class="verification-step">
+                  <div class="step-number">1</div>
+                  <div class="step-text">Сделайте селфи при хорошем освещении</div>
+                </div>
+                <div class="verification-step">
+                  <div class="step-number">2</div>
+                  <div class="step-text">Лицо должно быть чётко видно</div>
+                </div>
+                <div class="verification-step">
+                  <div class="step-number">3</div>
+                  <div class="step-text">Фото будет проверено в течение 24 часов</div>
+                </div>
+              </div>
+              
+              <div class="field">
+                <label for="verification-photo">Селфи-фото для верификации</label>
+                <input type="file" id="verification-photo" accept="image/*" capture="user" />
+                <div class="hint">Используйте камеру для селфи. Фото должно быть чётким.</div>
+                <img id="verification-preview" class="verification-photo-preview" />
+              </div>
+              
+              <button id="submit-verification" class="primary">Отправить на проверку</button>
+              <button id="cancel-verification" class="secondary-btn">Отмена</button>
+            </div>
+            
+            <!-- Секция "На проверке" -->
+            <div id="verification-pending-section" class="verification-status-section pending hidden">
+              <div class="verification-status-icon">⏳</div>
+              <h4>На проверке</h4>
+              <p>Ваша анкета отправлена на верификацию. Проверка занимает до 24 часов.</p>
+            </div>
+            
+            <!-- Секция "Верифицирована" -->
+            <div id="verification-verified-section" class="verification-status-section verified hidden">
+              <div class="verification-status-icon">✅</div>
+              <h4>Анкета верифицирована</h4>
+              <p>Ваша личность подтверждена. На вашем профиле отображается значок верификации.</p>
+            </div>
+            
+            <!-- Секция "Отклонена" -->
+            <div id="verification-rejected-section" class="verification-status-section rejected hidden">
+              <div class="verification-status-icon">❌</div>
+              <h4>Верификация отклонена</h4>
+              <p>Фото не прошло проверку. Убедитесь, что селфи чёткое и соответствует фото в профиле.</p>
+              <button id="retry-verification" class="primary">
+                Попробовать снова
+              </button>
+            </div>
+            
             <!-- СЕКЦИЯ ЗАДАНИЙ -->
             <div class="profile-section">
               <h3 class="section-title">📋 Задания</h3>
@@ -267,64 +324,6 @@
                   <button class="shop-btn primary">Купить</button>
                 </div>
               </div>
-            </div>
-            
-            <!-- СЕКЦИЯ ВЕРИФИКАЦИИ (скрыта по умолчанию) -->
-            <div id="verification-section-content" class="verification-section-content hidden">
-              <h3>🔐 Верификация анкеты</h3>
-              <div class="verification-instruction">
-                Для верификации необходимо отправить селфи-фото. Администратор сравнит его с фото в вашем профиле.
-              </div>
-              
-              <div class="verification-steps">
-                <div class="verification-step">
-                  <div class="step-number">1</div>
-                  <div class="step-text">Сделайте селфи при хорошем освещении</div>
-                </div>
-                <div class="verification-step">
-                  <div class="step-number">2</div>
-                  <div class="step-text">Лицо должно быть чётко видно</div>
-                </div>
-                <div class="verification-step">
-                  <div class="step-number">3</div>
-                  <div class="step-text">Фото будет проверено в течение 24 часов</div>
-                </div>
-              </div>
-              
-              <label for="verification-photo" style="display: block; margin-top: 16px;">
-                Селфи-фото для верификации
-              </label>
-              <input type="file" id="verification-photo" accept="image/*" capture="user" style="width: 100%;" />
-              <div class="hint">Используйте камеру для селфи. Фото должно быть чётким.</div>
-              
-              <img id="verification-preview" />
-              
-              <button id="submit-verification" class="primary" style="margin-top: 16px;">Отправить на проверку</button>
-              <button id="cancel-verification" style="margin-top: 8px;">Отмена</button>
-            </div>
-            
-            <!-- Секция "На проверке" -->
-            <div id="verification-pending-section" class="verification-status-section pending hidden">
-              <div class="verification-status-icon">⏳</div>
-              <h4>На проверке</h4>
-              <p>Ваша анкета отправлена на верификацию. Проверка занимает до 24 часов.</p>
-            </div>
-            
-            <!-- Секция "Верифицирована" -->
-            <div id="verification-verified-section" class="verification-status-section verified hidden">
-              <div class="verification-status-icon">✅</div>
-              <h4>Анкета верифицирована</h4>
-              <p>Ваша личность подтверждена. На вашем профиле отображается значок верификации.</p>
-            </div>
-            
-            <!-- Секция "Отклонена" -->
-            <div id="verification-rejected-section" class="verification-status-section rejected hidden">
-              <div class="verification-status-icon">❌</div>
-              <h4>Верификация отклонена</h4>
-              <p>Фото не прошло проверку. Убедитесь, что селфи чёткое и соответствует фото в профиле.</p>
-              <button id="retry-verification" class="primary" style="margin-top: 12px;">
-                Попробовать снова
-              </button>
             </div>
           </div>
           
