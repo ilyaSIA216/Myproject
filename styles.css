@@ -757,6 +757,276 @@ select:focus {
   z-index: 10;
 }
 
+/* ===== СТИЛИ ДЛЯ БАДЖА "ВАС ЛАЙКНУЛИ" ===== */
+.chats-header {
+  margin-bottom: 25px;
+}
+
+.likes-badge {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin: 0 0 25px 0;
+  border: 2px solid #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15);
+  animation: pulse 2s infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.likes-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.likes-badge-icon {
+  font-size: 36px;
+  color: #dc2626;
+  background: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+  flex-shrink: 0;
+}
+
+.likes-badge-content {
+  flex: 1;
+}
+
+.likes-badge-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #7c2d12;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.likes-badge-subtitle {
+  font-size: 14px;
+  color: #92400e;
+  opacity: 0.9;
+}
+
+.likes-badge-count {
+  font-size: 28px;
+  font-weight: 800;
+  color: #dc2626;
+  background: white;
+  padding: 6px 14px;
+  border-radius: 14px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Уведомление о новых лайках */
+.new-likes-notification {
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+  border-left: 5px solid #f97316;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.new-likes-notification-icon {
+  font-size: 24px;
+  color: #ea580c;
+  background: white;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.new-likes-notification-content {
+  flex: 1;
+}
+
+.new-likes-notification-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #7c2d12;
+  margin-bottom: 2px;
+}
+
+.new-likes-notification-text {
+  font-size: 14px;
+  color: #92400e;
+  opacity: 0.8;
+}
+
+/* Список потенциальных мэтчей */
+.potential-matches-section {
+  margin-top: 30px;
+}
+
+.potential-matches-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--siamatch-green-dark);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.potential-matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.potential-match-item {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 2px solid #fecaca;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.potential-match-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(to bottom, #fca5a5, #dc2626);
+}
+
+.potential-match-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.potential-match-photo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fca5a5;
+  flex-shrink: 0;
+}
+
+.potential-match-info {
+  flex: 1;
+}
+
+.potential-match-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #7c2d12;
+  margin-bottom: 4px;
+}
+
+.potential-match-details {
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  gap: 10px;
+}
+
+.potential-match-verified {
+  color: var(--siamatch-green);
+  font-weight: 600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.potential-match-action {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.potential-match-action:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* Кнопка просмотра всех лайков */
+.view-all-likes-btn {
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+  color: #7c2d12;
+  border: 2px solid #fbbf24;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px;
+  width: 100%;
+  cursor: pointer;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.view-all-likes-btn:hover {
+  background: linear-gradient(135deg, #fed7aa, #fbbf24);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.2);
+}
+
 /* Адаптив для маленьких экранов */
 @media (max-height: 700px) {
   .welcome-logo {
@@ -796,6 +1066,21 @@ select:focus {
     height: 32px;
     font-size: 16px;
   }
+  
+  .likes-badge {
+    padding: 14px 16px;
+  }
+  
+  .likes-badge-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 30px;
+  }
+  
+  .likes-badge-count {
+    font-size: 24px;
+    padding: 5px 12px;
+  }
 }
 
 /* Адаптив для очень маленьких экранов */
@@ -816,5 +1101,19 @@ select:focus {
   
   .verification-section {
     padding: 12px;
+  }
+  
+  .likes-badge {
+    padding: 12px;
+  }
+  
+  .likes-badge-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 24px;
+  }
+  
+  .likes-badge-title {
+    font-size: 16px;
   }
 }
