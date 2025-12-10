@@ -10,17 +10,6 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Шапка НЕ фиксированная, только показывается в ленте -->
-  <div id="header" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb;">
-    <div style="font-size: 22px; font-weight: 700; color: var(--siamatch-green-dark); display: flex; align-items: center; gap: 8px;">
-      <span>🍀</span>
-      <span>SiaMatch</span>
-    </div>
-    <div id="likes-counter" class="likes-counter" style="display: none;">
-      ❤️ <span id="likes-count">0</span>
-    </div>
-  </div>
-
   <div id="app-root">
     <div id="card">
       <!-- ЭКРАН ПРИВЕТСТВИЯ -->
@@ -75,27 +64,24 @@
             <div class="hint">Минимум 10 символов, максимум 300</div>
           </div>
 
+          <!-- FIX: Кнопка всегда видна -->
           <button id="saveProfileBtn">Сохранить профиль 🍀</button>
         </div>
       </div>
 
-      <!-- УБИРАЕМ ЭКРАН ЧАТОВ - он теперь в матчах -->
-
-      <!-- ЭКРАН ЛЕНТЫ (СВАЙПОВ) -->
-      <div id="screen-feed" class="screen hidden">
-        <!-- Шапка с лайками показывается только здесь -->
-        <div class="feed-header">
-          <div style="font-size: 22px; font-weight: 700; color: var(--siamatch-green-dark); display: flex; align-items: center; gap: 8px; margin-left: 10px;">
-            <span>🍀</span>
-            <span>SiaMatch</span>
-          </div>
-          <div id="likes-counter-feed" class="likes-counter" style="display: none;">
-            ❤️ <span id="likes-count-feed">0</span>
-          </div>
+      <!-- ЭКРАН ЧАТОВ -->
+      <div id="screen-chats" class="screen hidden">
+        <div class="screen-content">
+          <h2 class="screen-title">Чаты 💬</h2>
+          <div id="chats-empty" class="hint">Здесь пока пусто</div>
+          <ul id="chats-list"></ul>
         </div>
-        
-        <div class="screen-content" style="padding-top: 10px;">
-          <!-- УБИРАЕМ ЗАГОЛОВОК "Познакомьтесь" -->
+      </div>
+
+      <!-- ЭКРАН ЛЕНТЫ -->
+      <div id="screen-feed" class="screen hidden">
+        <div class="screen-content">
+          <h2 class="screen-title">Познакомьтесь 🍀</h2>
           
           <div id="candidate-card">
             <!-- ЗНАЧОК ВЕРИФИКАЦИИ -->
@@ -110,7 +96,6 @@
                 <span id="candidate-age"></span>
               </div>
               <div id="candidate-city" class="candidate-city"></div>
-              <div id="candidate-likes" class="candidate-likes" style="display: none;"></div>
               <div id="candidate-bio" class="candidate-bio"></div>
             </div>
           </div>
@@ -121,23 +106,6 @@
           </div>
           
           <div id="feed-status" class="feed-status"></div>
-        </div>
-      </div>
-
-      <!-- ЭКРАН МАТЧЕЙ (вместо чатов) -->
-      <div id="screen-matches" class="screen hidden">
-        <div class="screen-content">
-          <h2 class="screen-title">Ваши матчи ❤️</h2>
-          
-          <div id="matches-list">
-            <div class="empty-state" id="matches-empty">
-              <div style="font-size: 48px; margin-bottom: 20px;">💘</div>
-              <h3>Пока нет матчей</h3>
-              <p style="color: #666; margin-top: 10px; max-width: 300px; margin: 10px auto;">
-                Лайкайте людей в ленте, и если они ответят взаимностью - здесь появится чат!
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -184,7 +152,7 @@
             <img id="photo-preview" />
           </div>
 
-          <!-- СЕКЦИЯ ВЕРИФИКАЦИИ -->
+          <!-- ===== СЕКЦИЯ ВЕРИФИКАЦИИ ===== -->
           <div class="field verification-section">
             <label>Верификация анкеты 🔐</label>
             
@@ -198,7 +166,7 @@
               🔐 Верифицировать анкету
             </button>
             
-            <!-- Секция загрузки фото -->
+            <!-- Секция загрузки фото (скрыта по умолчанию) -->
             <div id="verification-section-content" class="verification-section-content hidden">
               <h3>🔐 Верификация анкеты</h3>
               <div class="verification-instruction">
@@ -256,6 +224,7 @@
               </button>
             </div>
           </div>
+          <!-- ===== КОНЕЦ СЕКЦИИ ВЕРИФИКАЦИИ ===== -->
 
           <div class="field">
             <label class="checkbox-field">
@@ -278,6 +247,7 @@
             <input type="number" id="profile-max-distance" min="1" max="500" value="50" />
           </div>
 
+          <!-- FIX: Кнопка всегда видна -->
           <button id="updateProfileBtn">Сохранить изменения ✏️</button>
         </div>
       </div>
@@ -285,90 +255,13 @@
 
     <!-- НИЖНЯЯ НАВИГАЦИЯ -->
     <div id="tab-bar" class="hidden">
-      <!-- УБИРАЕМ КНОПКУ ЧАТОВ, ВМЕСТО НЕЕ МАТЧИ -->
+      <button class="tab-btn" data-tab="chats">💬</button>
       <button class="tab-btn active" data-tab="feed">🍀</button>
-      <button class="tab-btn" data-tab="matches">💬</button> <!-- Иконка чата, но ведет к матчам -->
       <button class="tab-btn" data-tab="profile">✏️</button>
-    </div>
-  </div>
-
-  <!-- ЭКРАН ЧАТА (открывается из матчей) -->
-  <div id="chat-screen" class="screen hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; background: white; display: flex; flex-direction: column;">
-    <div class="chat-header">
-      <button id="back-to-matches" style="background: none; border: none; font-size: 24px; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">←</button>
-      <div id="chat-partner-info" style="flex: 1;">
-        <!-- Информация о собеседнике -->
-      </div>
-    </div>
-    
-    <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px;">
-      <!-- Сообщения будут здесь -->
-    </div>
-    
-    <div class="chat-input">
-      <div style="display: flex; gap: 10px; padding: 12px; background: white; border-top: 1px solid #e5e7eb;">
-        <input type="text" id="message-input" placeholder="Напишите сообщение..." style="flex: 1; padding: 12px 16px; border-radius: 20px; border: 1px solid #e5e7eb; font-size: 16px;" />
-        <button id="send-message" style="background: var(--siamatch-green); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center;">↑</button>
-      </div>
     </div>
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="app.js"></script>
-
-  <style>
-    /* Шапка в ленте */
-    .feed-header {
-      position: sticky;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(10px);
-      padding: 12px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #e5e7eb;
-      z-index: 1000;
-    }
-    
-    /* Чат */
-    #chat-screen {
-      z-index: 2000;
-    }
-    
-    .chat-header {
-      position: sticky;
-      top: 0;
-      background: white;
-      padding: 15px;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      z-index: 10;
-    }
-    
-    .chat-input {
-      position: sticky;
-      bottom: 0;
-      background: white;
-      z-index: 10;
-    }
-    
-    /* Пустое состояние матчей */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #6b7280;
-    }
-    
-    .empty-state h3 {
-      font-size: 20px;
-      color: #374151;
-      margin-bottom: 10px;
-    }
-  </style>
 </body>
 </html>
