@@ -74,37 +74,42 @@
         <div class="screen-content">
           <h2 class="screen-title">Чаты 💬</h2>
           
-          <!-- БАДЖ С КОЛИЧЕСТВОМ ЛАЙКОВ -->
+          <!-- БАДЖ С КОЛИЧЕСТВОМ ЛАЙКОВ (ТОЛЬКО ЧИСЛО!) -->
           <div class="chats-header">
             <div id="likes-badge" class="likes-badge">
               <div class="likes-badge-icon">💗</div>
               <div class="likes-badge-content">
-                <div class="likes-badge-title">Вас лайкнули <span id="likes-count">0</span> анкет</div>
-                <div class="likes-badge-subtitle">Это потенциальные мэтчи! Свайпайте вправо, чтобы познакомиться</div>
+                <div class="likes-badge-title">
+                  Вас лайкнули 
+                  <span id="likes-count" class="counter-animation">0</span> 
+                  человек
+                </div>
+                <div class="likes-badge-subtitle">
+                  Продолжайте свайпать, чтобы найти взаимные симпатии!
+                </div>
               </div>
               <div id="likes-count-badge" class="likes-badge-count">0</div>
+              <div class="likes-badge-mystery">❓</div>
             </div>
             
             <!-- УВЕДОМЛЕНИЕ О НОВЫХ ЛАЙКАХ -->
             <div id="new-likes-notification" class="new-likes-notification hidden">
               <div class="new-likes-notification-icon">🎉</div>
               <div class="new-likes-notification-content">
-                <div class="new-likes-notification-title">Новые лайки!</div>
-                <div class="new-likes-notification-text">Кто-то оценил вашу анкету</div>
+                <div class="new-likes-notification-title">Новый лайк!</div>
+                <div class="new-likes-notification-text">Кто-то оценил вашу анкету. Продолжайте свайпать, чтобы найти этого человека!</div>
               </div>
             </div>
-          </div>
-          
-          <!-- СЕКЦИЯ ПОТЕНЦИАЛЬНЫХ МЭТЧЕЙ -->
-          <div id="potential-matches-section" class="potential-matches-section hidden">
-            <h3 class="potential-matches-title">💕 Потенциальные мэтчи</h3>
-            <div id="potential-matches-list" class="potential-matches-list">
-              <!-- Потенциальные мэтчи будут добавлены динамически -->
-            </div>
             
-            <button id="view-all-likes-btn" class="view-all-likes-btn">
-              👀 Посмотреть все лайки
-            </button>
+            <!-- МОТИВАЦИОННОЕ СООБЩЕНИЕ -->
+            <div id="motivation-message" class="motivation-message hidden">
+              <div class="motivation-icon">✨</div>
+              <div class="motivation-title">Тайные поклонники ждут вас!</div>
+              <div class="motivation-text">
+                <span id="motivation-count">0</span> человек уже оценили вашу анкету. 
+                Они появятся в ленте - просто продолжайте свайпать!
+              </div>
+            </div>
           </div>
           
           <!-- СТАНДАРТНЫЙ СПИСОК ЧАТОВ -->
@@ -290,7 +295,11 @@
 
     <!-- НИЖНЯЯ НАВИГАЦИЯ -->
     <div id="tab-bar" class="hidden">
-      <button class="tab-btn" data-tab="chats">💬</button>
+      <button class="tab-btn" data-tab="chats">
+        💬
+        <!-- Бейдж с количеством лайков на иконке чатов -->
+        <div id="tab-chats-badge" class="tab-notification-badge hidden">0</div>
+      </button>
       <button class="tab-btn active" data-tab="feed">🍀</button>
       <button class="tab-btn" data-tab="profile">✏️</button>
     </div>
