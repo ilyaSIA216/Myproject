@@ -11,16 +11,28 @@ document.addEventListener('DOMContentLoaded', function() {
   let keyboardHeight = 0;
   let originalHeight = window.innerHeight;
   
+  // Фильтры поиска
+  let searchFilters = {
+    minAge: 18,
+    maxAge: 35,
+    interests: [],
+    datingGoal: ''
+  };
+  
   // Добавляем состояние верификации
-  let verificationStatus = 'not_verified'; // 'not_verified', 'pending', 'verified', 'rejected'
+  let verificationStatus = 'not_verified';
   let verificationPhoto = null;
   
-  // НОВОЕ: Система лайков (только счетчики, без показа анкет)
-  let usersWhoLikedMeCount = 0; // Только количество, без данных о пользователях
-  let lastLikesCount = 0; // Для отслеживания новых лайков
-  let newLikesReceived = false; // Флаг новых лайков
+  // Система лайков
+  let usersWhoLikedMeCount = 0;
+  let lastLikesCount = 0;
+  let newLikesReceived = false;
   
-  // Демо-данные кандидатов (только для ленты)
+  // Интересы пользователя
+  let userInterests = [];
+  let datingGoal = '';
+  
+  // Демо-данные кандидатов (с интересами)
   const candidates = [
     {
       id: 1,
@@ -31,7 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Люблю кофе ☕ Москва ❤️. Ищу серьезные отношения.",
       photo: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: true,
-      verification_status: 'verified'
+      verification_status: 'verified',
+      interests: ["travel", "movies", "photography"],
+      dating_goal: "marriage"
     },
     {
       id: 2,
@@ -42,7 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Инженер, люблю спорт и путешествия. Ищу активную девушку.",
       photo: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: false,
-      verification_status: 'pending'
+      verification_status: 'pending',
+      interests: ["sport", "travel", "cars"],
+      dating_goal: "dating"
     },
     {
       id: 3,
@@ -53,7 +69,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Фотограф, люблю искусство и природу. Ищу творческого человека.",
       photo: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: true,
-      verification_status: 'verified'
+      verification_status: 'verified',
+      interests: ["art", "photography", "travel"],
+      dating_goal: "friendship"
     },
     {
       id: 4,
@@ -64,7 +82,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Предприниматель. Люблю активный отдых и путешествия 🗺️",
       photo: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: true,
-      verification_status: 'verified'
+      verification_status: 'verified',
+      interests: ["business", "travel", "sport"],
+      dating_goal: "marriage"
     },
     {
       id: 5,
@@ -75,7 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Дизайнер. Увлекаюсь йогой и здоровым питанием 🥗",
       photo: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: false,
-      verification_status: 'pending'
+      verification_status: 'pending',
+      interests: ["art", "music", "cooking"],
+      dating_goal: "dating"
     },
     {
       id: 6,
@@ -86,7 +108,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Программист, увлекаюсь настольными играми и кино.",
       photo: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: true,
-      verification_status: 'verified'
+      verification_status: 'verified',
+      interests: ["gaming", "movies", "music"],
+      dating_goal: "virtual"
     },
     {
       id: 7,
@@ -97,7 +121,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Маркетолог, люблю театр и литературу. Ищу интеллигентного мужчину.",
       photo: "https://images.pexels.com/photos/712513/pexels-photo-712513.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: true,
-      verification_status: 'verified'
+      verification_status: 'verified',
+      interests: ["art", "movies", "music"],
+      dating_goal: "marriage"
     },
     {
       id: 8,
@@ -108,7 +134,35 @@ document.addEventListener('DOMContentLoaded', function() {
       bio: "Врач, занимаюсь бегом. Ищу спутницу жизни.",
       photo: "https://images.pexels.com/photos/2589653/pexels-photo-2589653.jpeg?auto=compress&cs=tinysrgb&w=800",
       verified: false,
-      verification_status: 'pending'
+      verification_status: 'pending',
+      interests: ["sport", "travel", "photography"],
+      dating_goal: "marriage"
+    },
+    {
+      id: 9,
+      name: "Ольга",
+      age: 22,
+      gender: "female",
+      city: "Екатеринбург",
+      bio: "Студентка, увлекаюсь танцами и музыкой. Ищу друзей для общения.",
+      photo: "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=800",
+      verified: false,
+      verification_status: 'not_verified',
+      interests: ["dancing", "music", "movies"],
+      dating_goal: "friendship"
+    },
+    {
+      id: 10,
+      name: "Сергей",
+      age: 33,
+      gender: "male",
+      city: "Нижний Новгород",
+      bio: "Бизнесмен, люблю автомобили и путешествия. Ищу девушку для серьезных отношений.",
+      photo: "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=800",
+      verified: true,
+      verification_status: 'verified',
+      interests: ["cars", "travel", "business"],
+      dating_goal: "marriage"
     }
   ];
   
@@ -122,12 +176,22 @@ document.addEventListener('DOMContentLoaded', function() {
   const appRoot = document.getElementById("app-root");
   const card = document.getElementById("card");
   
-  // Элементы для системы лайков (ТОЛЬКО СЧЕТЧИКИ)
+  // Элементы для системы лайков
   const likesBadge = document.getElementById('likes-badge');
   const likesCountElement = document.getElementById('likes-count');
   const likesCountBadge = document.getElementById('likes-count-badge');
   const newLikesNotification = document.getElementById('new-likes-notification');
   const tabChatsBadge = document.getElementById('tab-chats-badge');
+  
+  // Фильтры поиска
+  const searchMinAge = document.getElementById('search-min-age');
+  const searchMaxAge = document.getElementById('search-max-age');
+  const applyFiltersBtn = document.getElementById('apply-filters');
+  
+  // Интересы пользователя
+  const saveInterestsBtn = document.getElementById('save-interests');
+  const datingGoalSelect = document.getElementById('dating-goal');
+  const saveDatingGoalBtn = document.getElementById('save-dating-goal');
   
   // ===== ИНИЦИАЛИЗАЦИЯ TELEGRAM =====
   function initTelegram() {
@@ -267,22 +331,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // ===== СИСТЕМА ЛАЙКОВ (ТОЛЬКО СЧЕТЧИКИ) =====
+  // ===== СИСТЕМА ЛАЙКОВ =====
   function initLikesSystem() {
-    console.log('💗 Инициализирую систему лайков (только счетчики)');
+    console.log('💗 Инициализирую систему лайков');
     
-    // Загружаем данные о лайках
     loadLikesData();
-    
-    // Обновляем UI лайков
     updateLikesUI();
     
-    // Настройка клика на бадж
     if (likesBadge) {
       likesBadge.addEventListener('click', handleLikesBadgeClick);
     }
     
-    // Симуляция получения новых лайков (в демо-режиме)
     simulateNewLikes();
   }
   
@@ -317,12 +376,11 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateLikesUI() {
     const count = usersWhoLikedMeCount;
     
-    // Обновляем счетчики с анимацией
     if (likesCountElement) {
       const currentCount = parseInt(likesCountElement.textContent) || 0;
       if (currentCount !== count) {
         likesCountElement.classList.remove('counter-animation');
-        void likesCountElement.offsetWidth; // Trigger reflow
+        void likesCountElement.offsetWidth;
         likesCountElement.classList.add('counter-animation');
         likesCountElement.textContent = count;
       }
@@ -332,8 +390,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const currentBadgeCount = parseInt(likesCountBadge.textContent) || 0;
       if (currentBadgeCount !== count) {
         likesCountBadge.textContent = count;
-        
-        // Анимация при изменении количества
         likesCountBadge.style.animation = 'none';
         setTimeout(() => {
           likesCountBadge.style.animation = 'countPulse 2s infinite';
@@ -341,10 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Обновляем бейдж на табе чатов
     updateTabChatsBadge();
-    
-    // Проверяем наличие новых лайков
     checkForNewLikes();
   }
   
@@ -357,7 +410,6 @@ document.addEventListener('DOMContentLoaded', function() {
       tabChatsBadge.textContent = count > 99 ? '99+' : count.toString();
       tabChatsBadge.classList.remove('hidden');
       
-      // Анимация для новых лайков
       if (newLikesReceived) {
         tabChatsBadge.style.animation = 'badgePulse 1.5s infinite';
       }
@@ -367,7 +419,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function checkForNewLikes() {
-    // Проверяем, появились ли новые лайки с последнего посещения
     if (usersWhoLikedMeCount > lastLikesCount) {
       newLikesReceived = true;
       showNewLikesNotification();
@@ -379,17 +430,14 @@ document.addEventListener('DOMContentLoaded', function() {
   function showNewLikesNotification() {
     if (!newLikesNotification || !newLikesReceived) return;
     
-    // Показываем уведомление
     newLikesNotification.classList.remove('hidden');
     
-    // Вибрация (если доступна)
     if (tg?.HapticFeedback) {
       try {
         tg.HapticFeedback.impactOccurred('light');
       } catch (e) {}
     }
     
-    // Автоматически скрываем через 5 секунд
     setTimeout(() => {
       newLikesNotification.classList.add('hidden');
       newLikesReceived = false;
@@ -399,7 +447,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function handleLikesBadgeClick() {
     console.log('💗 Клик на бадж с лайками');
     
-    // Показываем мотивационное сообщение
     if (usersWhoLikedMeCount > 0) {
       const messages = [
         `🎯 У вас ${usersWhoLikedMeCount} тайных поклонников! Продолжайте свайпать, чтобы найти их в ленте.`,
@@ -422,28 +469,25 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function simulateNewLikes() {
-    // В демо-режиме симулируем получение лайков
     if (usersWhoLikedMeCount === 0) {
-      // При первом запуске даем несколько лайков для мотивации
       setTimeout(() => {
-        usersWhoLikedMeCount = Math.floor(Math.random() * 5) + 3; // 3-7 лайков
+        usersWhoLikedMeCount = Math.floor(Math.random() * 5) + 3;
         saveLikesData();
         updateLikesUI();
         console.log('🎲 Демо: добавлены лайки для мотивации');
       }, 3000);
     }
     
-    // Периодически добавляем новые лайки (симуляция активности)
     setInterval(() => {
-      if (Math.random() > 0.7) { // 30% chance
-        const newLikes = Math.floor(Math.random() * 2) + 1; // 1-2 новых лайка
+      if (Math.random() > 0.7) {
+        const newLikes = Math.floor(Math.random() * 2) + 1;
         usersWhoLikedMeCount += newLikes;
         newLikesReceived = true;
         saveLikesData();
         updateLikesUI();
         console.log(`🎲 Демо: добавлено ${newLikes} новых лайков`);
       }
-    }, 30000); // Каждые 30 секунд
+    }, 30000);
   }
   
   // ===== СИСТЕМА ВЕРИФИКАЦИИ =====
@@ -503,13 +547,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!verifyBtn || !verificationStatusElem) return;
     
-    // Скрываем все секции верификации
     if (verificationSection) verificationSection.classList.add('hidden');
     if (verificationPendingSection) verificationPendingSection.classList.add('hidden');
     if (verificationVerifiedSection) verificationVerifiedSection.classList.add('hidden');
     if (verificationRejectedSection) verificationRejectedSection.classList.add('hidden');
     
-    // Показываем кнопку верификации только если статус не верифицирован или отклонен
     verifyBtn.style.display = verificationStatus === 'not_verified' || verificationStatus === 'rejected' ? 'block' : 'none';
     
     switch(verificationStatus) {
@@ -589,7 +631,6 @@ document.addEventListener('DOMContentLoaded', function() {
     saveVerificationStatus();
     updateVerificationUI();
     
-    // Скрываем форму верификации после отправки
     const verificationSection = document.getElementById('verification-form-section');
     if (verificationSection) verificationSection.classList.add('hidden');
     
@@ -614,11 +655,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const preview = document.getElementById('verification-preview');
     if (preview) preview.style.display = 'none';
     
-    // Скрываем форму верификации
     const verificationSection = document.getElementById('verification-form-section');
     if (verificationSection) verificationSection.classList.add('hidden');
     
-    // Показываем кнопку верификации
     const verifyBtn = document.getElementById('verifyProfileBtn');
     if (verifyBtn) verifyBtn.style.display = 'block';
   }
@@ -635,13 +674,177 @@ document.addEventListener('DOMContentLoaded', function() {
     const preview = document.getElementById('verification-preview');
     if (preview) preview.style.display = 'none';
     
-    // Скрываем секцию отклонения
     const verificationRejectedSection = document.getElementById('verification-rejected-section');
     if (verificationRejectedSection) verificationRejectedSection.classList.add('hidden');
     
-    // Показываем кнопку верификации
     const verifyBtn = document.getElementById('verifyProfileBtn');
     if (verifyBtn) verifyBtn.style.display = 'block';
+  }
+  
+  // ===== ФУНКЦИИ ФИЛЬТРОВ ПОИСКА =====
+  function initSearchFilters() {
+    loadSearchFilters();
+    
+    if (searchMinAge) {
+      searchMinAge.value = searchFilters.minAge;
+      searchMinAge.addEventListener('change', function() {
+        searchFilters.minAge = parseInt(this.value) || 18;
+      });
+    }
+    
+    if (searchMaxAge) {
+      searchMaxAge.value = searchFilters.maxAge;
+      searchMaxAge.addEventListener('change', function() {
+        searchFilters.maxAge = parseInt(this.value) || 35;
+      });
+    }
+    
+    document.querySelectorAll('.search-interest').forEach(checkbox => {
+      checkbox.checked = searchFilters.interests.includes(checkbox.value);
+      
+      checkbox.addEventListener('change', function() {
+        const interest = this.value;
+        if (this.checked) {
+          if (!searchFilters.interests.includes(interest)) {
+            searchFilters.interests.push(interest);
+          }
+        } else {
+          const index = searchFilters.interests.indexOf(interest);
+          if (index > -1) {
+            searchFilters.interests.splice(index, 1);
+          }
+        }
+      });
+    });
+    
+    const searchDatingGoalSelect = document.getElementById('search-dating-goal');
+    if (searchDatingGoalSelect) {
+      searchDatingGoalSelect.value = searchFilters.datingGoal;
+      searchDatingGoalSelect.addEventListener('change', function() {
+        searchFilters.datingGoal = this.value;
+      });
+    }
+    
+    if (applyFiltersBtn) {
+      applyFiltersBtn.addEventListener('click', function() {
+        saveSearchFilters();
+        alert('Фильтры применены! 🎯\n\nИщем анкеты по вашим критериям...');
+        initFeed();
+      });
+    }
+  }
+  
+  function loadSearchFilters() {
+    try {
+      const saved = localStorage.getItem("siamatch_search_filters");
+      if (saved) {
+        const data = JSON.parse(saved);
+        searchFilters.minAge = data.minAge || 18;
+        searchFilters.maxAge = data.maxAge || 35;
+        searchFilters.interests = data.interests || [];
+        searchFilters.datingGoal = data.datingGoal || '';
+      }
+    } catch (e) {
+      console.error("❌ Ошибка загрузки фильтров:", e);
+    }
+  }
+  
+  function saveSearchFilters() {
+    try {
+      localStorage.setItem("siamatch_search_filters", JSON.stringify(searchFilters));
+    } catch (e) {
+      console.error("❌ Ошибка сохранения фильтров:", e);
+    }
+  }
+  
+  // ===== СИСТЕМА ИНТЕРЕСОВ =====
+  function initInterestsSystem() {
+    console.log('🎯 Инициализирую систему интересов');
+    
+    loadUserInterests();
+    updateInterestsUI();
+    
+    if (saveInterestsBtn) {
+      saveInterestsBtn.addEventListener('click', saveUserInterests);
+    }
+    
+    if (datingGoalSelect) {
+      datingGoalSelect.value = datingGoal;
+      datingGoalSelect.addEventListener('change', function() {
+        datingGoal = this.value;
+      });
+    }
+    
+    if (saveDatingGoalBtn) {
+      saveDatingGoalBtn.addEventListener('click', saveDatingGoal);
+    }
+  }
+  
+  function loadUserInterests() {
+    try {
+      const saved = localStorage.getItem("siamatch_interests");
+      if (saved) {
+        const data = JSON.parse(saved);
+        userInterests = data.interests || [];
+        datingGoal = data.datingGoal || '';
+      }
+    } catch (e) {
+      console.error("❌ Ошибка загрузки интересов:", e);
+    }
+  }
+  
+  function saveUserInterests() {
+    userInterests = [];
+    document.querySelectorAll('.user-interest:checked').forEach(checkbox => {
+      userInterests.push(checkbox.value);
+    });
+    
+    try {
+      const data = {
+        interests: userInterests,
+        datingGoal: datingGoal,
+        timestamp: Date.now()
+      };
+      localStorage.setItem("siamatch_interests", JSON.stringify(data));
+      
+      alert('✅ Интересы сохранены!');
+      
+      if (tg?.HapticFeedback) {
+        try {
+          tg.HapticFeedback.impactOccurred('light');
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.error("❌ Ошибка сохранения интересов:", e);
+      alert('❌ Ошибка при сохранении интересов');
+    }
+  }
+  
+  function saveDatingGoal() {
+    if (!datingGoal) {
+      alert('Выберите цель знакомства');
+      return;
+    }
+    
+    saveUserInterests();
+    
+    alert('✅ Цель знакомства сохранена!');
+    
+    if (tg?.HapticFeedback) {
+      try {
+        tg.HapticFeedback.impactOccurred('light');
+      } catch (e) {}
+    }
+  }
+  
+  function updateInterestsUI() {
+    document.querySelectorAll('.user-interest').forEach(checkbox => {
+      checkbox.checked = userInterests.includes(checkbox.value);
+    });
+    
+    if (datingGoalSelect) {
+      datingGoalSelect.value = datingGoal;
+    }
   }
   
   // ===== ОБРАБОТЧИК КНОПКИ "НАЧАТЬ ЗНАКОМСТВО" =====
@@ -741,10 +944,6 @@ document.addEventListener('DOMContentLoaded', function() {
         gender,
         city,
         bio,
-        min_age_filter: 18,
-        max_age_filter: 35,
-        max_distance_km: 50,
-        use_geolocation: false,
         verification_status: 'not_verified'
       };
       
@@ -756,11 +955,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         initVerification();
-        initLikesSystem(); // Инициализируем систему лайков
+        initLikesSystem();
+        initInterestsSystem();
+        initSearchFilters();
         showMainApp();
         
         setTimeout(() => {
-          alert("✅ Профиль сохранён! Добро пожаловать в SiaMatch 🍀\n\nТеперь вы можете пройти верификацию анкеты в разделе профиля.");
+          alert("✅ Профиль сохранён! Добро пожаловать в SiaMatch 🍀\n\nТеперь вы можете:\n1. Пройти верификацию анкеты\n2. Выбрать свои интересы\n3. Настроить фильтры поиска");
         }, 300);
       } else {
         alert("❌ Ошибка при сохранении профиля");
@@ -778,7 +979,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     initVerification();
-    initLikesSystem(); // Инициализируем систему лайков
+    initLikesSystem();
+    initInterestsSystem();
+    initSearchFilters();
     
     setActiveTab("feed");
   }
@@ -806,7 +1009,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (tab === 'profile') {
       initProfile();
     } else if (tab === 'chats') {
-      // При открытии экрана чатов обновляем счетчик лайков
       updateLikesUI();
     }
     
@@ -830,9 +1032,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // ===== ЛЕНТА СВАЙПОВ =====
+  // ===== ЛЕНТА СВАЙПОВ С ФИЛЬТРАЦИЕЙ =====
   function initFeed() {
     currentIndex = 0;
+    initSearchFilters();
     showCurrentCandidate();
     
     const btnLike = document.getElementById("btn-like");
@@ -849,8 +1052,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  function getFilteredCandidates() {
+    let filtered = candidates.filter(c => !likedIds.includes(c.id));
+    
+    filtered = filtered.filter(c => {
+      return c.age >= searchFilters.minAge && c.age <= searchFilters.maxAge;
+    });
+    
+    if (searchFilters.interests.length > 0) {
+      filtered = filtered.filter(c => {
+        return searchFilters.interests.some(interest => 
+          c.interests.includes(interest)
+        );
+      });
+    }
+    
+    if (searchFilters.datingGoal) {
+      filtered = filtered.filter(c => {
+        return c.dating_goal === searchFilters.datingGoal;
+      });
+    }
+    
+    return filtered;
+  }
+  
   function showCurrentCandidate() {
-    const filtered = candidates.filter(c => !likedIds.includes(c.id));
+    const filtered = getFilteredCandidates();
+    
+    if (filtered.length === 0) {
+      document.getElementById("candidate-name").textContent = "";
+      document.getElementById("candidate-age").textContent = "";
+      document.getElementById("candidate-city").textContent = "";
+      document.getElementById("candidate-bio").textContent = "";
+      document.getElementById("candidate-photo").src = "";
+      
+      const verifiedBadge = document.getElementById('candidate-verified');
+      if (verifiedBadge) verifiedBadge.classList.add('hidden');
+      
+      document.getElementById("feed-status").textContent = 
+        "Нет подходящих анкет по вашим фильтрам. Попробуйте изменить параметры поиска 🍀";
+      return;
+    }
     
     if (currentIndex >= filtered.length) {
       document.getElementById("candidate-name").textContent = "";
@@ -893,17 +1135,15 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (e) {}
     }
     
-    const filtered = candidates.filter(c => !likedIds.includes(c.id));
+    const filtered = getFilteredCandidates();
     if (currentIndex < filtered.length) {
       const likedUser = filtered[currentIndex];
       likedIds.push(likedUser.id);
       currentIndex++;
       showCurrentCandidate();
       
-      // Проверяем, был ли это один из тех, кто лайкнул нас
       checkForMatch(likedUser.id);
       
-      // В реальном приложении здесь будет отправка лайка на сервер
       console.log(`❤️ Лайк пользователю ${likedUser.name} (ID: ${likedUser.id})`);
     }
   }
@@ -915,7 +1155,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (e) {}
     }
     
-    const filtered = candidates.filter(c => !likedIds.includes(c.id));
+    const filtered = getFilteredCandidates();
     if (currentIndex < filtered.length) {
       const dislikedUser = filtered[currentIndex];
       currentIndex++;
@@ -926,15 +1166,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function checkForMatch(likedUserId) {
-    // В демо-режиме с небольшой вероятностью создаем мэтч
-    if (Math.random() > 0.7) { // 30% chance
-      // Уменьшаем счетчик лайков (один из тайных поклонников найден!)
+    if (Math.random() > 0.7) {
       if (usersWhoLikedMeCount > 0) {
         usersWhoLikedMeCount--;
         saveLikesData();
         updateLikesUI();
         
-        // Показываем уведомление о мэтче
         setTimeout(() => {
           alert('🎉 У вас взаимная симпатия! Один из ваших тайных поклонников ответил вам взаимностью! Теперь вы можете начать общение в чатах.');
         }, 500);
@@ -947,18 +1184,15 @@ document.addEventListener('DOMContentLoaded', function() {
     profileData = loadProfile();
     
     if (profileData) {
-      // Обновляем информацию в профиле
       updateProfileDisplay();
-      
-      // Обновляем информацию в форме редактирования
       updateEditForm();
     }
     
     updateVerificationUI();
+    initInterestsSystem();
   }
   
   function updateProfileDisplay() {
-    // Обновляем отображаемую информацию в профиле
     const profileNameElem = document.getElementById('profile-name');
     const profileAgeElem = document.getElementById('profile-age-display');
     const profileCityElem = document.getElementById('profile-city-display');
@@ -983,28 +1217,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function updateEditForm() {
-    // Обновляем данные в форме редактирования
     const editAgeElem = document.getElementById("edit-age");
     const editGenderElem = document.getElementById("edit-gender");
     const editCityElem = document.getElementById("edit-city");
     const editBioElem = document.getElementById("edit-bio");
-    const editMinAgeElem = document.getElementById("edit-min-age");
-    const editMaxAgeElem = document.getElementById("edit-max-age");
-    const editMaxDistanceElem = document.getElementById("edit-max-distance");
-    const editGeoCheckbox = document.getElementById("edit-use-geolocation");
     const editPhotoElem = document.getElementById('edit-photo-preview');
     
     if (editAgeElem) editAgeElem.value = profileData.age || "";
     if (editGenderElem) editGenderElem.value = profileData.gender || "";
     if (editCityElem) editCityElem.value = profileData.city || "";
     if (editBioElem) editBioElem.value = profileData.bio || "";
-    if (editMinAgeElem) editMinAgeElem.value = profileData.min_age_filter || 18;
-    if (editMaxAgeElem) editMaxAgeElem.value = profileData.max_age_filter || 35;
-    if (editMaxDistanceElem) editMaxDistanceElem.value = profileData.max_distance_km || 50;
-    
-    if (editGeoCheckbox) {
-      editGeoCheckbox.checked = profileData.use_geolocation || false;
-    }
     
     if (editPhotoElem && profileData.custom_photo_url) {
       editPhotoElem.src = profileData.custom_photo_url;
@@ -1013,7 +1235,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function handleEditProfile() {
-    // Показываем экран редактирования
     document.getElementById('profile-display').classList.add('hidden');
     document.getElementById('profile-edit').classList.remove('hidden');
     
@@ -1035,25 +1256,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      // Получаем значения из формы редактирования
       profileData.age = Number(document.getElementById("edit-age").value);
       profileData.gender = document.getElementById("edit-gender").value;
       profileData.city = document.getElementById("edit-city").value;
       profileData.bio = document.getElementById("edit-bio").value.trim();
-      profileData.min_age_filter = Number(document.getElementById("edit-min-age").value);
-      profileData.max_age_filter = Number(document.getElementById("edit-max-age").value);
-      profileData.max_distance_km = Number(document.getElementById("edit-max-distance").value);
-      
-      const editGeoCheckbox = document.getElementById("edit-use-geolocation");
-      if (editGeoCheckbox) {
-        profileData.use_geolocation = editGeoCheckbox.checked;
-      }
       
       if (saveProfile(profileData)) {
-        // Обновляем отображение профиля
         updateProfileDisplay();
         
-        // Возвращаемся к отображению профиля
         document.getElementById('profile-display').classList.remove('hidden');
         document.getElementById('profile-edit').classList.add('hidden');
         
@@ -1062,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tg?.HapticFeedback) {
           try {
             tg.HapticFeedback.impactOccurred('light');
-          } catch (e) {}
+        } catch (e) {}
         }
       } else {
         alert("❌ Ошибка при обновлении профиля");
@@ -1071,7 +1281,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function handleCancelEdit() {
-    // Возвращаемся к отображению профиля без сохранения
     document.getElementById('profile-display').classList.remove('hidden');
     document.getElementById('profile-edit').classList.add('hidden');
   }
@@ -1087,28 +1296,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const reader = new FileReader();
     reader.onload = function(event) {
-      // Определяем, на каком экране мы находимся
       const isEditMode = !document.getElementById('profile-edit').classList.contains('hidden');
       
       if (isEditMode) {
-        // В режиме редактирования
         const preview = document.getElementById('edit-photo-preview');
         if (preview) {
           preview.src = event.target.result;
           preview.style.display = 'block';
         }
         
-        // Сохраняем в промежуточные данные
         profileData.custom_photo_url = event.target.result;
       } else {
-        // В режиме просмотра профиля
         const preview = document.getElementById('profile-photo-preview');
         if (preview) {
           preview.src = event.target.result;
           preview.style.display = 'block';
         }
         
-        // Сохраняем сразу
         profileData.custom_photo_url = event.target.result;
         saveProfile(profileData);
         alert('Фото загружено! 📸');
@@ -1128,7 +1332,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setupStartButton();
     setupTabButtons();
     
-    // Устанавливаем обработчики для профиля
     const editProfileBtn = document.getElementById('edit-profile-btn');
     const saveChangesBtn = document.getElementById('save-profile-changes');
     const cancelEditBtn = document.getElementById('cancel-profile-edit');
@@ -1176,8 +1379,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 300);
     }
     
-    // Инициализируем систему лайков даже если профиль не создан
     initLikesSystem();
+    initInterestsSystem();
+    initSearchFilters();
     
     console.log('✅ Приложение инициализировано');
   }
