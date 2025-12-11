@@ -52,9 +52,22 @@
             <select id="city" required>
               <option value="">Выберите город</option>
               <option value="Москва">Москва</option>
+              <option value="Московская обл.">Московская обл.</option>
               <option value="Санкт-Петербург">Санкт-Петербург</option>
-              <option value="Казань">Казань</option>
               <option value="Новосибирск">Новосибирск</option>
+              <option value="Екатеринбург">Екатеринбург</option>
+              <option value="Казань">Казань</option>
+              <option value="Нижний Новгород">Нижний Новгород</option>
+              <option value="Челябинск">Челябинск</option>
+              <option value="Самара">Самара</option>
+              <option value="Уфа">Уфа</option>
+              <option value="Ростов-на-Дону">Ростов-на-Дону</option>
+              <option value="Красноярск">Красноярск</option>
+              <option value="Воронеж">Воронеж</option>
+              <option value="Пермь">Пермь</option>
+              <option value="Волгоград">Волгоград</option>
+              <option value="Омск">Омск</option>
+              <option value="Краснодар">Краснодар</option>
             </select>
           </div>
 
@@ -112,6 +125,88 @@
       <div id="screen-feed" class="screen hidden">
         <div class="screen-content">
           <h2 class="screen-title">Познакомьтесь 🍀</h2>
+          
+          <!-- ФИЛЬТРЫ ПОИСКА -->
+          <div id="search-filters" class="profile-section">
+            <h3 class="section-title">🔍 Фильтры поиска</h3>
+            
+            <div class="field">
+              <label>Возрастной диапазон</label>
+              <div class="age-range">
+                <input type="number" id="search-min-age" min="18" max="60" value="18" placeholder="От" />
+                <span>—</span>
+                <input type="number" id="search-max-age" min="18" max="60" value="35" placeholder="До" />
+              </div>
+            </div>
+            
+            <div class="field">
+              <label>Интересы для поиска</label>
+              <div class="interests-list">
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="travel" />
+                  Путешествия
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="movies" />
+                  Кино
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="art" />
+                  Искусство
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="sport" />
+                  Спорт
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="photography" />
+                  Фотография
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="dancing" />
+                  Танцы
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="music" />
+                  Музыка
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="cooking" />
+                  Кулинария
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="business" />
+                  Бизнес
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="gaming" />
+                  Гейминг
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="cars" />
+                  Автомобили
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="search-interest" value="anime" />
+                  Аниме
+                </label>
+              </div>
+            </div>
+            
+            <!-- ЦЕЛЬ ЗНАКОМСТВА В ФИЛЬТРАХ -->
+            <div class="field">
+              <label>Цель знакомства</label>
+              <select id="search-dating-goal">
+                <option value="">Любая цель</option>
+                <option value="marriage">Брак и создание семьи</option>
+                <option value="dating">Встречи и свидания</option>
+                <option value="friendship">Дружба и общение</option>
+                <option value="virtual">Виртуальное общение и флирт</option>
+              </select>
+            </div>
+            
+            <button id="apply-filters" class="primary" style="margin-top: 15px;">Применить фильтры</button>
+          </div>
           
           <div id="candidate-card">
             <!-- ЗНАЧОК ВЕРИФИКАЦИИ -->
@@ -248,82 +343,75 @@
               </button>
             </div>
             
-            <!-- СЕКЦИЯ ЗАДАНИЙ -->
+            <!-- СЕКЦИЯ ИНТЕРЕСОВ -->
             <div class="profile-section">
-              <h3 class="section-title">📋 Задания</h3>
-              <div class="tasks-list">
-                <div class="task-item">
-                  <div class="task-icon">✅</div>
-                  <div class="task-content">
-                    <div class="task-title">Заполните профиль на 100%</div>
-                    <div class="task-reward">+10 свайпов</div>
-                  </div>
-                  <button class="task-btn">Выполнить</button>
-                </div>
-                
-                <div class="task-item">
-                  <div class="task-icon">🌟</div>
-                  <div class="task-content">
-                    <div class="task-title">Пройти верификацию</div>
-                    <div class="task-reward">+20 свайпов</div>
-                  </div>
-                  <button class="task-btn">Выполнить</button>
-                </div>
-                
-                <div class="task-item">
-                  <div class="task-icon">📱</div>
-                  <div class="task-content">
-                    <div class="task-title">Пригласите друга</div>
-                    <div class="task-reward">+15 свайпов за друга</div>
-                  </div>
-                  <button class="task-btn">Поделиться</button>
-                </div>
-                
-                <div class="task-item">
-                  <div class="task-icon">🎯</div>
-                  <div class="task-content">
-                    <div class="task-title">Сделайте 20 свайпов в день</div>
-                    <div class="task-reward">+5 свайпов ежедневно</div>
-                  </div>
-                  <button class="task-btn">Начать</button>
-                </div>
+              <h3 class="section-title">🎯 Мои интересы</h3>
+              <div class="interests-list">
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="travel" />
+                  Путешествия
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="movies" />
+                  Кино
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="art" />
+                  Искусство
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="sport" />
+                  Спорт
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="photography" />
+                  Фотография
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="dancing" />
+                  Танцы
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="music" />
+                  Музыка
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="cooking" />
+                  Кулинария
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="business" />
+                  Бизнес
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="gaming" />
+                  Гейминг
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="cars" />
+                  Автомобили
+                </label>
+                <label class="checkbox-field">
+                  <input type="checkbox" class="user-interest" value="anime" />
+                  Аниме
+                </label>
               </div>
+              <button id="save-interests" class="primary" style="margin-top: 15px;">Сохранить интересы</button>
             </div>
             
-            <!-- МАГАЗИН -->
+            <!-- ЦЕЛЬ ЗНАКОМСТВА -->
             <div class="profile-section">
-              <h3 class="section-title">🛒 Shop</h3>
-              <div class="shop-items">
-                <div class="shop-item">
-                  <div class="shop-item-icon">💎</div>
-                  <div class="shop-item-content">
-                    <div class="shop-item-title">Premium подписка</div>
-                    <div class="shop-item-description">Безлимитные свайпы, видимость выше, скрытый режим</div>
-                    <div class="shop-item-price">299 ₽/месяц</div>
-                  </div>
-                  <button class="shop-btn primary">Купить</button>
-                </div>
-                
-                <div class="shop-item">
-                  <div class="shop-item-icon">💝</div>
-                  <div class="shop-item-content">
-                    <div class="shop-item-title">Пакет 100 свайпов</div>
-                    <div class="shop-item-description">Расширьте свои возможности</div>
-                    <div class="shop-item-price">149 ₽</div>
-                  </div>
-                  <button class="shop-btn primary">Купить</button>
-                </div>
-                
-                <div class="shop-item">
-                  <div class="shop-item-icon">⚡</div>
-                  <div class="shop-item-content">
-                    <div class="shop-item-title">Буст профиля</div>
-                    <div class="shop-item-description">Ваш профиль показывается первым в ленте на 24 часа</div>
-                    <div class="shop-item-price">199 ₽</div>
-                  </div>
-                  <button class="shop-btn primary">Купить</button>
-                </div>
+              <h3 class="section-title">💝 Цель знакомства</h3>
+              <div class="field">
+                <select id="dating-goal">
+                  <option value="">Выберите цель знакомства</option>
+                  <option value="marriage">Брак и создание семьи</option>
+                  <option value="dating">Встречи и свидания</option>
+                  <option value="friendship">Дружба и общение</option>
+                  <option value="virtual">Виртуальное общение и флирт</option>
+                </select>
               </div>
+              <button id="save-dating-goal" class="primary" style="margin-top: 15px;">Сохранить цель</button>
             </div>
           </div>
           
@@ -354,9 +442,22 @@
               <select id="edit-city">
                 <option value="">Выберите город</option>
                 <option value="Москва">Москва</option>
+                <option value="Московская обл.">Московская обл.</option>
                 <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Казань">Казань</option>
                 <option value="Новосибирск">Новосибирск</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Казань">Казань</option>
+                <option value="Нижний Новгород">Нижний Новгород</option>
+                <option value="Челябинск">Челябинск</option>
+                <option value="Самара">Самара</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Ростов-на-Дону">Ростов-на-Дону</option>
+                <option value="Красноярск">Красноярск</option>
+                <option value="Воронеж">Воронеж</option>
+                <option value="Пермь">Пермь</option>
+                <option value="Волгоград">Волгоград</option>
+                <option value="Омск">Омск</option>
+                <option value="Краснодар">Краснодар</option>
               </select>
             </div>
 
@@ -370,27 +471,6 @@
               <input type="file" id="edit-photo-upload" accept="image/*" />
               <div class="hint">Выберите фото (до 5MB)</div>
               <img id="edit-photo-preview" class="edit-photo-preview" />
-            </div>
-
-            <div class="field">
-              <label class="checkbox-field">
-                <input type="checkbox" id="edit-use-geolocation" />
-                Использовать мою геолокацию для поиска поблизости
-              </label>
-            </div>
-
-            <div class="field">
-              <label>Возрастной диапазон</label>
-              <div class="age-range">
-                <input type="number" id="edit-min-age" min="18" max="60" value="18" />
-                <span>—</span>
-                <input type="number" id="edit-max-age" min="18" max="60" value="35" />
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="edit-max-distance">Максимум расстояние (км)</label>
-              <input type="number" id="edit-max-distance" min="1" max="500" value="50" />
             </div>
             
             <button id="cancel-profile-edit" class="cancel-edit-btn">Отмена</button>
