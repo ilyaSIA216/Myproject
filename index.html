@@ -43,7 +43,6 @@
               <option value="">Выберите пол</option>
               <option value="male">Мужской</option>
               <option value="female">Женский</option>
-              <option value="other">Другое</option>
             </select>
           </div>
 
@@ -186,10 +185,32 @@
           
           <div class="profile-section">
             <h3 class="section-title">Возрастной диапазон</h3>
-            <div class="age-range">
-              <input type="number" id="search-min-age" min="18" max="60" value="18" placeholder="От" />
-              <span>—</span>
-              <input type="number" id="search-max-age" min="18" max="60" value="35" placeholder="До" />
+            <div class="age-range-fields">
+              <div class="age-input-group">
+                <label for="search-min-age">От</label>
+                <input type="number" id="search-min-age" min="18" max="99" value="18" placeholder="18" />
+              </div>
+              <div class="age-input-group">
+                <label for="search-max-age">До</label>
+                <input type="number" id="search-max-age" min="18" max="99" value="35" placeholder="35" />
+              </div>
+            </div>
+          </div>
+          
+          <div class="profile-section">
+            <h3 class="section-title">Пол для поиска</h3>
+            <div class="gender-filter">
+              <div class="gender-options">
+                <label class="gender-option">
+                  <input type="checkbox" id="filter-gender-male" value="male" />
+                  <span class="gender-label">Мужской</span>
+                </label>
+                <label class="gender-option">
+                  <input type="checkbox" id="filter-gender-female" value="female" />
+                  <span class="gender-label">Женский</span>
+                </label>
+              </div>
+              <div class="hint">Оставьте пустым для поиска любого пола</div>
             </div>
           </div>
           
@@ -295,6 +316,11 @@
                 <div class="profile-info-row">
                   <span class="info-label">Возраст:</span>
                   <span id="profile-age-display" class="info-value">—</span>
+                </div>
+                
+                <div class="profile-info-row">
+                  <span class="info-label">Пол:</span>
+                  <span id="profile-gender-display" class="info-value">—</span>
                 </div>
                 
                 <div class="profile-info-row">
@@ -472,7 +498,6 @@
                 <option value="">Выберите пол</option>
                 <option value="male">Мужской</option>
                 <option value="female">Женский</option>
-                <option value="other">Другое</option>
               </select>
             </div>
 
