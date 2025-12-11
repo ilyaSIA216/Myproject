@@ -428,27 +428,26 @@ document.addEventListener('DOMContentLoaded', function() {
     loadBoostStatus();
     updateBoostUI();
     
-    // Удаляем кнопку покупки буста
+    // Удаляем кнопку покупки буста если она существует
     const boostProfileBtn = document.getElementById('boostProfileBtn');
-    if (boostProfileBtn) {
+    if (boostProfileBtn && boostProfileBtn.parentNode) {
       boostProfileBtn.parentNode.removeChild(boostProfileBtn);
     }
     
-    // Удаляем форму буста
+    // Удаляем форму буста если она существует
     const boostFormSection = document.getElementById('boost-form-section');
-    if (boostFormSection) {
+    if (boostFormSection && boostFormSection.parentNode) {
       boostFormSection.parentNode.removeChild(boostFormSection);
     }
     
-    // Обновляем секцию буста
+    // Обновляем секцию буста в профиле - используем существующий элемент
     const boostInfoRow = document.querySelector('.profile-info-row:nth-child(5)');
     if (boostInfoRow) {
-      boostInfoRow.innerHTML = `
-        <span class="info-label">Буст:</span>
-        <span id="boost-status" class="boost-status not-boosted">
-          Доступен только из админ-панели
-        </span>
-      `;
+      // Сохраняем существующую структуру, но обновляем текст
+      const boostStatusSpan = boostInfoRow.querySelector('#boost-status');
+      if (boostStatusSpan) {
+        updateBoostStatusElement(boostStatusSpan);
+      }
     }
     
     // Запускаем таймер обновления
@@ -490,24 +489,18 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function updateBoostUI() {
     const boostStatusElement = document.getElementById('boost-status');
-    if (!boostStatusElement) return;
-    
+    if (boostStatusElement) {
+      updateBoostStatusElement(boostStatusElement);
+    }
+  }
+  
+  function updateBoostStatusElement(element) {
     if (boostActive && boostEndTime) {
-      boostStatusElement.textContent = 'Активен';
-      boostStatusElement.className = 'boost-status boosted';
-      
-      const boostActiveSection = document.getElementById('boost-active-section');
-      if (boostActiveSection) {
-        boostActiveSection.classList.remove('hidden');
-      }
+      element.textContent = 'Активен';
+      element.className = 'boost-status boosted';
     } else {
-      boostStatusElement.textContent = 'Доступен только из админ-панели';
-      boostStatusElement.className = 'boost-status not-boosted';
-      
-      const boostActiveSection = document.getElementById('boost-active-section');
-      if (boostActiveSection) {
-        boostActiveSection.classList.add('hidden');
-      }
+      element.textContent = 'Доступен только из админ-панели';
+      element.className = 'boost-status not-boosted';
     }
   }
   
@@ -1566,7 +1559,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tg?.HapticFeedback) {
           try {
             tg.HapticFeedback.impactOccurred('light');
-          } catch (e) {}
+        } catch (e) {}
         }
       } else {
         showNotification("❌ Ошибка при обновлении профиля");
