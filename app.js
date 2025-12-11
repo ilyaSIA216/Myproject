@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let searchFilters = {
     minAge: 18,
     maxAge: 35,
+    genders: [], // Массив для выбранных полов
     interests: [],
     datingGoal: ''
   };
@@ -318,6 +319,42 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
+    // Инициализация фильтра по полу
+    const genderMaleCheckbox = document.getElementById('filter-gender-male');
+    const genderFemaleCheckbox = document.getElementById('filter-gender-female');
+    
+    if (genderMaleCheckbox) {
+      genderMaleCheckbox.checked = searchFilters.genders.includes('male');
+      genderMaleCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          if (!searchFilters.genders.includes('male')) {
+            searchFilters.genders.push('male');
+          }
+        } else {
+          const index = searchFilters.genders.indexOf('male');
+          if (index > -1) {
+            searchFilters.genders.splice(index, 1);
+          }
+        }
+      });
+    }
+    
+    if (genderFemaleCheckbox) {
+      genderFemaleCheckbox.checked = searchFilters.genders.includes('female');
+      genderFemaleCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          if (!searchFilters.genders.includes('female')) {
+            searchFilters.genders.push('female');
+          }
+        } else {
+          const index = searchFilters.genders.indexOf('female');
+          if (index > -1) {
+            searchFilters.genders.splice(index, 1);
+          }
+        }
+      });
+    }
+    
     document.querySelectorAll('.search-interest').forEach(checkbox => {
       checkbox.checked = searchFilters.interests.includes(checkbox.value);
       
@@ -349,7 +386,6 @@ document.addEventListener('DOMContentLoaded', function() {
         saveSearchFilters();
         setActiveTab("feed");
         
-        // Просто показываем уведомление без alert
         showNotification('✅ Фильтры применены!\n\nТеперь в ленте будут показываться только подходящие анкеты. 🎯');
         
         if (tg?.HapticFeedback) {
@@ -368,6 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = JSON.parse(saved);
         searchFilters.minAge = data.minAge || 18;
         searchFilters.maxAge = data.maxAge || 35;
+        searchFilters.genders = data.genders || []; // Загружаем выбранные полы
         searchFilters.interests = data.interests || [];
         searchFilters.datingGoal = data.datingGoal || '';
       }
@@ -452,12 +489,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function updateBoostUI() {
+    const boostStatusElement = document.getElementById('boost-status');
     if (!boostStatusElement) return;
     
     if (boostActive && boostEndTime) {
       boostStatusElement.textContent = 'Активен';
       boostStatusElement.className = 'boost-status boosted';
       
+      const boostActiveSection = document.getElementById('boost-active-section');
       if (boostActiveSection) {
         boostActiveSection.classList.remove('hidden');
       }
@@ -465,6 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
       boostStatusElement.textContent = 'Доступен только из админ-панели';
       boostStatusElement.className = 'boost-status not-boosted';
       
+      const boostActiveSection = document.getElementById('boost-active-section');
       if (boostActiveSection) {
         boostActiveSection.classList.add('hidden');
       }
@@ -487,6 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
     
+    const boostTimerElement = document.getElementById('boost-timer');
     if (boostTimerElement) {
       boostTimerElement.textContent = `Осталось: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
@@ -1259,11 +1300,20 @@ document.addEventListener('DOMContentLoaded', function() {
   function getFilteredCandidates() {
     let filtered = candidates.filter(c => !likedIds.includes(c.id));
     
-    // Применяем фильтры
+    // Применяем фильтр по возрасту
     filtered = filtered.filter(c => {
       return c.age >= searchFilters.minAge && c.age <= searchFilters.maxAge;
     });
     
+    // Применяем фильтр по полу (если выбран хотя бы один пол)
+    if (searchFilters.genders.length > 0) {
+      filtered = filtered.filter(c => {
+        return searchFilters.genders.includes(c.gender);
+      });
+    }
+    // Если пол не выбран - показываем все
+    
+    // Применяем фильтр по интересам (если выбраны интересы)
     if (searchFilters.interests.length > 0) {
       filtered = filtered.filter(c => {
         return searchFilters.interests.some(interest => 
@@ -1271,12 +1321,15 @@ document.addEventListener('DOMContentLoaded', function() {
         );
       });
     }
+    // Если интересы не выбраны - показываем все
     
+    // Применяем фильтр по цели знакомства (если выбрана цель)
     if (searchFilters.datingGoal) {
       filtered = filtered.filter(c => {
         return c.dating_goal === searchFilters.datingGoal;
       });
     }
+    // Если цель не выбрана - показываем все
     
     // Сортируем: сначала бустированные анкеты
     filtered.sort((a, b) => {
@@ -1427,6 +1480,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateProfileDisplay() {
     const profileNameElem = document.getElementById('profile-name');
     const profileAgeElem = document.getElementById('profile-age-display');
+    const profileGenderElem = document.getElementById('profile-gender-display');
     const profileCityElem = document.getElementById('profile-city-display');
     const profilePhotoElem = document.getElementById('profile-photo-preview');
     
@@ -1436,6 +1490,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (profileAgeElem) {
       profileAgeElem.textContent = profileData.age ? `${profileData.age} лет` : "";
+    }
+    
+    if (profileGenderElem) {
+      const genderMap = {
+        'male': 'Мужской',
+        'female': 'Женский'
+      };
+      profileGenderElem.textContent = profileData.gender ? genderMap[profileData.gender] || profileData.gender : "";
     }
     
     if (profileCityElem) {
