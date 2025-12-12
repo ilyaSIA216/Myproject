@@ -21,6 +21,8 @@
       --pending: #f59e0b;
       --boost: #f59e0b;
       --reports: #ec4899;
+      --invite: #3b82f6;
+      --share: #8b5cf6;
     }
     * {
       box-sizing: border-box;
@@ -38,7 +40,7 @@
     }
     #admin-root {
       width: 100%;
-      max-width: 800px;
+      max-width: 900px;
     }
     .card {
       background: rgba(15, 23, 42, 0.96);
@@ -202,6 +204,9 @@
     .tab-btn[data-tab="search"].active {
       background: linear-gradient(135deg, #8b5cf6, #7c3aed);
     }
+    .tab-btn[data-tab="bonuses"].active {
+      background: linear-gradient(135deg, var(--invite), #1d4ed8);
+    }
 
     /* Статистика */
     .stats-grid {
@@ -233,6 +238,9 @@
     .stat-number.verified { color: #10b981; }
     .stat-number.boosted { color: var(--boost); }
     .stat-number.reports { color: var(--reports); }
+    .stat-number.invites { color: var(--invite); }
+    .stat-number.shares { color: var(--share); }
+    .stat-number.bonus-swipes { color: #10b981; }
     .stat-label {
       font-size: 12px;
       color: var(--muted);
@@ -317,6 +325,9 @@
     .user-item.report-item {
       border-left: 4px solid var(--reports);
     }
+    .user-item.bonus-item {
+      border-left: 4px solid var(--invite);
+    }
     .user-main {
       display: flex;
       flex-direction: column;
@@ -374,6 +385,17 @@
       font-weight: 600;
       background: rgba(236, 72, 153, 0.2);
       color: var(--reports);
+    }
+    .bonus-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--invite);
     }
     .user-meta {
       color: var(--muted);
@@ -461,6 +483,15 @@
       padding: 0;
       text-align: right;
     }
+    .bonus-btn-admin {
+      border: none;
+      background: none;
+      color: var(--invite);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+      text-align: right;
+    }
     .user-actions-row {
       display: flex;
       gap: 10px;
@@ -496,6 +527,10 @@
     .section-banner.reports {
       background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(219, 39, 119, 0.05));
       border-color: rgba(236, 72, 153, 0.2);
+    }
+    .section-banner.bonuses {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05));
+      border-color: rgba(59, 130, 246, 0.2);
     }
     .section-banner h3 {
       margin: 0 0 6px;
@@ -635,12 +670,12 @@
       color: var(--muted);
       text-align: right;
     }
-    .report-actions {
+    .modal-actions {
       display: flex;
       gap: 12px;
       margin-top: 20px;
     }
-    .report-actions .primary {
+    .modal-actions .primary {
       flex: 1;
     }
     .danger-btn {
@@ -651,6 +686,12 @@
     }
     .reports-btn {
       background: linear-gradient(135deg, var(--reports), #db2777) !important;
+    }
+    .invite-btn {
+      background: linear-gradient(135deg, var(--invite), #1d4ed8) !important;
+    }
+    .share-btn {
+      background: linear-gradient(135deg, var(--share), #7c3aed) !important;
     }
 
     /* Стили для кнопок количества свайпов */
@@ -682,6 +723,40 @@
     /* Стили для модальных окон буста и свайпов */
     .modal-actions .boost-btn {
       background: linear-gradient(135deg, var(--boost), #d97706) !important;
+    }
+
+    /* Стили для бонусных записей */
+    .bonus-record {
+      background: rgba(2, 6, 23, 0.7);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .bonus-record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .bonus-record-type {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .bonus-record-date {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    
+    .bonus-record-details {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -720,6 +795,7 @@
         <button class="tab-btn" data-tab="verification">Верификация ⏳</button>
         <button class="tab-btn" data-tab="blocked">Заблокированные</button>
         <button class="tab-btn" data-tab="reports">Жалобы ⚠️</button>
+        <button class="tab-btn" data-tab="bonuses">Бонусы 🎁</button>
         <button class="tab-btn" data-tab="search">Поиск</button>
       </div>
 
@@ -746,8 +822,25 @@
           <span class="stat-label">Заблокировано</span>
         </div>
         <div class="stat-card">
+          <span class="stat-number boosted" id="stat-boosted">0</span>
+          <span class="stat-label">С бустом</span>
+        </div>
+        <div class="stat-card">
           <span class="stat-number reports" id="stat-reports">0</span>
           <span class="stat-label">Жалоб ⚠️</span>
+        </div>
+        <!-- НОВАЯ СТАТИСТИКА -->
+        <div class="stat-card">
+          <span class="stat-number bonus-swipes" id="stat-bonus-swipes">0</span>
+          <span class="stat-label">Бонусных свайпов</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number invites" id="stat-invites">0</span>
+          <span class="stat-label">Приглашений</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number shares" id="stat-shares">0</span>
+          <span class="stat-label">Шеров в Stories</span>
         </div>
       </div>
 
@@ -775,6 +868,12 @@
       <div id="section-banner-reports" class="section-banner reports hidden">
         <h3>Жалобы пользователей ⚠️</h3>
         <p>Просмотр и обработка жалоб на пользователей. Здесь вы можете видеть диалоги, причины жалоб и принимать меры.</p>
+      </div>
+
+      <!-- НОВЫЙ БАННЕР ДЛЯ БОНУСОВ -->
+      <div id="section-banner-bonuses" class="section-banner bonuses hidden">
+        <h3>Бонусные активности пользователей 🎁</h3>
+        <p>Отслеживание активности пользователей по приглашению друзей, шерингу в Stories и другим бонусным действиям. Начисляйте бонусы вручную.</p>
       </div>
 
       <div id="section-banner-search" class="section-banner search hidden">
@@ -924,6 +1023,72 @@
     </div>
   </div>
 
+  <!-- НОВОЕ: Модальное окно для начисления бонусов -->
+  <div id="bonus-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>🎁 Начислить бонус</h3>
+        <button class="close-btn" id="close-bonus-modal-btn">×</button>
+      </div>
+      <div id="bonus-modal-content">
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 14px; color: var(--muted); margin-bottom: 10px;">
+            ID пользователя: <span id="bonus-user-id">-</span><br>
+            Имя: <span id="bonus-user-name">-</span>
+          </div>
+          
+          <div class="field">
+            <label for="bonus-type">Тип бонуса</label>
+            <select id="bonus-type" class="filter-select" style="width: 100%;">
+              <option value="verification">Верификация анкеты (+20 свайпов)</option>
+              <option value="invite">Приглашение друга (+20 свайпов)</option>
+              <option value="share">Шеринг в Stories (+24ч буст)</option>
+              <option value="custom_swipes">Свайпы (произвольное количество)</option>
+              <option value="custom_boost">Буст (произвольная длительность)</option>
+              <option value="other">Другой бонус</option>
+            </select>
+          </div>
+          
+          <div id="custom-bonus-amount" class="hidden">
+            <div class="field">
+              <label for="custom-bonus-amount-input">Количество свайпов</label>
+              <input type="number" id="custom-bonus-amount-input" min="1" max="1000" value="20" class="filter-select" style="width: 100%;" />
+            </div>
+          </div>
+          
+          <div id="custom-boost-hours" class="hidden">
+            <div class="field">
+              <label for="custom-boost-hours-input">Длительность буста (часы)</label>
+              <input type="number" id="custom-boost-hours-input" min="1" max="720" value="24" class="filter-select" style="width: 100%;" />
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="bonus-reason">Причина начисления</label>
+            <select id="bonus-reason" class="filter-select" style="width: 100%;">
+              <option value="verification_success">Успешная верификация</option>
+              <option value="invite_friend">Пригласил друга</option>
+              <option value="shared_stories">Поделился в Stories</option>
+              <option value="promo">Промо-акция</option>
+              <option value="compensation">Компенсация</option>
+              <option value="loyalty">Лояльность пользователя</option>
+              <option value="other">Другое</option>
+            </select>
+          </div>
+          
+          <div class="field">
+            <label for="bonus-comment">Комментарий (опционально)</label>
+            <textarea id="bonus-comment" rows="2" placeholder="Дополнительная информация о бонусе..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; background: #020617; color: var(--text); font-size: 13px;"></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button id="apply-bonus-btn" class="primary invite-btn">Начислить бонус</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Модальное окно для просмотра жалобы -->
   <div id="report-details-modal" class="modal-overlay hidden">
     <div class="modal" style="max-width: 800px;">
@@ -932,6 +1097,19 @@
         <button class="close-btn" id="close-report-details-btn">×</button>
       </div>
       <div id="report-details-content" class="report-details-content">
+        <!-- Контент будет заполняться динамически -->
+      </div>
+    </div>
+  </div>
+
+  <!-- НОВОЕ: Модальное окно для просмотра истории бонусов -->
+  <div id="bonus-history-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>📋 История бонусов пользователя</h3>
+        <button class="close-btn" id="close-bonus-history-btn">×</button>
+      </div>
+      <div id="bonus-history-content">
         <!-- Контент будет заполняться динамически -->
       </div>
     </div>
@@ -967,7 +1145,7 @@
     const resultsInfo = document.getElementById("results-info");
     const usersList = document.getElementById("users-list");
 
-    // DOM элементы - статистика
+    // DOM элементы - статистика (добавляем новые)
     const statTotal = document.getElementById("stat-total");
     const statNew = document.getElementById("stat-new");
     const statPending = document.getElementById("stat-pending");
@@ -975,6 +1153,9 @@
     const statBlocked = document.getElementById("stat-blocked");
     const statBoosted = document.getElementById("stat-boosted");
     const statReports = document.getElementById("stat-reports");
+    const statBonusSwipes = document.getElementById("stat-bonus-swipes");
+    const statInvites = document.getElementById("stat-invites");
+    const statShares = document.getElementById("stat-shares");
 
     // DOM элементы - баннеры
     const sectionBanners = {
@@ -983,6 +1164,7 @@
       verification: document.getElementById("section-banner-verification"),
       blocked: document.getElementById("section-banner-blocked"),
       reports: document.getElementById("section-banner-reports"),
+      bonuses: document.getElementById("section-banner-bonuses"),
       search: document.getElementById("section-banner-search")
     };
 
@@ -1007,6 +1189,23 @@
     const customSwipesInput = document.getElementById('custom-swipes');
     const swipesReasonInput = document.getElementById('swipes-reason');
 
+    // НОВЫЕ: DOM элементы - модальное окно бонусов
+    const bonusModal = document.getElementById('bonus-modal');
+    const closeBonusModalBtn = document.getElementById('close-bonus-modal-btn');
+    const applyBonusBtn = document.getElementById('apply-bonus-btn');
+    const bonusTypeSelect = document.getElementById('bonus-type');
+    const customBonusAmountDiv = document.getElementById('custom-bonus-amount');
+    const customBoostHoursDiv = document.getElementById('custom-boost-hours');
+    const customBonusAmountInput = document.getElementById('custom-bonus-amount-input');
+    const customBoostHoursInput = document.getElementById('custom-boost-hours-input');
+    const bonusReasonSelect = document.getElementById('bonus-reason');
+    const bonusCommentInput = document.getElementById('bonus-comment');
+
+    // НОВЫЕ: DOM элементы - модальное окно истории бонусов
+    const bonusHistoryModal = document.getElementById('bonus-history-modal');
+    const closeBonusHistoryBtn = document.getElementById('close-bonus-history-btn');
+    const bonusHistoryContent = document.getElementById('bonus-history-content');
+
     // DOM элементы - модальное окно деталей жалобы
     const reportDetailsModal = document.getElementById('report-details-modal');
     const closeReportDetailsBtn = document.getElementById('close-report-details-btn');
@@ -1017,10 +1216,78 @@
     let currentTab = "all";
     let allUsers = [];
     let filteredUsers = [];
-    let allReports = []; // Новый массив для жалоб
+    let allReports = [];
+    let allBonuses = []; // НОВОЕ: массив для истории бонусов
     let currentUserForBoost = null;
     let currentUserForSwipes = null;
+    let currentUserForBonus = null; // НОВОЕ
+    let currentUserForBonusHistory = null; // НОВОЕ
     let currentReportForDetails = null;
+
+    // НОВАЯ ФУНКЦИЯ: генерация демо-данных бонусов
+    function generateDemoBonuses(count = 20) {
+      const bonuses = [];
+      const bonusTypes = [
+        { type: 'verification', name: 'Верификация анкеты', icon: '🔐', swipes: 20 },
+        { type: 'invite', name: 'Приглашение друга', icon: '👥', swipes: 20 },
+        { type: 'share', name: 'Шеринг в Stories', icon: '📱', boost: 24 },
+        { type: 'custom_swipes', name: 'Бонусные свайпы', icon: '🔄', swipes: 50 },
+        { type: 'custom_boost', name: 'Бонусный буст', icon: '🚀', boost: 72 }
+      ];
+      
+      const reasons = [
+        'verification_success', 'invite_friend', 'shared_stories', 
+        'promo', 'compensation', 'loyalty', 'other'
+      ];
+      
+      const reasonTexts = {
+        'verification_success': 'Успешная верификация',
+        'invite_friend': 'Пригласил друга',
+        'shared_stories': 'Поделился в Stories',
+        'promo': 'Промо-акция',
+        'compensation': 'Компенсация',
+        'loyalty': 'Лояльность пользователя',
+        'other': 'Другое'
+      };
+      
+      // Берем пользователей из allUsers для демо
+      const demoUsers = allUsers.slice(0, 15);
+      
+      for (let i = 1; i <= count; i++) {
+        const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+        const bonusType = bonusTypes[Math.floor(Math.random() * bonusTypes.length)];
+        const reason = reasons[Math.floor(Math.random() * reasons.length)];
+        
+        const createdAt = new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000);
+        
+        let details = '';
+        if (bonusType.swipes) {
+          details = `+${bonusType.swipes} свайпов`;
+        } else if (bonusType.boost) {
+          details = `Буст на ${bonusType.boost} часа`;
+        }
+        
+        bonuses.push({
+          id: i,
+          userId: user.id,
+          userName: user.name,
+          type: bonusType.type,
+          typeName: bonusType.name,
+          icon: bonusType.icon,
+          details: details,
+          swipes: bonusType.swipes || 0,
+          boostHours: bonusType.boost || 0,
+          reason: reason,
+          reasonText: reasonTexts[reason],
+          comment: reason === 'other' ? 'Специальный бонус от администрации' : '',
+          adminName: 'Администратор',
+          createdAt: createdAt.toISOString(),
+          status: 'completed'
+        });
+      }
+      
+      return bonuses;
+    }
 
     // Генерация демо-данных пользователей
     function generateDemoUsers(count = 50) {
@@ -1059,6 +1326,11 @@
         const boosted = Math.random() < 0.15;
         const boostEnd = boosted ? new Date(now.getTime() + Math.floor(Math.random() * 7) * dayMs) : null;
         
+        // Демо данные для бонусов
+        const bonusSwipes = Math.floor(Math.random() * 100);
+        const invitedFriends = Math.floor(Math.random() * 5);
+        const sharedStories = Math.floor(Math.random() * 3);
+        
         // Фото для верификации (демо)
         const verificationPhoto = (verified || verificationStatus === 'pending') ? 
           `https://randomuser.me/api/portraits/${gender === 'male' ? 'men' : 'women'}/${i % 50}.jpg` : null;
@@ -1087,7 +1359,12 @@
             new Date(now.getTime() - Math.floor(Math.random() * 24) * 60 * 60 * 1000).toISOString() : null,
           boosted: boosted,
           boost_end: boostEnd ? boostEnd.toISOString() : null,
-          remaining_swipes: Math.floor(Math.random() * 30)
+          remaining_swipes: Math.floor(Math.random() * 30) + bonusSwipes,
+          // НОВЫЕ ПОЛЯ ДЛЯ БОНУСОВ
+          bonus_swipes: bonusSwipes,
+          invited_friends: invitedFriends,
+          shared_stories: sharedStories,
+          total_bonuses: Math.floor(Math.random() * 5) + 1
         });
       }
       
@@ -1184,6 +1461,11 @@
       const boosted = allUsers.filter(u => u.boosted).length;
       const pendingReports = allReports.filter(r => r.status === 'pending').length;
       
+      // НОВАЯ СТАТИСТИКА ДЛЯ БОНУСОВ
+      const totalBonusSwipes = allUsers.reduce((sum, u) => sum + (u.bonus_swipes || 0), 0);
+      const totalInvites = allUsers.reduce((sum, u) => sum + (u.invited_friends || 0), 0);
+      const totalShares = allUsers.reduce((sum, u) => sum + (u.shared_stories || 0), 0);
+      
       statTotal.textContent = total;
       statNew.textContent = newUsers;
       statPending.textContent = pendingVerification;
@@ -1191,6 +1473,10 @@
       statBlocked.textContent = blocked;
       statBoosted.textContent = boosted;
       statReports.textContent = pendingReports;
+      // НОВЫЕ СТАТИСТИКИ
+      statBonusSwipes.textContent = totalBonusSwipes;
+      statInvites.textContent = totalInvites;
+      statShares.textContent = totalShares;
     }
 
     // Фильтрация пользователей по текущей вкладке
@@ -1285,6 +1571,36 @@
       }
     }
 
+    // НОВАЯ ФУНКЦИЯ: Загрузка истории бонусов
+    function loadBonuses() {
+      try {
+        // Пытаемся загрузить из localStorage
+        const saved = localStorage.getItem('siamatch_admin_bonuses');
+        if (saved) {
+          allBonuses = JSON.parse(saved);
+          console.log('📂 Загружено бонусов из localStorage:', allBonuses.length);
+        }
+        
+        // Если нет бонусов, генерируем демо
+        if (allBonuses.length === 0) {
+          allBonuses = generateDemoBonuses(20);
+          console.log('✅ Сгенерировано демо-бонусов:', allBonuses.length);
+        }
+      } catch (e) {
+        console.error('❌ Ошибка загрузки бонусов:', e);
+        allBonuses = generateDemoBonuses(10);
+      }
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Сохранение истории бонусов
+    function saveBonuses() {
+      try {
+        localStorage.setItem('siamatch_admin_bonuses', JSON.stringify(allBonuses));
+      } catch (e) {
+        console.error('❌ Ошибка сохранения бонусов:', e);
+      }
+    }
+
     // Показать модальное окно верификации
     function showVerificationModal(user) {
       modalContent.innerHTML = `
@@ -1332,7 +1648,34 @@
       if (user) {
         user.verified = true;
         user.verification_status = 'verified';
-        alert(`✅ Верификация для ${user.name} подтверждена!\n\nТеперь в ленте рядом с её анкетой будет отображаться значок верификации ✅`);
+        
+        // НАЧИСЛЯЕМ БОНУС ЗА ВЕРИФИКАЦИЮ
+        const bonusSwipes = 20;
+        user.remaining_swipes = (user.remaining_swipes || 0) + bonusSwipes;
+        user.bonus_swipes = (user.bonus_swipes || 0) + bonusSwipes;
+        
+        // ДОБАВЛЯЕМ В ИСТОРИЮ БОНУСОВ
+        const newBonus = {
+          id: allBonuses.length + 1,
+          userId: user.id,
+          userName: user.name,
+          type: 'verification',
+          typeName: 'Верификация анкеты',
+          icon: '🔐',
+          details: `+${bonusSwipes} свайпов`,
+          swipes: bonusSwipes,
+          boostHours: 0,
+          reason: 'verification_success',
+          reasonText: 'Успешная верификация',
+          comment: 'Автоматическое начисление за верификацию',
+          adminName: 'Система',
+          createdAt: new Date().toISOString(),
+          status: 'completed'
+        };
+        allBonuses.push(newBonus);
+        saveBonuses();
+        
+        alert(`✅ Верификация для ${user.name} подтверждена!\n\nПользователь получил +${bonusSwipes} свайпов в качестве бонуса!`);
         switchTab(currentTab);
         updateStats();
       }
@@ -1348,6 +1691,75 @@
         switchTab(currentTab);
         updateStats();
       }
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Показать модальное окно бонусов
+    function showBonusModal(user) {
+      currentUserForBonus = user;
+      
+      document.getElementById('bonus-user-id').textContent = user.id;
+      document.getElementById('bonus-user-name').textContent = `${user.name}, ${user.age} лет`;
+      
+      // Сбрасываем значения
+      bonusTypeSelect.value = 'verification';
+      customBonusAmountDiv.classList.add('hidden');
+      customBoostHoursDiv.classList.add('hidden');
+      bonusReasonSelect.value = 'verification_success';
+      bonusCommentInput.value = '';
+      
+      bonusModal.classList.remove('hidden');
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Показать модальное окно истории бонусов
+    function showBonusHistoryModal(user) {
+      currentUserForBonusHistory = user;
+      
+      // Фильтруем бонусы для этого пользователя
+      const userBonuses = allBonuses.filter(b => b.userId === user.id);
+      
+      let bonusesHtml = '';
+      if (userBonuses.length === 0) {
+        bonusesHtml = `<div style="text-align: center; padding: 20px; color: var(--muted);">
+          <div style="font-size: 40px; margin-bottom: 10px;">🎁</div>
+          <div>У пользователя пока нет истории бонусов</div>
+        </div>`;
+      } else {
+        // Сортируем по дате (новые сверху)
+        userBonuses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        userBonuses.forEach(bonus => {
+          bonusesHtml += `
+            <div class="bonus-record">
+              <div class="bonus-record-header">
+                <div class="bonus-record-type">
+                  ${bonus.icon} ${bonus.typeName}
+                </div>
+                <div class="bonus-record-date">
+                  ${new Date(bonus.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+              <div class="bonus-record-details">
+                ${bonus.details}<br>
+                Причина: ${bonus.reasonText}<br>
+                ${bonus.comment ? `Комментарий: ${bonus.comment}<br>` : ''}
+                Начислил: ${bonus.adminName}
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      bonusHistoryContent.innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <strong>Пользователь:</strong> ${user.name}, ${user.age} лет (ID: ${user.id})<br>
+          <strong>Всего бонусов:</strong> ${userBonuses.length}
+        </div>
+        <div style="max-height: 400px; overflow-y: auto;">
+          ${bonusesHtml}
+        </div>
+      `;
+      
+      bonusHistoryModal.classList.remove('hidden');
     }
 
     // Показать модальное окно буста
@@ -1384,6 +1796,147 @@
       });
       
       swipesModal.classList.remove('hidden');
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Применить бонус
+    function applyBonus() {
+      if (!currentUserForBonus) return;
+      
+      const user = allUsers.find(u => u.id === currentUserForBonus.id);
+      if (!user) return;
+      
+      const bonusType = bonusTypeSelect.value;
+      const reason = bonusReasonSelect.value;
+      const comment = bonusCommentInput.value.trim();
+      
+      let bonusDetails = '';
+      let bonusSwipes = 0;
+      let bonusBoostHours = 0;
+      let bonusName = '';
+      let bonusIcon = '';
+      
+      // Определяем параметры бонуса
+      switch(bonusType) {
+        case 'verification':
+          bonusSwipes = 20;
+          bonusName = 'Верификация анкеты';
+          bonusIcon = '🔐';
+          bonusDetails = `+${bonusSwipes} свайпов`;
+          break;
+          
+        case 'invite':
+          bonusSwipes = 20;
+          bonusName = 'Приглашение друга';
+          bonusIcon = '👥';
+          bonusDetails = `+${bonusSwipes} свайпов`;
+          user.invited_friends = (user.invited_friends || 0) + 1;
+          break;
+          
+        case 'share':
+          bonusBoostHours = 24;
+          bonusName = 'Шеринг в Stories';
+          bonusIcon = '📱';
+          bonusDetails = `Буст на ${bonusHours} часов`;
+          user.shared_stories = (user.shared_stories || 0) + 1;
+          break;
+          
+        case 'custom_swipes':
+          bonusSwipes = parseInt(customBonusAmountInput.value) || 20;
+          bonusName = 'Бонусные свайпы';
+          bonusIcon = '🔄';
+          bonusDetails = `+${bonusSwipes} свайпов`;
+          break;
+          
+        case 'custom_boost':
+          bonusBoostHours = parseInt(customBoostHoursInput.value) || 24;
+          bonusName = 'Бонусный буст';
+          bonusIcon = '🚀';
+          bonusDetails = `Буст на ${bonusBoostHours} часов`;
+          break;
+          
+        case 'other':
+          bonusSwipes = 10; // дефолтное значение
+          bonusName = 'Другой бонус';
+          bonusIcon = '🎁';
+          bonusDetails = `Специальный бонус`;
+          break;
+      }
+      
+      // Применяем бонус к пользователю
+      if (bonusSwipes > 0) {
+        user.remaining_swipes = (user.remaining_swipes || 0) + bonusSwipes;
+        user.bonus_swipes = (user.bonus_swipes || 0) + bonusSwipes;
+      }
+      
+      if (bonusBoostHours > 0) {
+        user.boosted = true;
+        const boostEndTime = new Date(Date.now() + (bonusBoostHours * 60 * 60 * 1000));
+        user.boost_end = boostEndTime.toISOString();
+      }
+      
+      // Добавляем бонус в историю
+      const newBonus = {
+        id: allBonuses.length + 1,
+        userId: user.id,
+        userName: user.name,
+        type: bonusType,
+        typeName: bonusName,
+        icon: bonusIcon,
+        details: bonusDetails,
+        swipes: bonusSwipes,
+        boostHours: bonusBoostHours,
+        reason: reason,
+        reasonText: getReasonText(reason),
+        comment: comment || '',
+        adminName: 'Администратор',
+        createdAt: new Date().toISOString(),
+        status: 'completed'
+      };
+      
+      allBonuses.push(newBonus);
+      saveBonuses();
+      
+      // Показываем сообщение об успехе
+      let successMessage = `✅ Бонус успешно начислен!\n\n`;
+      successMessage += `Пользователь: ${user.name}\n`;
+      successMessage += `Тип бонуса: ${bonusName}\n`;
+      if (bonusSwipes > 0) {
+        successMessage += `Свайпов: +${bonusSwipes}\n`;
+        successMessage += `Всего свайпов: ${user.remaining_swipes}\n`;
+      }
+      if (bonusBoostHours > 0) {
+        successMessage += `Буст: ${bonusBoostHours} часов\n`;
+      }
+      if (comment) {
+        successMessage += `Комментарий: ${comment}\n`;
+      }
+      
+      alert(successMessage);
+      
+      // Обновляем интерфейс
+      bonusModal.classList.add('hidden');
+      currentUserForBonus = null;
+      updateStats();
+      
+      if (currentTab === 'bonuses') {
+        renderBonusUsers();
+      } else {
+        switchTab(currentTab);
+      }
+    }
+
+    // Вспомогательная функция для получения текста причины
+    function getReasonText(reasonCode) {
+      const reasons = {
+        'verification_success': 'Успешная верификация',
+        'invite_friend': 'Пригласил друга',
+        'shared_stories': 'Поделился в Stories',
+        'promo': 'Промо-акция',
+        'compensation': 'Компенсация',
+        'loyalty': 'Лояльность пользователя',
+        'other': 'Другое'
+      };
+      return reasons[reasonCode] || 'Другое';
     }
 
     // Показать модальное окно деталей жалобы
@@ -1645,6 +2198,7 @@
       const user = allUsers.find(u => u.id === currentUserForSwipes.id);
       if (user) {
         user.remaining_swipes = (user.remaining_swipes || 0) + swipesCount;
+        user.bonus_swipes = (user.bonus_swipes || 0) + swipesCount;
         
         let message = `✅ Свайпы подарены!\n\n`;
         message += `Пользователь: ${user.name}\n`;
@@ -1660,7 +2214,130 @@
       }
     }
 
-    // Рендеринг пользователей
+    // НОВАЯ ФУНКЦИЯ: Рендеринг пользователей для вкладки бонусов
+    function renderBonusUsers() {
+      usersList.innerHTML = "";
+      
+      // Сортируем пользователей по количеству бонусных активностей
+      const sortedUsers = [...allUsers].sort((a, b) => {
+        const aScore = (a.bonus_swipes || 0) + (a.invited_friends || 0) * 10 + (a.shared_stories || 0) * 5;
+        const bScore = (b.bonus_swipes || 0) + (b.invited_friends || 0) * 10 + (b.shared_stories || 0) * 5;
+        return bScore - aScore;
+      });
+      
+      if (!sortedUsers.length) {
+        resultsInfo.textContent = "Нет данных о пользователях";
+        return;
+      }
+      
+      resultsInfo.textContent = `Активные пользователи: ${sortedUsers.length} человек`;
+      
+      // Рендерим каждого пользователя
+      sortedUsers.forEach((u) => {
+        const li = document.createElement("li");
+        
+        // Классы для стилизации
+        const classes = ['user-item', 'bonus-item'];
+        if (u.blocked) classes.push('blocked');
+        if (u.is_new) classes.push('new');
+        classes.push(u.verification_status);
+        if (u.boosted) classes.push('boosted');
+        li.className = classes.join(' ');
+
+        const main = document.createElement("div");
+        main.className = "user-main";
+        
+        // Бейдж верификации
+        const verificationBadgeText = {
+          'not_verified': 'Не верифицирован',
+          'pending': '⏳ На проверке',
+          'verified': '✅ Верифицирован',
+          'rejected': '❌ Отклонен'
+        }[u.verification_status];
+        
+        // Бейдж буста
+        const boostBadge = u.boosted ? 
+          `<span class="boost-badge">🚀 Буст до: ${new Date(u.boost_end).toLocaleDateString()}</span>` : '';
+        
+        // Бонусные активности
+        const bonusBadge = `
+          <span class="bonus-badge">🎁 ${u.total_bonuses || 0} бонусов</span>
+        `;
+        
+        main.innerHTML = `
+          <div class="user-name">
+            ${u.name}, ${u.age} лет
+            <span class="verification-badge ${u.verification_status}">${verificationBadgeText}</span>
+            ${boostBadge}
+            ${bonusBadge}
+          </div>
+          <div class="user-meta">
+            <span>ID: ${u.id}</span>
+            <span>@${u.username}</span>
+            <span>${u.city}</span>
+            <span>🔄 ${u.remaining_swipes || 0} свайпов</span>
+            <span style="color: var(--invite)">👥 ${u.invited_friends || 0} приглашений</span>
+            <span style="color: var(--share)">📱 ${u.shared_stories || 0} шеров</span>
+            <span style="color: #10b981">🎁 ${u.bonus_swipes || 0} бонусных свайпов</span>
+            ${u.blocked ? '<span style="color:var(--danger)">🚫 Заблокирован</span>' : ''}
+            ${u.is_new ? '<span style="color:var(--info)">🆕 Новый</span>' : ''}
+          </div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "user-actions";
+        
+        const actionsRow1 = document.createElement("div");
+        actionsRow1.className = "user-actions-row";
+        
+        const actionsRow2 = document.createElement("div");
+        actionsRow2.className = "user-actions-row";
+
+        // Кнопка "История бонусов"
+        const historyBtn = document.createElement("button");
+        historyBtn.className = "bonus-btn-admin";
+        historyBtn.innerHTML = "📋 История бонусов";
+        historyBtn.onclick = () => {
+          showBonusHistoryModal(u);
+        };
+        actionsRow1.appendChild(historyBtn);
+
+        // Кнопка "Начислить бонус"
+        const addBonusBtn = document.createElement("button");
+        addBonusBtn.className = "bonus-btn-admin";
+        addBonusBtn.innerHTML = "🎁 Начислить бонус";
+        addBonusBtn.onclick = () => {
+          showBonusModal(u);
+        };
+        actionsRow1.appendChild(addBonusBtn);
+
+        // Кнопка "Подарить свайпы"
+        const swipesBtn = document.createElement("button");
+        swipesBtn.className = "swipes-btn-admin";
+        swipesBtn.innerHTML = "🔄 Подарить свайпы";
+        swipesBtn.onclick = () => {
+          showSwipesModal(u);
+        };
+        actionsRow2.appendChild(swipesBtn);
+
+        // Кнопка буста
+        const boostBtn = document.createElement("button");
+        boostBtn.className = "boost-btn-admin";
+        boostBtn.innerHTML = u.boosted ? "🔄 Продлить буст" : "🚀 Буст анкеты";
+        boostBtn.onclick = () => {
+          showBoostModal(u);
+        };
+        actionsRow2.appendChild(boostBtn);
+
+        actions.appendChild(actionsRow1);
+        actions.appendChild(actionsRow2);
+        li.appendChild(main);
+        li.appendChild(actions);
+        usersList.appendChild(li);
+      });
+    }
+
+    // Рендеринг пользователей для обычных вкладок
     function renderUsers(users) {
       usersList.innerHTML = "";
       
@@ -1668,7 +2345,7 @@
         const emptyMsg = {
           "all": "Нет зарегистрированных пользователей",
           "new": "Нет новых пользователей за последние 24 часа",
-          "verification": "Нет заявок на верификацию",
+          "verification": "Нет заявок на верификации",
           "blocked": "Нет заблокированных пользователей",
           "search": "По вашему запросу ничего не найдено"
         }[currentTab];
@@ -1715,9 +2392,9 @@
         const boostBadge = u.boosted ? 
           `<span class="boost-badge">🚀 Буст до: ${new Date(u.boost_end).toLocaleDateString()}</span>` : '';
         
-        // Информация о свайпах
-        const swipesInfo = u.remaining_swipes ? 
-          `<span style="color:#10b981;">🔄 ${u.remaining_swipes} свайпов</span>` : '';
+        // Бонусная информация
+        const bonusInfo = u.bonus_swipes ? 
+          `<span style="color:#10b981;">🎁 ${u.bonus_swipes} бонусных свайпов</span>` : '';
         
         main.innerHTML = `
           <div class="user-name">
@@ -1731,7 +2408,8 @@
             <span>${u.city}</span>
             <span>${u.gender === 'male' ? '♂ Мужской' : '♀ Женский'}</span>
             <span>Рег.: ${u.registration_date}</span>
-            ${swipesInfo}
+            <span>🔄 ${u.remaining_swipes || 0} свайпов</span>
+            ${bonusInfo}
             ${u.blocked ? '<span style="color:var(--danger)">🚫 Заблокирован</span>' : ''}
             ${u.is_new ? '<span style="color:var(--info)">🆕 Новый</span>' : ''}
           </div>
@@ -2011,6 +2689,8 @@
       // Фильтруем и рендерим
       if (tabName === 'reports') {
         renderReports();
+      } else if (tabName === 'bonuses') {
+        renderBonusUsers();
       } else {
         const users = filterUsersByTab();
         renderUsers(users);
@@ -2050,6 +2730,8 @@
       verificationModal.classList.add('hidden');
       boostModal.classList.add('hidden');
       swipesModal.classList.add('hidden');
+      bonusModal.classList.add('hidden');
+      bonusHistoryModal.classList.add('hidden');
       reportDetailsModal.classList.add('hidden');
     }
 
@@ -2064,6 +2746,10 @@
       // Загрузка жалоб
       loadReports();
       console.log('✅ Загружено жалоб:', allReports.length);
+      
+      // Загрузка истории бонусов
+      loadBonuses();
+      console.log('✅ Загружено бонусов:', allBonuses.length);
       
       // Обработчики для логина
       loginBtn.onclick = handleLogin;
@@ -2090,6 +2776,16 @@
         currentUserForSwipes = null;
       };
 
+      closeBonusModalBtn.onclick = () => {
+        bonusModal.classList.add('hidden');
+        currentUserForBonus = null;
+      };
+
+      closeBonusHistoryBtn.onclick = () => {
+        bonusHistoryModal.classList.add('hidden');
+        currentUserForBonusHistory = null;
+      };
+
       closeReportDetailsBtn.onclick = () => {
         reportDetailsModal.classList.add('hidden');
         currentReportForDetails = null;
@@ -2100,6 +2796,21 @@
 
       // Подарить свайпы
       applySwipesBtn.onclick = applySwipes;
+
+      // НАЧИСЛИТЬ БОНУС
+      applyBonusBtn.onclick = applyBonus;
+
+      // Обработчик выбора типа бонуса
+      bonusTypeSelect.addEventListener('change', function() {
+        customBonusAmountDiv.classList.add('hidden');
+        customBoostHoursDiv.classList.add('hidden');
+        
+        if (this.value === 'custom_swipes') {
+          customBonusAmountDiv.classList.remove('hidden');
+        } else if (this.value === 'custom_boost') {
+          customBoostHoursDiv.classList.remove('hidden');
+        }
+      });
 
       // Обработчик выбора продолжительности буста
       boostDurationSelect.addEventListener('change', function() {
@@ -2164,6 +2875,20 @@
         if (e.target === swipesModal) {
           swipesModal.classList.add('hidden');
           currentUserForSwipes = null;
+        }
+      };
+
+      bonusModal.onclick = (e) => {
+        if (e.target === bonusModal) {
+          bonusModal.classList.add('hidden');
+          currentUserForBonus = null;
+        }
+      };
+
+      bonusHistoryModal.onclick = (e) => {
+        if (e.target === bonusHistoryModal) {
+          bonusHistoryModal.classList.add('hidden');
+          currentUserForBonusHistory = null;
         }
       };
 
