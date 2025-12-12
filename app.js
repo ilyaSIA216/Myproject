@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let searchFilters = {
     minAge: 18,
     maxAge: 35,
-    genders: [], // Массив для выбранных полов
+    genders: [],
     interests: [],
     datingGoal: ''
   };
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Интересы пользователя
   let userInterests = [];
   let datingGoal = '';
-  let maxInterests = 5; // Максимум интересов
+  let maxInterests = 5;
   
   // Система буста
   let boostActive = false;
@@ -43,12 +43,15 @@ document.addEventListener('DOMContentLoaded', function() {
   let maxSwipesPerDay = 20;
   
   // СИСТЕМА ЧАТОВ И ЖАЛОБ
-  let matchedUsers = []; // Список мэтчей
-  let currentChatId = null; // Текущий открытый чат
-  let chatMessages = {}; // Сообщения по чатам
-  let userReports = []; // Жалобы пользователя
+  let matchedUsers = [];
+  let currentChatId = null;
+  let chatMessages = {};
+  let userReports = [];
   
-  // Демо-данные кандидатов (с интересами и статусом буста)
+  // НОВАЯ СИСТЕМА: Ожидающие подтверждения бонусы
+  let pendingBonusVerifications = [];
+  
+  // Демо-данные кандидатов
   const candidates = [
     {
       id: 1,
@@ -63,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
       interests: ["travel", "movies", "photography", "tattoos"],
       dating_goal: "marriage",
       boosted: true,
-      boost_end: Date.now() + 24 * 60 * 60 * 1000 // Буст на 24 часа
+      boost_end: Date.now() + 24 * 60 * 60 * 1000
     },
     {
       id: 2,
@@ -91,35 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
       verification_status: 'verified',
       interests: ["art", "photography", "travel", "wine"],
       dating_goal: "friendship",
-      boosted: false
-    },
-    {
-      id: 4,
-      name: "Иван",
-      age: 29,
-      gender: "male",
-      city: "Казань",
-      bio: "Предприниматель. Люблю активный отдых и путешествия 🗺️",
-      photo: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=800",
-      verified: true,
-      verification_status: 'verified',
-      interests: ["business", "travel", "sport", "boardgames"],
-      dating_goal: "marriage",
-      boosted: true,
-      boost_end: Date.now() + 12 * 60 * 60 * 1000 // Буст на 12 часов
-    },
-    {
-      id: 5,
-      name: "София",
-      age: 25,
-      gender: "female",
-      city: "Новосибирск",
-      bio: "Дизайнер. Увлекаюсь йогой и здоровым питанием 🥗",
-      photo: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=800",
-      verified: false,
-      verification_status: 'pending',
-      interests: ["art", "music", "cooking", "piercing"],
-      dating_goal: "dating",
       boosted: false
     }
   ];
@@ -194,7 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const searchMaxAge = document.getElementById('search-max-age');
   
   // Интересы пользователя
-  const saveInterestsBtn = document.getElementById('save-interests');
   const datingGoalSelect = document.getElementById('dating-goal');
   const saveDatingGoalBtn = document.getElementById('save-dating-goal');
   
@@ -341,6 +314,83 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // ===== НОВАЯ СИСТЕМА: ОЖИДАЮЩИЕ ПОДТВЕРЖДЕНИЯ БОНУСЫ =====
+  function loadPendingBonuses() {
+    try {
+      const saved = localStorage.getItem("siamatch_pending_bonuses");
+      if (saved) {
+        pendingBonusVerifications = JSON.parse(saved);
+        console.log('📂 Загружено ожидающих бонусов:', pendingBonusVerifications.length);
+      }
+    } catch (e) {
+      console.error("❌ Ошибка загрузки ожидающих бонусов:", e);
+    }
+  }
+  
+  function savePendingBonuses() {
+    try {
+      localStorage.setItem("siamatch_pending_bonuses", JSON.stringify(pendingBonusVerifications));
+      
+      // Также сохраняем в админскую базу для проверки
+      const adminBonuses = JSON.parse(localStorage.getItem('siamatch_admin_pending_bonuses') || '[]');
+      const newPendingBonuses = pendingBonusVerifications.filter(pb => 
+        !adminBonuses.some(ab => ab.id === pb.id)
+      );
+      
+      if (newPendingBonuses.length > 0) {
+        localStorage.setItem('siamatch_admin_pending_bonuses', 
+          JSON.stringify([...adminBonuses, ...newPendingBonuses])
+        );
+      }
+    } catch (e) {
+      console.error("❌ Ошибка сохранения ожидающих бонусов:", e);
+    }
+  }
+  
+  function submitShareForVerification(screenshotData) {
+    const verificationRequest = {
+      id: Date.now(),
+      userId: profileData?.tg_id,
+      userName: profileData?.first_name,
+      type: 'share_stories',
+      screenshot: screenshotData,
+      requestedAt: new Date().toISOString(),
+      status: 'pending',
+      reward: {
+        type: 'boost',
+        value: 24,
+        description: '24-часовой буст за шеринг в Stories'
+      }
+    };
+    
+    pendingBonusVerifications.push(verificationRequest);
+    savePendingBonuses();
+    
+    showNotification('📱 Скриншот отправлен на проверку!\n\nАдминистратор проверит вашу публикацию в течение 24 часов. После подтверждения вы получите 24-часовой буст!');
+  }
+  
+  function submitInviteForVerification(invitedUserId) {
+    const verificationRequest = {
+      id: Date.now(),
+      userId: profileData?.tg_id,
+      userName: profileData?.first_name,
+      type: 'invite_friend',
+      invitedUserId: invitedUserId,
+      requestedAt: new Date().toISOString(),
+      status: 'pending',
+      reward: {
+        type: 'swipes',
+        value: 20,
+        description: '+20 свайпов за приглашение друга'
+      }
+    };
+    
+    pendingBonusVerifications.push(verificationRequest);
+    savePendingBonuses();
+    
+    showNotification('👥 Запрос на проверку приглашения отправлен!\n\nАдминистратор проверит регистрацию вашего друга. После подтверждения вы получите +20 свайпов!');
+  }
+  
   // ===== СИСТЕМА ЧАТОВ И ЖАЛОБ =====
   function initChatsSystem() {
     console.log('💬 Инициализирую систему чатов и жалоб');
@@ -349,22 +399,18 @@ document.addEventListener('DOMContentLoaded', function() {
     loadChatMessages();
     loadUserReports();
     
-    // Если нет мэтчей, добавляем демо для тестирования
     if (matchedUsers.length === 0) {
       matchedUsers = demoMatches;
       saveMatchedUsers();
     }
     
-    // Инициализируем демо сообщения
     Object.keys(demoMessages).forEach(chatId => {
       if (!chatMessages[chatId]) {
         chatMessages[chatId] = demoMessages[chatId];
       }
     });
     
-    // Сохраняем сообщения
     saveChatMessages();
-    
     updateChatsList();
   }
   
@@ -472,26 +518,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const user = matchedUsers.find(u => u.id === parseInt(userId));
     if (!user) return;
     
-    // Создаем экран чата если его нет
     if (!document.getElementById('chat-screen')) {
       createChatScreen();
     }
     
-    // Показываем экран чата
     document.getElementById('screen-chats').classList.add('hidden');
     document.getElementById('chat-screen').classList.remove('hidden');
     document.getElementById('tab-bar').classList.add('hidden');
     
-    // Устанавливаем информацию о собеседнике
     document.getElementById('chat-user-name').textContent = `${user.name}, ${user.age}`;
     document.getElementById('chat-user-city').textContent = user.city;
     document.getElementById('chat-user-photo').src = user.photo;
     document.getElementById('chat-user-bio').textContent = user.bio;
     
-    // Загружаем сообщения
     loadMessagesForChat(userId);
     
-    // Обнуляем непрочитанные
     user.unread = 0;
     saveMatchedUsers();
     updateChatsList();
@@ -523,7 +564,6 @@ document.addEventListener('DOMContentLoaded', function() {
         <button id="send-message-btn" class="send-btn">➤</button>
       </div>
       
-      <!-- Модальное окно жалобы -->
       <div id="report-modal" class="modal-overlay hidden">
         <div class="modal" style="max-width: 500px;">
           <div class="modal-header">
@@ -579,13 +619,10 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     
     document.getElementById('card').appendChild(chatScreen);
-    
-    // Инициализируем обработчики событий
     setupChatEventHandlers();
   }
   
   function setupChatEventHandlers() {
-    // Кнопка "Назад к чатам"
     document.getElementById('back-to-chats').addEventListener('click', () => {
       document.getElementById('chat-screen').classList.add('hidden');
       document.getElementById('screen-chats').classList.remove('hidden');
@@ -593,30 +630,24 @@ document.addEventListener('DOMContentLoaded', function() {
       currentChatId = null;
     });
     
-    // Кнопка отправки сообщения
     document.getElementById('send-message-btn').addEventListener('click', sendMessage);
     
-    // Ввод сообщения по Enter
     document.getElementById('chat-message-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         sendMessage();
       }
     });
     
-    // Кнопка жалобы
     document.getElementById('chat-report-btn').addEventListener('click', openReportModal);
     
-    // Закрытие модального окна жалобы
     document.getElementById('close-report-modal-btn').addEventListener('click', () => {
       document.getElementById('report-modal').classList.add('hidden');
     });
     
-    // Отмена жалобы
     document.getElementById('cancel-report-btn').addEventListener('click', () => {
       document.getElementById('report-modal').classList.add('hidden');
     });
     
-    // Выбор причины жалобы
     document.getElementById('report-reason').addEventListener('change', function() {
       const customReasonDiv = document.getElementById('custom-report-reason');
       if (this.value === 'other') {
@@ -626,10 +657,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Отправка жалобы
     document.getElementById('submit-report-btn').addEventListener('click', submitReport);
     
-    // Закрытие модального окна при клике вне его
     document.getElementById('report-modal').addEventListener('click', (e) => {
       if (e.target === document.getElementById('report-modal')) {
         document.getElementById('report-modal').classList.add('hidden');
@@ -665,7 +694,6 @@ document.addEventListener('DOMContentLoaded', function() {
       messagesContainer.appendChild(messageElement);
     });
     
-    // Прокрутка вниз
     setTimeout(() => {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }, 100);
@@ -689,7 +717,6 @@ document.addEventListener('DOMContentLoaded', function() {
       date: dateString
     };
     
-    // Добавляем сообщение в историю
     if (!chatMessages[currentChatId]) {
       chatMessages[currentChatId] = [];
     }
@@ -697,7 +724,6 @@ document.addEventListener('DOMContentLoaded', function() {
     chatMessages[currentChatId].push(newMessage);
     saveChatMessages();
     
-    // Добавляем сообщение в интерфейс
     const messagesContainer = document.getElementById('chat-messages');
     const messageElement = document.createElement('div');
     messageElement.className = 'message message-out';
@@ -707,15 +733,12 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     messagesContainer.appendChild(messageElement);
     
-    // Очищаем поле ввода
     input.value = '';
     
-    // Прокрутка вниз
     setTimeout(() => {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }, 100);
     
-    // Симулируем ответ через 1-3 секунды
     setTimeout(() => {
       simulateResponse(currentChatId);
     }, 1000 + Math.random() * 2000);
@@ -752,7 +775,6 @@ document.addEventListener('DOMContentLoaded', function() {
     chatMessages[chatId].push(responseMessage);
     saveChatMessages();
     
-    // Если чат открыт, добавляем сообщение
     if (currentChatId === chatId) {
       const messagesContainer = document.getElementById('chat-messages');
       if (messagesContainer) {
@@ -769,7 +791,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
       }
     } else {
-      // Увеличиваем счетчик непрочитанных
       const user = matchedUsers.find(u => u.id === parseInt(chatId));
       if (user) {
         user.unread = (user.unread || 0) + 1;
@@ -787,7 +808,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('report-user-name').textContent = `${user.name}, ${user.age}`;
     
-    // Сброс формы
     document.getElementById('report-reason').value = '';
     document.getElementById('custom-report-reason').classList.add('hidden');
     document.getElementById('custom-reason-text').value = '';
@@ -814,7 +834,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const user = matchedUsers.find(u => u.id === parseInt(currentChatId));
     if (!user) return;
     
-    // Собираем данные для жалобы
     const reportData = {
       id: Date.now(),
       reporterId: profileData?.tg_id || 1,
@@ -831,17 +850,13 @@ document.addEventListener('DOMContentLoaded', function() {
       adminResponse: null
     };
     
-    // Добавляем жалобу
     userReports.push(reportData);
     saveUserReports();
     
-    // Сохраняем жалобу в localStorage для админ-панели
     saveReportToAdmin(reportData);
     
-    // Показываем уведомление
     showNotification('✅ Жалоба отправлена!\n\nВаша жалоба будет рассмотрена администратором в течение 24 часов. Диалог сохранён для проверки.');
     
-    // Закрываем модальное окно
     document.getElementById('report-modal').classList.add('hidden');
     
     if (tg?.HapticFeedback) {
@@ -867,7 +882,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadSearchFilters();
     
-    // Удаляем старую кнопку открытия фильтров
     const openFiltersBtn = document.getElementById("open-filters-btn");
     if (openFiltersBtn) {
       openFiltersBtn.parentNode.removeChild(openFiltersBtn);
@@ -893,7 +907,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Инициализация фильтра по полу
     const genderMaleCheckbox = document.getElementById('filter-gender-male');
     const genderFemaleCheckbox = document.getElementById('filter-gender-female');
     
@@ -978,7 +991,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = JSON.parse(saved);
         searchFilters.minAge = data.minAge || 18;
         searchFilters.maxAge = data.maxAge || 35;
-        searchFilters.genders = data.genders || []; // Загружаем выбранные полы
+        searchFilters.genders = data.genders || [];
         searchFilters.interests = data.interests || [];
         searchFilters.datingGoal = data.datingGoal || '';
       }
@@ -1002,29 +1015,24 @@ document.addEventListener('DOMContentLoaded', function() {
     loadBoostStatus();
     updateBoostUI();
     
-    // Удаляем кнопку покупки буста если она существует
     const boostProfileBtn = document.getElementById('boostProfileBtn');
     if (boostProfileBtn && boostProfileBtn.parentNode) {
       boostProfileBtn.parentNode.removeChild(boostProfileBtn);
     }
     
-    // Удаляем форму буста если она существует
     const boostFormSection = document.getElementById('boost-form-section');
     if (boostFormSection && boostFormSection.parentNode) {
       boostFormSection.parentNode.removeChild(boostFormSection);
     }
     
-    // Обновляем секцию буста в профиле - используем существующий элемент
     const boostInfoRow = document.querySelector('.profile-info-row:nth-child(5)');
     if (boostInfoRow) {
-      // Сохраняем существующую структуру, но обновляем текст
       const boostStatusSpan = boostInfoRow.querySelector('#boost-status');
       if (boostStatusSpan) {
         updateBoostStatusElement(boostStatusSpan);
       }
     }
     
-    // Запускаем таймер обновления
     setInterval(updateBoostTimer, 1000);
   }
   
@@ -1212,9 +1220,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // ===== СИСТЕМА БОНУСНЫХ СВАЙПОВ И БУСТОВ =====
+  // ===== СИСТЕМА БОНУСНЫХ СВАЙПОВ И БУСТОВ (ОБНОВЛЕННАЯ) =====
   function initBonusSystem() {
     console.log('🎁 Инициализирую систему бонусов');
+    
+    loadPendingBonuses();
     
     const inviteFriendBtn = document.getElementById('inviteFriendBtn');
     const shareStoriesBtn = document.getElementById('shareStoriesBtn');
@@ -1227,7 +1237,6 @@ document.addEventListener('DOMContentLoaded', function() {
       shareStoriesBtn.addEventListener('click', handleShareStories);
     }
     
-    // Обновляем текст верификации
     const verifyBtn = document.getElementById('verifyProfileBtn');
     if (verifyBtn) {
       verifyBtn.textContent = '🔐 Верифицировать анкету (+20 свайпов)';
@@ -1242,17 +1251,11 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (e) {}
     }
     
-    // Генерация реферальной ссылки
     const referralCode = generateReferralCode();
     const referralLink = `https://t.me/SiaMatchBot?start=${referralCode}`;
     
-    // Показываем уведомление с ссылкой
-    showBonusNotification(
-      '👥 Пригласите друга!',
-      'Отправьте эту ссылку другу. Когда он зарегистрируется по вашей ссылке и заполнит профиль, вы оба получите по +20 свайпов! 🎁',
-      referralLink,
-      'invite'
-    );
+    // СОЗДАЕМ МОДАЛЬНОЕ ОКНО ДЛЯ СКРИНШОТА ПРИГЛАШЕНИЯ
+    showInviteVerificationModal(referralLink);
   }
   
   function handleShareStories() {
@@ -1262,14 +1265,208 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (e) {}
     }
     
-    // В реальном приложении здесь был бы вызов API для шеринга
-    // Для демо просто показываем уведомление
-    showBonusNotification(
-      '📱 Поделиться в Stories',
-      'Сделайте скриншот этого экрана или главного экрана приложения и опубликуйте в Stories с хэштегом #SiaMatch. Затем отправьте нам ссылку на публикацию для получения 24-часового буста!',
-      null,
-      'share'
-    );
+    // СОЗДАЕМ МОДАЛЬНОЕ ОКНО ДЛЯ ЗАГРУЗКИ СКРИНШОТА STORIES
+    showShareVerificationModal();
+  }
+  
+  function showInviteVerificationModal(referralLink) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3>👥 Приглашение друга</h3>
+          <button class="close-btn" id="close-invite-modal-btn">×</button>
+        </div>
+        <div style="padding: 20px;">
+          <div style="margin-bottom: 20px;">
+            <p>Для получения бонуса +20 свайпов необходимо:</p>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+              <li>Отправьте эту ссылку другу: <strong>${referralLink}</strong></li>
+              <li>Друг должен зарегистрироваться по вашей ссылке</li>
+              <li>После регистрации вашего друга, администратор проверит приглашение</li>
+              <li>После проверки вы получите +20 свайпов!</li>
+            </ol>
+          </div>
+          
+          <div class="field">
+            <label>ID вашего друга (если он уже зарегистрировался)</label>
+            <input type="number" id="friend-id-input" placeholder="Введите ID друга" style="width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #bbf7d0;" />
+          </div>
+          
+          <div class="field" style="margin-top: 20px;">
+            <label>Или загрузите скриншот переписки с другом</label>
+            <input type="file" id="invite-screenshot-input" accept="image/*" style="width: 100%; padding: 10px;" />
+            <div class="hint">Скриншот вашего приглашения в Telegram</div>
+          </div>
+          
+          <div class="modal-actions" style="margin-top: 20px;">
+            <button id="submit-invite-verification" class="primary">📤 Отправить на проверку</button>
+            <button id="cancel-invite-verification" class="secondary-btn">Отмена</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Обработчики событий
+    document.getElementById('close-invite-modal-btn').onclick = () => {
+      document.body.removeChild(modal);
+    };
+    
+    document.getElementById('cancel-invite-verification').onclick = () => {
+      document.body.removeChild(modal);
+    };
+    
+    document.getElementById('submit-invite-verification').onclick = () => {
+      const friendIdInput = document.getElementById('friend-id-input');
+      const screenshotInput = document.getElementById('invite-screenshot-input');
+      
+      const friendId = friendIdInput.value.trim();
+      const screenshotFile = screenshotInput.files[0];
+      
+      if (!friendId && !screenshotFile) {
+        showNotification('Заполните хотя бы одно поле: ID друга или загрузите скриншот');
+        return;
+      }
+      
+      if (friendId) {
+        // Отправляем ID друга на проверку
+        submitInviteForVerification(parseInt(friendId));
+        document.body.removeChild(modal);
+      } else if (screenshotFile) {
+        // Загружаем скриншот
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const screenshotData = event.target.result;
+          
+          // Создаем запрос на проверку с скриншотом
+          const verificationRequest = {
+            id: Date.now(),
+            userId: profileData?.tg_id,
+            userName: profileData?.first_name,
+            type: 'invite_friend_screenshot',
+            screenshot: screenshotData,
+            requestedAt: new Date().toISOString(),
+            status: 'pending',
+            reward: {
+              type: 'swipes',
+              value: 20,
+              description: '+20 свайпов за приглашение друга'
+            }
+          };
+          
+          pendingBonusVerifications.push(verificationRequest);
+          savePendingBonuses();
+          
+          document.body.removeChild(modal);
+          showNotification('📤 Скриншот отправлен на проверку!\n\nАдминистратор проверит ваше приглашение в течение 24 часов. После подтверждения вы получите +20 свайпов!');
+        };
+        reader.readAsDataURL(screenshotFile);
+      }
+    };
+    
+    // Закрытие по клику вне модального окна
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+  }
+  
+  function showShareVerificationModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3>📱 Шеринг в Stories</h3>
+          <button class="close-btn" id="close-share-modal-btn">×</button>
+        </div>
+        <div style="padding: 20px;">
+          <div style="margin-bottom: 20px;">
+            <p>Для получения 24-часового буста необходимо:</p>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+              <li>Сделайте скриншот приложения SiaMatch</li>
+              <li>Опубликуйте в Stories Telegram или Instagram</li>
+              <li>Сделайте скриншот вашей публикации</li>
+              <li>Загрузите скриншот для проверки</li>
+              <li>После проверки вы получите 24-часовой буст!</li>
+            </ol>
+          </div>
+          
+          <div class="field">
+            <label>Загрузите скриншот вашей публикации в Stories</label>
+            <input type="file" id="share-screenshot-input" accept="image/*" style="width: 100%; padding: 10px;" />
+            <div class="hint">Скриншот должен показывать вашу публикацию в Stories с хэштегом #SiaMatch</div>
+          </div>
+          
+          <div id="screenshot-preview" style="margin-top: 15px; display: none;">
+            <img id="preview-image" style="max-width: 200px; border-radius: 10px; border: 2px solid #bbf7d0;" />
+          </div>
+          
+          <div class="modal-actions" style="margin-top: 20px;">
+            <button id="submit-share-verification" class="primary" disabled>📤 Отправить на проверку</button>
+            <button id="cancel-share-verification" class="secondary-btn">Отмена</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Обработчики событий
+    const closeBtn = document.getElementById('close-share-modal-btn');
+    const cancelBtn = document.getElementById('cancel-share-verification');
+    const submitBtn = document.getElementById('submit-share-verification');
+    const screenshotInput = document.getElementById('share-screenshot-input');
+    const previewDiv = document.getElementById('screenshot-preview');
+    const previewImg = document.getElementById('preview-image');
+    
+    closeBtn.onclick = () => {
+      document.body.removeChild(modal);
+    };
+    
+    cancelBtn.onclick = () => {
+      document.body.removeChild(modal);
+    };
+    
+    screenshotInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          previewDiv.style.display = 'block';
+          submitBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    submitBtn.onclick = () => {
+      const file = screenshotInput.files[0];
+      if (!file) {
+        showNotification('Сначала загрузите скриншот');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const screenshotData = event.target.result;
+        submitShareForVerification(screenshotData);
+        document.body.removeChild(modal);
+      };
+      reader.readAsDataURL(file);
+    };
+    
+    // Закрытие по клику вне модального окна
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
   }
   
   function generateReferralCode() {
@@ -1294,7 +1491,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </button>
     `;
     
-    // Добавляем стили
     notification.style.cssText = `
       position: fixed;
       top: 50%;
@@ -1312,7 +1508,6 @@ document.addEventListener('DOMContentLoaded', function() {
       border: 3px solid white;
     `;
     
-    // Добавляем анимацию
     const style = document.createElement('style');
     style.textContent = `
       @keyframes bonusAppear {
@@ -1328,15 +1523,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.body.appendChild(notification);
     
-    // Обработчик кнопки
     const copyBtn = document.getElementById('bonus-copy-btn');
     copyBtn.addEventListener('click', () => {
       if (link) {
-        // Копируем ссылку в буфер обмена
         navigator.clipboard.writeText(link).then(() => {
           showNotification('✅ Ссылка скопирована в буфер обмена!');
         }).catch(() => {
-          // Fallback для старых браузеров
           const textArea = document.createElement('textarea');
           textArea.value = link;
           document.body.appendChild(textArea);
@@ -1347,12 +1539,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }
       
-      // Если это шеринг, добавляем буст
-      if (type === 'share') {
-        activateBoostFromShare();
-      }
-      
-      // Закрываем уведомление
       notification.style.animation = 'bonusDisappear 0.3s ease forwards';
       setTimeout(() => {
         if (notification.parentNode) {
@@ -1364,7 +1550,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 300);
     });
     
-    // Автоматическое закрытие через 10 секунд
     setTimeout(() => {
       if (notification.parentNode) {
         notification.style.animation = 'bonusDisappear 0.3s ease forwards';
@@ -1379,7 +1564,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }, 10000);
     
-    // Закрытие по клику вне уведомления
     notification.addEventListener('click', (e) => {
       if (e.target === notification) {
         notification.style.animation = 'bonusDisappear 0.3s ease forwards';
@@ -1393,29 +1577,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
       }
     });
-  }
-  
-  function activateBoostFromShare() {
-    // Проверяем, был ли уже активирован буст за шеринг сегодня
-    const today = new Date().toDateString();
-    const shareData = JSON.parse(localStorage.getItem('siamatch_share_bonus') || '{}');
-    
-    if (shareData.date === today) {
-      showNotification('🎁 Вы уже получали бонус за шеринг сегодня. Попробуйте завтра!');
-      return;
-    }
-    
-    // Активируем буст на 24 часа
-    boostActive = true;
-    boostEndTime = Date.now() + 24 * 60 * 60 * 1000; // 24 часа
-    saveBoostStatus();
-    updateBoostUI();
-    
-    // Сохраняем дату активации
-    shareData.date = today;
-    localStorage.setItem('siamatch_share_bonus', JSON.stringify(shareData));
-    
-    showNotification('🚀 Буст активирован на 24 часа!\n\nВаша анкета будет показываться чаще в ленте других пользователей.');
   }
   
   // ===== СИСТЕМА ЛАЙКОВ =====
@@ -1729,10 +1890,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     showNotification('✅ Запрос на верификацию отправлен!\n\nАнкета будет проверена администратором в течение 24 часов.\n\nПосле успешной верификации вы получите +20 свайпов! 🎁');
     
-    // Для демо: через 3 секунды симулируем успешную верификацию
     setTimeout(() => {
-      // В реальном приложении здесь был бы вызов API
-      // Для демо автоматически завершаем верификацию
       if (verificationStatus === 'pending') {
         completeVerificationWithBonus();
       }
@@ -1744,7 +1902,6 @@ document.addEventListener('DOMContentLoaded', function() {
     saveVerificationStatus();
     updateVerificationUI();
     
-    // Добавляем 20 свайпов
     remainingSwipes += 20;
     saveSwipesCount();
     updateSwipesUI();
@@ -1823,10 +1980,8 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Инициализация чекбоксов с ограничением
     initInterestsCheckboxes();
     
-    // Цель знакомства (оставляем как есть)
     if (datingGoalSelect) {
       datingGoalSelect.value = datingGoal;
       datingGoalSelect.addEventListener('change', function() {
@@ -1843,10 +1998,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkboxes = document.querySelectorAll('.interest-checkbox');
     
     checkboxes.forEach(checkbox => {
-      // Устанавливаем состояние из сохраненных данных
       checkbox.checked = userInterests.includes(checkbox.value);
       
-      // Добавляем обработчик с ограничением
       checkbox.addEventListener('change', function() {
         const selectedCount = document.querySelectorAll('.interest-checkbox:checked').length;
         
@@ -1872,7 +2025,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (counterEditor) {
       counterEditor.textContent = `Выбрано: ${selectedCount}/5 интересов`;
       
-      // Подсвечиваем если достигнут лимит
       if (selectedCount >= maxInterests) {
         counterEditor.classList.add('limit-reached');
       } else {
@@ -1885,18 +2037,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (saveBtn) {
-      // Разрешаем сохранение только если выбрано хотя бы 1 интерес
       saveBtn.disabled = selectedCount === 0;
     }
   }
   
   function openInterestsEditor() {
-    // Скрываем профиль и показываем редактор интересов
     document.getElementById('screen-profile').classList.add('hidden');
     document.getElementById('screen-interests').classList.remove('hidden');
     document.getElementById('tab-bar').classList.add('hidden');
     
-    // Загружаем текущие интересы в чекбоксы
     document.querySelectorAll('.interest-checkbox').forEach(checkbox => {
       checkbox.checked = userInterests.includes(checkbox.value);
     });
@@ -1928,12 +2077,10 @@ document.addEventListener('DOMContentLoaded', function() {
       
       showNotification('✅ Интересы сохранены!');
       
-      // Возвращаемся в профиль
       document.getElementById('screen-interests').classList.add('hidden');
       document.getElementById('screen-profile').classList.remove('hidden');
       document.getElementById('tab-bar').classList.remove('hidden');
       
-      // Обновляем отображение
       updateSelectedInterestsDisplay();
       
       if (tg?.HapticFeedback) {
@@ -1955,7 +2102,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!selectedList || !noInterestsHint) return;
     
-    // Очищаем список
     selectedList.innerHTML = '';
     
     if (userInterests.length === 0) {
@@ -1967,7 +2113,6 @@ document.addEventListener('DOMContentLoaded', function() {
     noInterestsHint.classList.add('hidden');
     if (interestsCounter) interestsCounter.classList.remove('hidden');
     
-    // Маппинг значений интересов на русские названия
     const interestLabels = {
       'travel': 'Путешествия',
       'movies': 'Кино',
@@ -1988,7 +2133,6 @@ document.addEventListener('DOMContentLoaded', function() {
       'boardgames': 'Настольные игры'
     };
     
-    // Добавляем выбранные интересы
     userInterests.forEach(interest => {
       const tag = document.createElement('div');
       tag.className = 'interest-tag';
@@ -2020,7 +2164,6 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // Сохраняем вместе с интересами
     const data = {
       interests: userInterests,
       datingGoal: datingGoal,
@@ -2149,6 +2292,8 @@ document.addEventListener('DOMContentLoaded', function() {
           } catch (e) {}
         }
         
+        loadPendingBonuses(); // Загружаем ожидающие бонусы
+        
         initVerification();
         initLikesSystem();
         initInterestsSystem();
@@ -2177,6 +2322,8 @@ document.addEventListener('DOMContentLoaded', function() {
       tabBar.classList.remove("hidden");
     }
     
+    loadPendingBonuses(); // Загружаем ожидающие бонусы
+    
     initVerification();
     initLikesSystem();
     initInterestsSystem();
@@ -2197,7 +2344,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Скрываем экран чата если переключаемся на другую вкладку
     if (tab !== 'chats' && document.getElementById('chat-screen')) {
       document.getElementById('chat-screen').classList.add('hidden');
     }
@@ -2268,27 +2414,22 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function initFiltersTab() {
-    // Просто инициализируем фильтры
     initSearchFilters();
   }
   
   function getFilteredCandidates() {
     let filtered = candidates.filter(c => !likedIds.includes(c.id));
     
-    // Применяем фильтр по возрасту
     filtered = filtered.filter(c => {
       return c.age >= searchFilters.minAge && c.age <= searchFilters.maxAge;
     });
     
-    // Применяем фильтр по полу (если выбран хотя бы один пол)
     if (searchFilters.genders.length > 0) {
       filtered = filtered.filter(c => {
         return searchFilters.genders.includes(c.gender);
       });
     }
-    // Если пол не выбран - показываем все
     
-    // Применяем фильтр по интересам (если выбраны интересы)
     if (searchFilters.interests.length > 0) {
       filtered = filtered.filter(c => {
         return searchFilters.interests.some(interest => 
@@ -2296,17 +2437,13 @@ document.addEventListener('DOMContentLoaded', function() {
         );
       });
     }
-    // Если интересы не выбраны - показываем все
     
-    // Применяем фильтр по цели знакомства (если выбрана цель)
     if (searchFilters.datingGoal) {
       filtered = filtered.filter(c => {
         return c.dating_goal === searchFilters.datingGoal;
       });
     }
-    // Если цель не выбрана - показываем все
     
-    // Сортируем: сначала бустированные анкеты
     filtered.sort((a, b) => {
       if (a.boosted && !b.boosted) return -1;
       if (!a.boosted && b.boosted) return 1;
@@ -2592,7 +2729,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
   function showNotification(message) {
-    // Создаем элемент уведомления
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.innerHTML = `
@@ -2601,7 +2737,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
     
-    // Добавляем стили
     notification.style.cssText = `
       position: fixed;
       top: 50%;
@@ -2634,7 +2769,6 @@ document.addEventListener('DOMContentLoaded', function() {
       margin-bottom: 15px;
     `;
     
-    // Добавляем анимацию
     const style = document.createElement('style');
     style.textContent = `
       @keyframes fadeIn {
@@ -2648,10 +2782,8 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
     
-    // Добавляем уведомление в DOM
     document.body.appendChild(notification);
     
-    // Автоматически скрываем через 3 секунды
     setTimeout(() => {
       notification.style.animation = 'fadeOut 0.3s ease forwards';
       setTimeout(() => {
@@ -2664,7 +2796,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 300);
     }, 3000);
     
-    // Также позволяем закрыть по клику
     notification.addEventListener('click', () => {
       notification.style.animation = 'fadeOut 0.3s ease forwards';
       setTimeout(() => {
@@ -2736,7 +2867,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 300);
     }
     
-    // Инициализация всех систем
     initLikesSystem();
     initInterestsSystem();
     initFiltersSystem();
