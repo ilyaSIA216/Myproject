@@ -8,6 +8,7 @@
     content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
   />
   <style>
+    /* Все стили остаются точно такими же, как в вашем коде */
     :root {
       --bg: #020617;
       --card-bg: #0f172a;
@@ -1325,6 +1326,442 @@
       return verifications;
     }
 
+    // ================ НЕДОСТАЮЩИЕ ФУНКЦИИ ================
+
+    function showVerificationModal(user) {
+      const modal = document.getElementById('verification-modal');
+      const content = document.getElementById('modal-content');
+      
+      content.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+            <img src="${user.profile_photo}" alt="${user.name}" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent);">
+            <div>
+              <h4 style="margin: 0 0 5px;">${user.name}, ${user.age} лет</h4>
+              <div style="font-size: 13px; color: var(--muted);">
+                ID: ${user.id} | ${user.city} | @${user.username}
+              </div>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label>Фото для верификации</label>
+            ${user.verification_photo ? 
+              `<img src="${user.verification_photo}" alt="Верификация" style="width: 100%; max-width: 300px; border-radius: 10px; border: 1px solid var(--accent); margin: 10px 0;">` : 
+              '<div style="color: var(--danger); padding: 20px; text-align: center; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">Фото не загружено</div>'
+            }
+          </div>
+          
+          <div class="field">
+            <label for="verification-comment">Комментарий (опционально)</label>
+            <textarea id="verification-comment" rows="2" placeholder="Причина подтверждения или отклонения..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; background: #020617; color: var(--text); font-size: 13px;"></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button id="reject-verification-btn" class="primary danger-btn">Отклонить</button>
+          <button id="approve-verification-btn" class="primary">Подтвердить</button>
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+      
+      document.getElementById('approve-verification-btn').onclick = () => approveVerification(user.id);
+      document.getElementById('reject-verification-btn').onclick = () => rejectVerification(user.id);
+    }
+
+    function showBonusVerificationModal(verification) {
+      const modal = document.getElementById('bonus-verification-modal');
+      const content = document.getElementById('bonus-verification-modal-content');
+      const user = allUsers.find(u => u.id === verification.userId);
+      
+      let photosHtml = '';
+      if (verification.verificationPhotos && verification.verificationPhotos.length > 0) {
+        photosHtml = verification.verificationPhotos.map((photo, index) => `
+          <div class="bonus-photo-container">
+            <div class="bonus-photo-label">Скриншот ${index + 1}</div>
+            <img src="${photo}" alt="Скриншот ${index + 1}" class="bonus-photo">
+            <div class="bonus-info">Размер: 800x600px, Дата: ${new Date().toLocaleDateString()}</div>
+          </div>
+        `).join('');
+      } else {
+        photosHtml = '<div style="color: var(--danger); padding: 20px; text-align: center; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">Скриншоты не загружены</div>';
+      }
+      
+      content.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+            <div style="font-size: 24px;">${verification.icon}</div>
+            <div>
+              <h4 style="margin: 0 0 5px;">${verification.bonusTypeName}</h4>
+              <div style="font-size: 13px; color: var(--muted);">
+                Награда: ${verification.reward}
+              </div>
+            </div>
+          </div>
+          
+          <div class="report-section">
+            <div class="report-section-title">👤 Информация о пользователе</div>
+            <div style="font-size: 13px;">
+              <strong>Имя:</strong> ${user?.name || verification.userName}, ${user?.age || verification.userAge} лет<br>
+              <strong>ID:</strong> ${verification.userId}<br>
+              <strong>Город:</strong> ${user?.city || verification.userCity}<br>
+              <strong>Статус верификации:</strong> ${user?.verification_status === 'verified' ? '✅ Верифицирован' : '❌ Не верифицирован'}
+            </div>
+          </div>
+          
+          <div class="report-section">
+            <div class="report-section-title">📱 Загруженные скриншоты</div>
+            <div class="bonus-verification-photos">
+              ${photosHtml}
+            </div>
+          </div>
+          
+          <div class="report-section">
+            <div class="report-section-title">📝 Дополнительная информация</div>
+            <div style="font-size: 13px; padding: 12px; background: rgba(2, 6, 23, 0.5); border-radius: 8px;">
+              ${verification.additionalInfo || 'Нет дополнительной информации'}
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="bonus-verification-comment">Комментарий модератора</label>
+            <textarea id="bonus-verification-comment" rows="2" placeholder="Ваш комментарий по этому запросу..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; background: #020617; color: var(--text); font-size: 13px;"></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button id="reject-bonus-verification-btn" class="primary danger-btn">Отклонить</button>
+          <button id="approve-bonus-verification-btn" class="primary bonus-verify-btn-modal">Подтвердить и начислить</button>
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+      
+      document.getElementById('approve-bonus-verification-btn').onclick = () => approveBonusVerification(verification.id);
+      document.getElementById('reject-bonus-verification-btn').onclick = () => rejectBonusVerification(verification.id);
+    }
+
+    function approveVerification(userId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (user) {
+        user.verification_status = 'verified';
+        user.verified = true;
+        
+        const comment = document.getElementById('verification-comment').value;
+        addBonusRecord(userId, 'verification', 20, 'Верификация анкеты', comment || 'Верификация подтверждена администратором');
+        
+        alert(`✅ Верификация для ${user.name} подтверждена! Пользователь получил +20 свайпов.`);
+        
+        document.getElementById('verification-modal').classList.add('hidden');
+        updateStats();
+        
+        if (currentTab === 'verification') {
+          const users = filterUsersByTab();
+          renderUsers(users);
+        }
+      }
+    }
+
+    function rejectVerification(userId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (user) {
+        user.verification_status = 'rejected';
+        user.verified = false;
+        
+        const comment = document.getElementById('verification-comment').value;
+        alert(`❌ Верификация для ${user.name} отклонена.`);
+        
+        document.getElementById('verification-modal').classList.add('hidden');
+        updateStats();
+        
+        if (currentTab === 'verification') {
+          const users = filterUsersByTab();
+          renderUsers(users);
+        }
+      }
+    }
+
+    function approveBonusVerification(verificationId) {
+      const verification = allBonusVerifications.find(bv => bv.id === verificationId);
+      if (verification) {
+        verification.status = 'approved';
+        const user = allUsers.find(u => u.id === verification.userId);
+        const comment = document.getElementById('bonus-verification-comment').value;
+        
+        if (verification.bonusType === 'share_stories') {
+          addBonusRecord(verification.userId, 'boost', 24, 'Шеринг в Stories', comment || 'Скриншот подтвержден');
+          alert(`✅ Шеринг в Stories подтвержден! Пользователь ${user?.name || verification.userName} получил буст на 24 часа.`);
+        } else if (verification.bonusType === 'invite_friend') {
+          addBonusRecord(verification.userId, 'swipes', 20, 'Приглашение друга', comment || 'Приглашение подтверждено');
+          alert(`✅ Приглашение друга подтверждено! Пользователь ${user?.name || verification.userName} получил +20 свайпов.`);
+        }
+        
+        document.getElementById('bonus-verification-modal').classList.add('hidden');
+        updateStats();
+        saveBonusVerifications();
+        
+        if (currentTab === 'bonus-verification') {
+          renderBonusVerifications();
+        }
+      }
+    }
+
+    function rejectBonusVerification(verificationId) {
+      const verification = allBonusVerifications.find(bv => bv.id === verificationId);
+      if (verification) {
+        verification.status = 'rejected';
+        const user = allUsers.find(u => u.id === verification.userId);
+        const comment = document.getElementById('bonus-verification-comment').value;
+        
+        alert(`❌ Бонусный запрос пользователя ${user?.name || verification.userName} отклонен.`);
+        
+        document.getElementById('bonus-verification-modal').classList.add('hidden');
+        updateStats();
+        saveBonusVerifications();
+        
+        if (currentTab === 'bonus-verification') {
+          renderBonusVerifications();
+        }
+      }
+    }
+
+    // ================ ОБРАБОТЧИКИ ЗАКРЫТИЯ МОДАЛЬНЫХ ОКОН ================
+
+    function setupModalHandlers() {
+      // Закрытие модального окна верификации
+      document.getElementById('close-modal-btn').onclick = () => {
+        document.getElementById('verification-modal').classList.add('hidden');
+      };
+      
+      // Закрытие модального окна проверки бонусов
+      document.getElementById('close-bonus-verification-modal-btn').onclick = () => {
+        document.getElementById('bonus-verification-modal').classList.add('hidden');
+      };
+      
+      // Закрытие модального окна истории бонусов
+      document.getElementById('close-bonus-history-btn').onclick = () => {
+        document.getElementById('bonus-history-modal').classList.add('hidden');
+      };
+      
+      // Закрытие по клику на оверлей
+      document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+          }
+        });
+      });
+    }
+
+    // ================ ДЕМО-ДАННЫЕ ДЛЯ ЖАЛОБ ================
+
+    function generateDemoReports() {
+      const reports = [];
+      const reasons = [
+        "Оскорбления",
+        "Мошенничество", 
+        "Спам",
+        "Неадекватное поведение",
+        "Подозрительный аккаунт",
+        "Нецензурные фото"
+      ];
+      
+      const demoUsers = allUsers.slice(0, 10);
+      
+      for (let i = 1; i <= 8; i++) {
+        const reporter = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+        const reported = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+        
+        reports.push({
+          id: i,
+          reporterId: reporter.id,
+          reporterName: reporter.name,
+          reporterPhoto: reporter.profile_photo,
+          reportedId: reported.id,
+          reportedName: reported.name,
+          reportedPhoto: reported.profile_photo,
+          reason: reasons[Math.floor(Math.random() * reasons.length)],
+          status: 'pending',
+          createdAt: new Date(Date.now() - Math.floor(Math.random() * 48) * 60 * 60 * 1000).toISOString(),
+          messages: [
+            {
+              sender: 'reporter',
+              text: `Пользователь вел себя неадекватно: ${reasons[Math.floor(Math.random() * reasons.length)]}`,
+              time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+            },
+            {
+              sender: 'system',
+              text: 'Диалог сохранен для модерации',
+              time: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+            }
+          ]
+        });
+      }
+      
+      return reports;
+    }
+
+    function renderReports() {
+      const usersList = document.getElementById('users-list');
+      const resultsInfo = document.getElementById('results-info');
+      
+      usersList.innerHTML = "";
+      
+      const reports = generateDemoReports();
+      
+      if (!reports.length) {
+        resultsInfo.textContent = "Нет активных жалоб";
+        return;
+      }
+      
+      resultsInfo.textContent = `Активных жалоб: ${reports.length} шт.`;
+      
+      reports.forEach((report) => {
+        const li = document.createElement("li");
+        li.className = 'user-item report-item';
+        
+        const main = document.createElement("div");
+        main.className = "user-main";
+        
+        const reporter = allUsers.find(u => u.id === report.reporterId);
+        const reported = allUsers.find(u => u.id === report.reportedId);
+        
+        main.innerHTML = `
+          <div class="user-name">
+            ⚠️ Жалоба #${report.id}
+            <span class="report-badge">${report.reason}</span>
+          </div>
+          <div class="user-meta">
+            <span>👤 Жалобщик: ${report.reporterName} (ID: ${report.reporterId})</span>
+            <span>🎯 На кого: ${report.reportedName} (ID: ${report.reportedId})</span>
+            <span>🕐 Дата: ${new Date(report.createdAt).toLocaleDateString()}</span>
+            <span>📊 Статус: ${report.status === 'pending' ? '⏳ На рассмотрении' : '✅ Обработана'}</span>
+          </div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "user-actions";
+        const actionsRow = document.createElement("div");
+        actionsRow.className = "user-actions-row";
+
+        const detailsBtn = document.createElement("button");
+        detailsBtn.className = "report-details-btn";
+        detailsBtn.textContent = "🔍 Детали";
+        detailsBtn.onclick = () => showReportDetails(report);
+        actionsRow.appendChild(detailsBtn);
+        
+        const blockBtn = document.createElement("button");
+        blockBtn.className = "block-btn";
+        blockBtn.textContent = "🚫 Заблокировать";
+        blockBtn.onclick = () => blockReportedUser(report.reportedId, report.id);
+        actionsRow.appendChild(blockBtn);
+
+        actions.appendChild(actionsRow);
+        li.appendChild(main);
+        li.appendChild(actions);
+        usersList.appendChild(li);
+      });
+    }
+
+    function showReportDetails(report) {
+      const modal = document.getElementById('report-details-modal');
+      const content = document.getElementById('report-details-content');
+      const titleId = document.getElementById('report-details-id');
+      
+      titleId.textContent = report.id;
+      
+      const reporter = allUsers.find(u => u.id === report.reporterId);
+      const reported = allUsers.find(u => u.id === report.reportedId);
+      
+      content.innerHTML = `
+        <div class="report-section">
+          <div class="report-section-title">📋 Основная информация</div>
+          <div style="font-size: 13px;">
+            <strong>ID жалобы:</strong> ${report.id}<br>
+            <strong>Причина:</strong> ${report.reason}<br>
+            <strong>Статус:</strong> ${report.status === 'pending' ? '⏳ На рассмотрении' : '✅ Обработана'}<br>
+            <strong>Дата создания:</strong> ${new Date(report.createdAt).toLocaleString()}
+          </div>
+        </div>
+        
+        <div class="report-section">
+          <div class="report-section-title">👥 Участники</div>
+          <div class="report-user-info">
+            <div class="report-user-card">
+              <div class="report-user-name">👤 Жалобщик</div>
+              <div class="report-user-details">
+                <strong>Имя:</strong> ${report.reporterName}<br>
+                <strong>ID:</strong> ${report.reporterId}<br>
+                <strong>Верификация:</strong> ${reporter?.verification_status === 'verified' ? '✅' : '❌'}<br>
+                <strong>Регистрация:</strong> ${reporter?.registration_date || 'Неизвестно'}
+              </div>
+            </div>
+            
+            <div class="report-user-card">
+              <div class="report-user-name">🎯 Нарушитель</div>
+              <div class="report-user-details">
+                <strong>Имя:</strong> ${report.reportedName}<br>
+                <strong>ID:</strong> ${report.reportedId}<br>
+                <strong>Верификация:</strong> ${reported?.verification_status === 'verified' ? '✅' : '❌'}<br>
+                <strong>Статус:</strong> ${reported?.blocked ? '🚫 Заблокирован' : '✅ Активен'}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="report-section">
+          <div class="report-section-title">💬 История диалога</div>
+          <div class="chat-messages-list">
+            ${report.messages.map(msg => `
+              <div class="chat-message ${msg.sender === 'reporter' ? 'reporter' : msg.sender === 'reported' ? 'reported' : 'chat-message-system'}">
+                ${msg.sender === 'reporter' ? 
+                  `<div class="message-sender">${report.reporterName}</div>` : 
+                  msg.sender === 'reported' ? 
+                  `<div class="message-sender">${report.reportedName}</div>` : 
+                  ''
+                }
+                <div class="message-text">${msg.text}</div>
+                <div class="message-time">${new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button id="dismiss-report-btn" class="primary warning-btn">Закрыть жалобу</button>
+          <button id="block-reported-btn" class="primary danger-btn">Заблокировать нарушителя</button>
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+      
+      document.getElementById('dismiss-report-btn').onclick = () => {
+        alert(`Жалоба #${report.id} закрыта.`);
+        modal.classList.add('hidden');
+      };
+      
+      document.getElementById('block-reported-btn').onclick = () => {
+        blockReportedUser(report.reportedId, report.id);
+      };
+    }
+
+    function blockReportedUser(userId, reportId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (user) {
+        user.blocked = true;
+        alert(`Пользователь ${user.name} заблокирован по жалобе #${reportId}.`);
+        document.getElementById('report-details-modal').classList.add('hidden');
+        updateStats();
+        
+        if (currentTab === 'reports') {
+          renderReports();
+        }
+      }
+    }
+
+    // ================ ФУНКЦИИ ДЛЯ ЗАГРУЗКИ И СОХРАНЕНИЯ ================
+
     function loadBonusVerifications() {
       try {
         const saved = localStorage.getItem('siamatch_admin_bonus_verifications');
@@ -1416,7 +1853,7 @@
       document.getElementById('stat-active').textContent = active;
       document.getElementById('stat-blocked').textContent = blocked;
       document.getElementById('stat-boosted').textContent = boosted;
-      document.getElementById('stat-reports').textContent = 0;
+      document.getElementById('stat-reports').textContent = 8;
       document.getElementById('stat-bonus-swipes').textContent = totalBonusSwipes;
       document.getElementById('stat-invites').textContent = totalInvites;
       document.getElementById('stat-shares').textContent = totalShares;
@@ -1687,8 +2124,7 @@
       if (tabName === 'bonus-verification') {
         renderBonusVerifications();
       } else if (tabName === 'reports') {
-        resultsInfo.textContent = "Раздел 'Жалобы' в разработке";
-        usersList.innerHTML = "";
+        renderReports();
       } else {
         const users = filterUsersByTab();
         renderUsers(users);
@@ -1800,6 +2236,9 @@
       console.log('✅ Загружено пользователей:', allUsers.length);
       console.log('✅ Загружено запросов на проверку бонусов:', allBonusVerifications.length);
       console.log('✅ Загружено истории бонусов:', bonusHistory.length);
+      
+      // Настройка обработчиков модальных окон
+      setupModalHandlers();
       
       // Обработчики для логина
       document.getElementById('login-btn').onclick = handleLogin;
