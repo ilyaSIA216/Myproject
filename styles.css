@@ -2604,3 +2604,191 @@ select:focus {
     stroke-width: 2.5px;
   }
 }
+
+/* АНИМИРОВАННОЕ СЕРДЦЕ С ТЕКСТОМ */
+.heart-container {
+  width: 220px;
+  height: 200px;
+  margin: 30px auto;
+  position: relative;
+  animation: heartContainerAppear 0.5s ease forwards;
+  opacity: 0;
+}
+
+.heart-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 5px 15px rgba(239, 68, 68, 0.3));
+}
+
+.heart-path {
+  fill: #fecaca;
+  stroke: #ef4444;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 340;
+  stroke-dashoffset: 340;
+  animation: drawHeart 2s ease forwards;
+  animation-delay: 2s;
+}
+
+.heart-text {
+  fill: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  opacity: 0;
+  animation: textAppear 0.4s ease forwards;
+  animation-delay: 2.4s;
+}
+
+.heart-text .heart-line {
+  opacity: 0;
+  animation: textLineAppear 0.4s ease forwards;
+}
+
+.heart-text .heart-line:nth-child(1) {
+  animation-delay: 2.4s;
+}
+
+.heart-text .heart-line:nth-child(2) {
+  animation-delay: 2.6s;
+}
+
+.heart-text .heart-line:nth-child(3) {
+  animation-delay: 2.8s;
+}
+
+/* Анимации */
+@keyframes drawHeart {
+  0% {
+    stroke-dashoffset: 340;
+    fill: transparent;
+  }
+  70% {
+    stroke-dashoffset: 0;
+    fill: transparent;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill: #fecaca;
+  }
+}
+
+@keyframes textLineAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes textAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes heartContainerAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cloverAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes titleAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ */
+#welcome-animated-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #fce7f3 0%, #e0e7ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.welcome-animated-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.animated-clover {
+  font-size: 80px;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: cloverAppear 1s ease forwards;
+}
+
+.animated-title {
+  font-size: 40px;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 30px;
+  opacity: 0;
+  animation: titleAppear 0.8s ease forwards;
+  animation-delay: 1s;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .heart-container {
+    width: 180px;
+    height: 160px;
+    margin: 20px auto;
+  }
+  
+  .heart-text {
+    font-size: 10px;
+  }
+  
+  .animated-clover {
+    font-size: 60px;
+  }
+  
+  .animated-title {
+    font-size: 32px;
+  }
+}
