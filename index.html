@@ -32,23 +32,25 @@
     <div id="animated-clover" class="animated-clover">🍀</div>
     <div id="animated-title" class="animated-title">SiaMatch</div>
     
-    <!-- ЕДИНЫЙ КОНТЕЙНЕР С СЕРДЦЕМ И ТЕКСТОМ ВНУТРИ -->
+    <!-- КОНТЕЙНЕР С СЕРДЦЕМ И ТЕКСТОМ -->
     <div class="heart-container">
-      <svg class="heart-svg" viewBox="0 0 200 180" preserveAspectRatio="xMidYMid meet">
-        <!-- Путь сердца - только КОНТУР, рисуется вокруг текста -->
+      <svg class="heart-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <!-- Текст ВНУТРИ сердца - появляется первым -->
+        <text class="heart-text" x="50" y="55" text-anchor="middle">
+          <tspan x="50" dy="-1.2em">Любовь</tspan>
+          <tspan x="50" dy="1.2em">начинается</tspan>
+          <tspan x="50" dy="1.2em">здесь</tspan>
+        </text>
+        
+        <!-- Путь сердца - рисуется вокруг текста -->
         <path class="heart-path" d="
-          M 100,40 
-          C 120,10 160,10 170,40 
-          C 180,70 150,100 100,130 
-          C 50,100 20,70 30,40 
-          C 40,10 80,10 100,40
+          M 50,25
+          C 60,10 80,10 85,25
+          C 90,40 75,55 50,70
+          C 25,55 10,40 15,25
+          C 20,10 40,10 50,25
           Z
         " />
-        
-        <!-- Текст ВНУТРИ сердца -->
-        <text class="heart-text" x="100" y="85" text-anchor="middle" dominant-baseline="middle">
-          Любовь начинается здесь
-        </text>
       </svg>
     </div>
   </div>
