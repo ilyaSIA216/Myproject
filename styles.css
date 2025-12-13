@@ -2396,8 +2396,8 @@ select:focus {
 
 /* УВЕЛИЧЕННЫЙ КОНТЕЙНЕР С СЕРДЦЕМ И ТЕКСТОМ */
 .heart-container {
-  width: 350px;  /* УВЕЛИЧИЛИ! Было меньше */
-  height: 300px; /* УВЕЛИЧИЛИ! Было меньше */
+  width: 320px;
+  height: 270px;
   opacity: 0;
   animation: heartContainerAppear 0.5s ease 2.5s forwards;
   position: relative;
@@ -2415,15 +2415,15 @@ select:focus {
   display: block;
 }
 
-/* Текст ВНУТРИ сердца - появляется первым */
+/* Текст ВНУТРИ сердца - ЧЕРНЫЙ, появляется ПЕРВЫМ */
 .heart-text {
-  fill: #064e3b;
-  font-size: 16px; /* Увеличили шрифт для большего сердца */
+  fill: #000000; /* ЧЕРНЫЙ цвет текста! */
+  font-size: 16px;
   font-weight: 700;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   text-anchor: middle;
   opacity: 0;
-  animation: textAppear 0.5s ease 2.5s forwards;
+  animation: textAppear 0.3s ease 2.5s forwards; /* Появляется первым */
 }
 
 @keyframes textAppear {
@@ -2431,20 +2431,20 @@ select:focus {
   100% { opacity: 1; }
 }
 
-/* Путь сердца - рисуется вокруг текста */
+/* Путь сердца - рисуется ВОКРУГ текста ПОСЛЕДНИМ */
 .heart-path {
   fill: none;
-  stroke: #f472b6;
+  stroke: #f472b6; /* Розовый контур сердца */
   stroke-width: 3px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 400; /* Увеличили для большего сердца */
-  stroke-dashoffset: 400;
-  animation: drawHeart 2.5s ease 3s forwards; /* Рисуется медленнее */
+  stroke-dasharray: 350;
+  stroke-dashoffset: 350;
+  animation: drawHeart 2.5s ease 2.8s forwards; /* Начинается ЧУТЬ ПОЗЖЕ текста */
 }
 
 @keyframes drawHeart {
-  0% { stroke-dashoffset: 400; }
+  0% { stroke-dashoffset: 350; }
   100% { stroke-dashoffset: 0; }
 }
 
@@ -2453,8 +2453,8 @@ select:focus {
   .animated-clover { font-size: 56px; }
   .animated-title { font-size: 28px; }
   .heart-container { 
-    width: 300px; 
-    height: 250px;
+    width: 280px; 
+    height: 230px;
   }
   .heart-text { font-size: 14px; }
 }
@@ -2469,15 +2469,15 @@ select:focus {
     margin-bottom: 20px; 
   }
   .heart-container { 
-    width: 250px; 
+    width: 240px; 
     height: 200px;
   }
-  .heart-text { font-size: 12px; }
+  .heart-text { font-size: 13px; }
 }
 
 @media (max-width: 380px) {
   .heart-container { 
-    width: 280px; 
-    height: 230px;
+    width: 260px; 
+    height: 220px;
   }
 }
