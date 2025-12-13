@@ -2295,7 +2295,7 @@ function showAnimatedWelcomeScreen() {
   // ИТОГО: 5.6 секунд
   
   console.log('⏱️ Запускаем таймер перехода через 6 секунд');
-  setTimeout(hideAnimatedWelcomeScreen, 6000);
+  setTimeout(hideAnimatedWelcomeScreen, 5000);
 }
 
 // ===== ФУНКЦИЯ: СКРЫТЬ АНИМИРОВАННЫЙ ЭКРАН И ПОКАЗАТЬ ПРИЛОЖЕНИЕ =====
