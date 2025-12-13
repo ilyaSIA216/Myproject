@@ -2242,59 +2242,81 @@ function showAnimatedWelcomeScreen() {
   const heartPath = document.querySelector('.heart-path');
   const heartLines = document.querySelectorAll('.heart-line');
   
-  if (clover) clover.style.animation = 'none';
-  if (title) title.style.animation = 'none';
-  if (heartPath) heartPath.style.animation = 'none';
+  if (clover) {
+    clover.style.animation = 'none';
+    clover.style.opacity = '0';
+    clover.style.transform = 'scale(0.5)';
+  }
+  
+  if (title) {
+    title.style.animation = 'none';
+    title.style.opacity = '0';
+    title.style.transform = 'translateY(30px)';
+  }
+  
+  if (heartPath) {
+    heartPath.style.animation = 'none';
+    heartPath.style.strokeDashoffset = '340';
+  }
+  
   heartLines.forEach(line => {
     line.style.animation = 'none';
     line.style.opacity = '0';
     line.style.transform = 'translateY(10px)';
   });
   
-  // Принудительный рефлоу
-  void clover.offsetWidth;
-  void title.offsetWidth;
-  if (heartPath) void heartPath.offsetWidth;
-  heartLines.forEach(line => void line.offsetWidth);
-  
-  // Запускаем анимации
-  if (clover) clover.style.animation = 'cloverAppear 1.5s ease forwards';
-  
+  // Принудительный рефлоу для сброса анимаций
   setTimeout(() => {
-    if (title) title.style.animation = 'titleAppear 1s ease forwards';
-  }, 1500);
-  
-  setTimeout(() => {
-    const heartContainer = document.querySelector('.heart-container');
-    if (heartContainer) {
-      heartContainer.style.opacity = '0';
-      heartContainer.style.animation = 'heartContainerAppear 0.5s ease forwards';
+    // Запускаем анимации с задержками
+    
+    // 1. Клевер (0-1 сек)
+    if (clover) {
+      clover.style.animation = 'cloverAppear 1s ease forwards';
     }
-  }, 2500);
-  
-  // Анимация рисования сердца
-  setTimeout(() => {
-    if (heartPath) {
-      heartPath.style.animation = 'drawHeart 2s ease forwards';
-    }
-  }, 3000);
-  
-  // Анимация текста
-  setTimeout(() => {
-    heartLines.forEach((line, index) => {
-      line.style.animation = `textLineAppear 0.4s ease forwards`;
-    });
-  }, 3200);
+    
+    // 2. Название SiaMatch (1-1.8 сек)
+    setTimeout(() => {
+      if (title) {
+        title.style.animation = 'titleAppear 0.8s ease forwards';
+      }
+    }, 1000);
+    
+    // 3. Контейнер сердца (1.8 сек)
+    setTimeout(() => {
+      const heartContainer = document.querySelector('.heart-container');
+      if (heartContainer) {
+        heartContainer.style.opacity = '0';
+        heartContainer.style.animation = 'heartContainerAppear 0.5s ease forwards';
+      }
+    }, 1800);
+    
+    // 4. Рисование сердца красной линией (2-4 сек)
+    setTimeout(() => {
+      if (heartPath) {
+        heartPath.style.animation = 'drawHeart 2s ease forwards';
+      }
+    }, 2000);
+    
+    // 5. Текст черными буквами (2.4-2.8 сек)
+    setTimeout(() => {
+      document.querySelectorAll('.heart-line').forEach((line, index) => {
+        setTimeout(() => {
+          line.style.animation = 'textLineAppear 0.4s ease forwards';
+        }, index * 200);
+      });
+    }, 2400);
+    
+  }, 100);
   
   // Общая последовательность:
-  // 0-1.5 сек: Анимация клевера
-  // 1.5-2.5 сек: Появление заголовка SiaMatch
-  // 2.5 сек: Появление контейнера сердца
-  // 3.0-5.0 сек: Рисование сердца (2 секунды)
-  // 3.2-3.6 сек: Появление текста "Любовь начинается здесь"
-  // ИТОГО: 5.6 секунд
+  // 0-1 сек: Клевер появляется
+  // 1-1.8 сек: SiaMatch появляется
+  // 1.8 сек: Сердце появляется
+  // 2-4 сек: Рисуется красная линия сердца
+  // 2.4-2.8 сек: Появляется черный текст
+  // 6 сек: Переход к приложению
   
-  console.log('⏱️ Запускаем таймер перехода через 6 секунд');
+  console.log('⏱️ Запускаем таймер перехода через 5 секунд');
   setTimeout(hideAnimatedWelcomeScreen, 5000);
 }
 
