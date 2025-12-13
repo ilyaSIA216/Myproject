@@ -2396,10 +2396,10 @@ select:focus {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* УВЕЛИЧЕННЫЙ контейнер для сердца */
+/* УВЕЛИЧЕННЫЙ контейнер для сердца - ГЛАВНОЕ ИЗМЕНЕНИЕ! */
 .heart-container {
-  width: 320px;
-  height: 280px;
+  width: 300px;  /* УВЕЛИЧИЛИ с 280px */
+  height: 260px; /* УВЕЛИЧИЛИ с 220px */
   opacity: 0;
   animation: heartContainerAppear 0.5s ease 2.5s forwards;
   position: relative;
@@ -2420,40 +2420,15 @@ select:focus {
   display: block;
 }
 
-/* Путь сердца - рисуется ПЕРВЫМ */
-.heart-path {
-  fill: #f472b6;
-  stroke: #f472b6;
-  stroke-width: 3px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: drawHeart 2.5s ease 3s forwards;
-  filter: drop-shadow(0 4px 12px rgba(244, 114, 182, 0.3));
-}
-
-@keyframes drawHeart {
-  0% { stroke-dashoffset: 400; }
-  100% { stroke-dashoffset: 0; }
-}
-
-/* Текст ВНУТРИ сердца - появляется ПОСЛЕ сердца */
+/* Текст ВНУТРИ сердца - появляется первым */
 .heart-text {
-  fill: #ffffff;
-  font-size: 16px;
+  fill: #064e3b; /* Возвращаем оригинальный цвет */
+  font-size: 15px; /* Слегка увеличили для большего сердца */
   font-weight: 700;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   text-anchor: middle;
   opacity: 0;
-  animation: textAppear 0.5s ease 5.5s forwards;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.heart-text tspan {
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  display: block;
+  animation: textAppear 0.5s ease 2.5s forwards;
 }
 
 @keyframes textAppear {
@@ -2461,16 +2436,33 @@ select:focus {
   100% { opacity: 1; }
 }
 
+/* Путь сердца - рисуется ВОКРУГ текста */
+.heart-path {
+  fill: none;
+  stroke: #f472b6;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 350; /* Увеличили для большего сердца */
+  stroke-dashoffset: 350;
+  animation: drawHeart 2.5s ease 3s forwards; /* Рисуется медленнее */
+}
+
+@keyframes drawHeart {
+  0% { stroke-dashoffset: 350; }
+  100% { stroke-dashoffset: 0; }
+}
+
 /* Адаптив для разных экранов */
 @media (max-height: 700px) {
   .animated-clover { font-size: 56px; }
   .animated-title { font-size: 28px; }
   .heart-container { 
-    width: 280px; 
-    height: 240px;
+    width: 260px; 
+    height: 220px;
     margin-top: 10px;
   }
-  .heart-text { font-size: 14px; }
+  .heart-text { font-size: 13px; }
 }
 
 @media (max-height: 600px) {
@@ -2483,8 +2475,8 @@ select:focus {
     margin-bottom: 20px; 
   }
   .heart-container { 
-    width: 240px; 
-    height: 210px;
+    width: 220px; 
+    height: 190px;
     margin-top: 5px;
   }
   .heart-text { font-size: 12px; }
@@ -2492,7 +2484,7 @@ select:focus {
 
 @media (max-width: 380px) {
   .heart-container { 
-    width: 260px; 
-    height: 220px;
+    width: 240px; 
+    height: 200px;
   }
 }
