@@ -2873,3 +2873,152 @@ select:focus {
   0% { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
 }
+
+#welcome-screen {
+  background: linear-gradient(135deg, #d8f3dc 0%, #b7e4c7 100%);
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.close-btn {
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+}
+
+.miniapp-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.welcome-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.app-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #2d6a4f;
+  margin-bottom: 40px;
+}
+
+.heart-with-text {
+  width: 280px;
+  height: 250px;
+  margin: 30px auto;
+  position: relative;
+}
+
+.heart-shape-final {
+  width: 100%;
+  height: 100%;
+  background: #ffcad4;
+  position: relative;
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(255, 107, 129, 0.3);
+}
+
+.heart-shape-final:before,
+.heart-shape-final:after {
+  content: '';
+  position: absolute;
+  width: 160px;
+  height: 240px;
+  background: #ffcad4;
+  border-radius: 160px 160px 0 0;
+  top: 0;
+}
+
+.heart-shape-final:before {
+  left: 160px;
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+}
+
+.heart-shape-final:after {
+  left: 0;
+  transform: rotate(45deg);
+  transform-origin: 100% 100%;
+}
+
+.heart-text-final {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #590d22;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  width: 70%;
+  z-index: 2;
+  font-family: 'Arial', sans-serif;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.welcome-subtitle-final {
+  margin-top: 30px;
+  color: #40916c;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.primary-btn-final {
+  background: #2d6a4f;
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 40px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+}
+
+.primary-btn-final:hover {
+  background: #1b4332;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .heart-with-text {
+    width: 220px;
+    height: 200px;
+  }
+  
+  .heart-shape-final:before,
+  .heart-shape-final:after {
+    width: 130px;
+    height: 190px;
+    border-radius: 130px 130px 0 0;
+  }
+  
+  .heart-shape-final:before {
+    left: 130px;
+  }
+  
+  .heart-text-final {
+    font-size: 16px;
+  }
+  
+  .app-title {
+    font-size: 28px;
+  }
+}
