@@ -680,5 +680,27 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="app.js"></script>
+<script>
+// Простой скрипт для кнопки "Начать знакомство"
+document.addEventListener('DOMContentLoaded', function() {
+  const startBtn = document.getElementById('startBtn');
+  const welcomeScreen = document.getElementById('welcome-screen');
+  const tabBar = document.getElementById('tab-bar');
+  const feedScreen = document.getElementById('screen-feed');
+  
+  if (startBtn && welcomeScreen) {
+    startBtn.addEventListener('click', function() {
+      // Скрываем экран приветствия
+      welcomeScreen.classList.add('hidden');
+      
+      // Показываем основное приложение
+      if (tabBar) tabBar.classList.remove('hidden');
+      if (feedScreen) feedScreen.classList.remove('hidden');
+      
+      console.log('Приложение запущено!');
+    });
+  }
+});
+</script>
 </body>
 </html>
