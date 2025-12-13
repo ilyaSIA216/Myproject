@@ -2625,7 +2625,7 @@ select:focus {
   opacity: 0;
   transform: translateY(20px);
   animation: titleAppear 1.5s ease 2s forwards;
-  margin-bottom: 10px;
+  margin-bottom: 40px; /* Увеличили отступ */
   text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
 }
 
@@ -2640,44 +2640,14 @@ select:focus {
   }
 }
 
-/* Текст "Любовь начинается здесь" - появляется ПЕРВЫМ */
-.animated-subtitle {
-  font-size: 22px;
-  color: #064e3b;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: subtitleAppear 1s ease 3.5s forwards;
-  font-weight: 700;
-  margin-top: 40px;
-  position: relative;
-  padding: 20px 0;
-  z-index: 2;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes subtitleAppear {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Контейнер для сердца - рисуется ВОКРУГ текста */
+/* КОНТЕЙНЕР ДЛЯ СЕРДЦА С ТЕКСТОМ ВНУТРИ */
 .heart-container {
-  position: absolute;
   width: 320px;
   height: 280px;
-  top: calc(50% + 40px);
-  left: 50%;
-  transform: translate(-50%, -50%);
   opacity: 0;
-  animation: heartContainerAppear 0.1s ease 4.5s forwards; /* Через 1 секунду после текста */
+  animation: heartContainerAppear 0.1s ease 3.5s forwards;
   z-index: 1;
-  pointer-events: none;
+  position: relative;
 }
 
 @keyframes heartContainerAppear {
@@ -2689,44 +2659,63 @@ select:focus {
   }
 }
 
-/* SVG сердца */
+/* SVG сердца с увеличенным viewBox */
 .heart-svg {
   width: 100%;
   height: 100%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
-/* Путь сердца - только КОНТУР, рисуется МЕДЛЕННО вокруг текста */
+/* Путь сердца - только КОНТУР, рисуется ВОКРУГ текста */
 .heart-path {
   fill: none; /* НЕ закрашиваем! */
   stroke: #f472b6; /* Розовый цвет контура */
   stroke-width: 4px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 800; /* Общая длина пути */
-  stroke-dashoffset: 800; /* Начинаем с полностью скрытого */
-  animation: drawHeart 3s ease 4.6s forwards; /* Медленно рисуется 3 секунды */
+  stroke-dasharray: 1000; /* Общая длина пути */
+  stroke-dashoffset: 1000; /* Начинаем с полностью скрытого */
+  animation: drawHeart 3s ease 3.6s forwards; /* Медленно рисуется 3 секунды */
   filter: drop-shadow(0 0 8px rgba(244, 114, 182, 0.4));
   transform-origin: center;
 }
 
-/* Анимация рисования сердца из одной точки ВОКРУГ текста */
+/* Текст ВНУТРИ сердца */
+.heart-text {
+  fill: #064e3b; /* Темно-зеленый цвет как в дизайне */
+  font-size: 18px;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  opacity: 0;
+  animation: textAppear 0.5s ease 3.5s forwards; /* Появляется перед началом рисования сердца */
+  pointer-events: none;
+}
+
 @keyframes drawHeart {
   0% {
-    stroke-dashoffset: 800;
-    opacity: 0.8;
+    stroke-dashoffset: 1000;
   }
   70% {
     stroke-dashoffset: 200;
-    opacity: 1;
   }
   100% {
     stroke-dashoffset: 0;
+  }
+}
+
+@keyframes textAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
     opacity: 1;
   }
+}
+
+/* Скрываем старый элемент текста */
+.animated-subtitle {
+  display: none !important;
 }
 
 /* Анимация для перехода к основному приложению */
@@ -2750,17 +2739,16 @@ select:focus {
   
   .animated-title {
     font-size: 32px;
-  }
-  
-  .animated-subtitle {
-    font-size: 20px;
-    margin-top: 35px;
+    margin-bottom: 30px;
   }
   
   .heart-container {
     width: 280px;
-    height: 240px;
-    top: calc(50% + 35px);
+    height: 245px;
+  }
+  
+  .heart-text {
+    font-size: 16px;
   }
   
   .heart-path {
@@ -2776,18 +2764,16 @@ select:focus {
   
   .animated-title {
     font-size: 28px;
-  }
-  
-  .animated-subtitle {
-    font-size: 18px;
-    margin-top: 30px;
-    padding: 15px 0;
+    margin-bottom: 25px;
   }
   
   .heart-container {
     width: 240px;
     height: 210px;
-    top: calc(50% + 30px);
+  }
+  
+  .heart-text {
+    font-size: 14px;
   }
   
   .heart-path {
@@ -2798,16 +2784,27 @@ select:focus {
 @media (max-width: 380px) {
   .animated-title {
     font-size: 30px;
-  }
-  
-  .animated-subtitle {
-    font-size: 18px;
-    padding: 15px 0;
+    margin-bottom: 25px;
   }
   
   .heart-container {
     width: 220px;
-    height: 190px;
-    top: calc(50% + 25px);
+    height: 192px;
+  }
+  
+  .heart-text {
+    font-size: 13px;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 340px) {
+  .heart-container {
+    width: 200px;
+    height: 175px;
+  }
+  
+  .heart-text {
+    font-size: 12px;
   }
 }
