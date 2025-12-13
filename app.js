@@ -2889,73 +2889,74 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
-  function initApp() {
-    if (hasInitialized) return;
-    hasInitialized = true;
-    
-    console.log('🎬 Инициализация приложения...');
-    
-    initTelegram();
-    setupStartButton();
-    setupTabButtons();
-    
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    const saveChangesBtn = document.getElementById('save-profile-changes');
-    const cancelEditBtn = document.getElementById('cancel-profile-edit');
-    const profilePhotoInput = document.getElementById('profile-photo-upload');
-    const editPhotoInput = document.getElementById('edit-photo-upload');
-    
-    if (editProfileBtn) {
-      editProfileBtn.addEventListener('click', handleEditProfile);
+// ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
+function initApp() {
+  if (hasInitialized) return;
+  hasInitialized = true;
+  
+  console.log('🎬 Инициализация приложения...');
+  
+  initTelegram();
+  setupStartButton();
+  setupTabButtons();
+  
+  const editProfileBtn = document.getElementById('edit-profile-btn');
+  const saveChangesBtn = document.getElementById('save-profile-changes');
+  const cancelEditBtn = document.getElementById('cancel-profile-edit');
+  const profilePhotoInput = document.getElementById('profile-photo-upload');
+  const editPhotoInput = document.getElementById('edit-photo-upload');
+  
+  if (editProfileBtn) {
+    editProfileBtn.addEventListener('click', handleEditProfile);
+  }
+  
+  if (saveChangesBtn) {
+    saveChangesBtn.addEventListener('click', handleSaveProfileChanges);
+  }
+  
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', handleCancelEdit);
+  }
+  
+  if (profilePhotoInput) {
+    profilePhotoInput.addEventListener('change', handlePhotoUpload);
+  }
+  
+  if (editPhotoInput) {
+    editPhotoInput.addEventListener('change', handlePhotoUpload);
+  }
+  
+  profileData = loadProfile();
+  
+  // ===== АНИМАЦИЯ ПРИВЕТСТВИЯ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ С АНКЕТОЙ =====
+  async function showWelcomeAnimation() {
+    const welcomeScreen = document.getElementById('welcome-animated-screen');
+    if (welcomeScreen) {
+      welcomeScreen.classList.remove('hidden');
     }
     
-    if (saveChangesBtn) {
-      saveChangesBtn.addEventListener('click', handleSaveProfileChanges);
+    // Ждем завершения всей анимации (7 секунд)
+    setTimeout(() => {
+      showMainTabs();
+    }, 7000);
+    
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+      continueBtn.onclick = () => {
+        showMainTabs();
+      };
+    }
+  }
+  
+  // ===== ПОКАЗАТЬ ГЛАВНЫЕ ТАБЫ =====
+  function showMainTabs() {
+    const welcomeScreen = document.getElementById('welcome-animated-screen');
+    if (welcomeScreen) {
+      welcomeScreen.classList.add('hidden');
     }
     
-    if (cancelEditBtn) {
-      cancelEditBtn.addEventListener('click', handleCancelEdit);
-    }
-    
-    if (profilePhotoInput) {
-      profilePhotoInput.addEventListener('change', handlePhotoUpload);
-    }
-    
-    if (editPhotoInput) {
-      editPhotoInput.addEventListener('change', handlePhotoUpload);
-    }
-    
-    profileData = loadProfile();
-    
-    // Проверяем, есть ли у пользователя анкета
-    if (profileData) {
-      // Если анкета есть, показываем анимированный экран приветствия
-      showAnimatedWelcomeScreen();
-    } else {
-      // Если анкеты нет, показываем обычный экран приветствия
-      if (welcomeScreen) {
-        welcomeScreen.classList.remove("hidden");
-      }
-    }
-    
-    if (onboardingScreen) onboardingScreen.classList.add("hidden");
-    document.querySelectorAll('.screen').forEach(screen => {
-      if (screen.id !== 'welcome-screen' && 
-          screen.id !== 'screen-interests' && 
-          screen.id !== 'welcome-animated-screen') {
-        screen.classList.add('hidden');
-      }
-    });
-    
-    if (tabBar) tabBar.classList.add("hidden");
-    
-    if (isIOS) {
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 300);
-    }
-    
+    // Инициализируем все системы
+    initVerification();
     initLikesSystem();
     initInterestsSystem();
     initFiltersSystem();
@@ -2964,9 +2965,72 @@ document.addEventListener('DOMContentLoaded', function() {
     initChatsSystem();
     initBonusSystem();
     
-    console.log('✅ Приложение инициализировано');
+    // Устанавливаем активную вкладку
+    setActiveTab("feed");
+    
+    // Показываем приветственное уведомление
+    setTimeout(() => {
+      showNotification("🍀 С возвращением в SiaMatch!\n\nЖелаем вам найти свою идеальную пару! ❤️");
+    }, 500);
   }
   
-  // ===== ЗАПУСК =====
-  setTimeout(initApp, 100);
-});
+  // ===== ПРОВЕРКА ПРОФИЛЯ =====
+  async function checkUserProfile() {
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const profile = await response.json();
+      
+      if (profile.exists) {
+        // У пользователя есть анкета - показываем анимацию
+        showWelcomeAnimation();
+      } else {
+        // Нет анкеты - обычный онбординг
+        if (welcomeScreen) {
+          welcomeScreen.classList.remove("hidden");
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка проверки профиля:', error);
+      // Fallback - проверяем локальное хранилище
+      if (profileData) {
+        showWelcomeAnimation();
+      } else {
+        if (welcomeScreen) {
+          welcomeScreen.classList.remove("hidden");
+        }
+      }
+    }
+  }
+  
+  // Проверяем, есть ли у пользователя анкета
+  if (profileData) {
+    // Если анкета есть в локальном хранилище, показываем анимацию
+    showWelcomeAnimation();
+  } else {
+    // Если анкеты нет, пробуем проверить на сервере
+    checkUserProfile();
+  }
+  
+  if (onboardingScreen) onboardingScreen.classList.add("hidden");
+  document.querySelectorAll('.screen').forEach(screen => {
+    if (screen.id !== 'welcome-screen' && 
+        screen.id !== 'screen-interests' && 
+        screen.id !== 'welcome-animated-screen') {
+      screen.classList.add('hidden');
+    }
+  });
+  
+  if (tabBar) tabBar.classList.add("hidden");
+  
+  if (isIOS) {
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 300);
+  }
+  
+  console.log('✅ Приложение инициализировано');
+}
