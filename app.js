@@ -2927,6 +2927,30 @@ function initApp() {
   }
   
   profileData = loadProfile();
+
+
+// ПРОВЕРКА ПРОФИЛЯ И АНИМАЦИЯ
+async function checkUserProfile() {
+  try {
+    // Пока что используем локальное хранилище для демо
+    // В реальном приложении здесь будет запрос к серверу
+    const profileData = loadProfile();
+    
+    if (profileData) {
+      // У пользователя есть анкета - показываем анимацию
+      showWelcomeAnimation();
+      return true;
+    } else {
+      // Нет анкеты - обычный онбординг
+      showWelcomeScreen();
+      return false;
+    }
+  } catch (error) {
+    console.error('Ошибка проверки профиля:', error);
+    showWelcomeScreen(); // Fallback
+    return false;
+  }
+}
   
   // ===== АНИМАЦИЯ ПРИВЕТСТВИЯ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ С АНКЕТОЙ =====
   async function showWelcomeAnimation() {
