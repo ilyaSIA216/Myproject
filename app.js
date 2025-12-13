@@ -81,42 +81,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
   }
   
-  // ===== НОВАЯ ФУНКЦИЯ: ЗАПУСК АНИМАЦИИ ПРИВЕТСТВИЯ =====
-  function startWelcomeAnimation() {
-    console.log('🎬 Запускаю анимацию приветствия...');
+// Обновите функцию startWelcomeAnimation() в app.js:
+
+// ===== НОВАЯ ФУНКЦИЯ: ЗАПУСК АНИМАЦИИ ПРИВЕТСТВИЯ =====
+function startWelcomeAnimation() {
+  console.log('🎬 Запускаю анимацию приветствия...');
+  
+  // Показываем анимированный клевер сразу
+  const cloverAnimation = document.getElementById('clover-animation');
+  if (cloverAnimation) {
+    cloverAnimation.classList.remove('hidden');
+    console.log('🍀 Анимация клевера запущена');
+  }
+  
+  // Показываем текст приветствия через 1.5 секунды
+  setTimeout(() => {
+    const welcomeText = document.getElementById('welcome-text');
+    const loadingProgress = document.getElementById('loading-progress');
     
-    // Показываем анимированный клевер сразу
-    const cloverAnimation = document.getElementById('clover-animation');
-    if (cloverAnimation) {
-      cloverAnimation.classList.remove('hidden');
-      console.log('🍀 Анимация клевера запущена');
+    if (welcomeText) {
+      welcomeText.classList.remove('hidden');
+      console.log('📝 Текст приветствия показан');
     }
     
-    // Показываем текст приветствия через 1.5 секунды
+    // Показываем прогресс бар через 3.5 секунды
     setTimeout(() => {
-      const welcomeText = document.getElementById('welcome-text');
-      const loadingProgress = document.getElementById('loading-progress');
-      
-      if (welcomeText) {
-        welcomeText.classList.remove('hidden');
-        console.log('📝 Текст приветствия показан');
+      if (loadingProgress) {
+        loadingProgress.classList.remove('hidden');
+        console.log('📊 Прогресс бар показан');
       }
       
-      // Показываем прогресс бар через 3.5 секунды
+      // Автоматический переход после завершения анимации (через 6.5 секунд от начала)
       setTimeout(() => {
-        if (loadingProgress) {
-          loadingProgress.classList.remove('hidden');
-          console.log('📊 Прогресс бар показан');
-        }
-        
-        // Автоматический переход после завершения анимации (через 6.5 секунд от начала)
-        setTimeout(() => {
-          console.log('🚀 Завершение анимации, переход в приложение...');
-          completeWelcomeAnimation();
-        }, 3000); // 3 секунды на прогресс бар
-      }, 2000); // Ждем 2 секунды после текста
-    }, 1500); // Начало через 1.5 секунды
-  }
+        console.log('🚀 Завершение анимации, переход в приложение...');
+        completeWelcomeAnimation();
+      }, 3000); // 3 секунды на прогресс бар
+    }, 2000); // Ждем 2 секунды после текста
+  }, 1500); // Начало через 1.5 секунды
+}
   
   // ===== НОВАЯ ФУНКЦИЯ: ЗАВЕРШЕНИЕ АНИМАЦИИ И ПЕРЕХОД =====
   function completeWelcomeAnimation() {
