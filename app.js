@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // ===== DOM ЭЛЕМЕНТЫ =====
   const welcomeScreen = document.getElementById("welcome-screen");
+  const animatedWelcomeScreen = document.getElementById("welcome-animated-screen");
   const startBtn = document.getElementById("startBtn");
   const usernameElem = document.getElementById("username");
   const onboardingScreen = document.getElementById("onboarding-screen");
@@ -2207,6 +2208,11 @@ document.addEventListener('DOMContentLoaded', function() {
       welcomeScreen.classList.add("hidden");
     }
     
+    // Также скрываем анимированный экран, если он показан
+    if (animatedWelcomeScreen) {
+      animatedWelcomeScreen.classList.add('hidden');
+    }
+    
     profileData = loadProfile();
     
     if (profileData) {
@@ -2214,6 +2220,75 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       showOnboarding();
     }
+  }
+  
+  // ===== ПОКАЗАТЬ АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ =====
+  function showAnimatedWelcomeScreen() {
+    if (!animatedWelcomeScreen) return;
+    
+    // Скрываем обычный экран приветствия
+    if (welcomeScreen) {
+      welcomeScreen.classList.add('hidden');
+    }
+    
+    // Показываем анимированный экран
+    animatedWelcomeScreen.classList.remove('hidden');
+    
+    // Добавляем DOM элемент для нижней части сердца
+    const heartAnimation = animatedWelcomeScreen.querySelector('.heart-animation');
+    if (heartAnimation && !heartAnimation.querySelector('.heart-bottom')) {
+      const heartBottom = document.createElement('div');
+      heartBottom.className = 'heart-bottom';
+      heartAnimation.appendChild(heartBottom);
+    }
+    
+    // Слушаем событие завершения анимации
+    const animatedSubtitle = document.getElementById('animated-subtitle');
+    if (animatedSubtitle) {
+      // Используем setTimeout как запасной вариант
+      setTimeout(() => {
+        hideAnimatedWelcomeScreen();
+      }, 6500); // 6.5 секунд - общая длительность анимации
+      
+      // Также слушаем анимацию CSS
+      animatedSubtitle.addEventListener('animationend', function() {
+        setTimeout(hideAnimatedWelcomeScreen, 2000);
+      }, { once: true });
+    }
+  }
+  
+  // ===== ФУНКЦИЯ: СКРЫТЬ АНИМИРОВАННЫЙ ЭКРАН И ПОКАЗАТЬ ПРИЛОЖЕНИЕ =====
+  function hideAnimatedWelcomeScreen() {
+    if (!animatedWelcomeScreen) return;
+    
+    // Добавляем анимацию исчезновения
+    animatedWelcomeScreen.style.animation = 'fadeOutScreen 0.8s ease forwards';
+    
+    setTimeout(() => {
+      animatedWelcomeScreen.classList.add('hidden');
+      animatedWelcomeScreen.style.animation = '';
+      
+      // Показываем главное приложение
+      showMainApp();
+      
+      // Включаем все системы
+      initVerification();
+      initLikesSystem();
+      initInterestsSystem();
+      initFiltersSystem();
+      initBoostSystem();
+      initSwipesSystem();
+      initChatsSystem();
+      initBonusSystem();
+      
+      // Устанавливаем активную вкладку
+      setActiveTab("feed");
+      
+      // Показываем приветственное уведомление
+      setTimeout(() => {
+        showNotification("🍀 С возвращением в SiaMatch!\n\nЖелаем вам найти свою идеальную пару! ❤️");
+      }, 500);
+    }, 800);
   }
   
   // ===== ПОКАЗАТЬ АНКЕТУ =====
@@ -2315,7 +2390,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // ===== ПОКАЗАТЬ ОСНОВНОЕ ПРИЛОЖЕНИЕ =====
   function showMainApp() {
+    // Скрываем все приветственные экраны
     if (welcomeScreen) welcomeScreen.classList.add("hidden");
+    if (animatedWelcomeScreen) animatedWelcomeScreen.classList.add("hidden");
     if (onboardingScreen) onboardingScreen.classList.add("hidden");
     
     if (tabBar) {
@@ -2339,7 +2416,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== УПРАВЛЕНИЕ ТАБАМИ =====
   function setActiveTab(tab) {
     document.querySelectorAll('.screen').forEach(screen => {
-      if (screen.id !== 'welcome-screen' && screen.id !== 'chat-screen' && screen.id !== 'screen-interests') {
+      if (screen.id !== 'welcome-screen' && 
+          screen.id !== 'chat-screen' && 
+          screen.id !== 'screen-interests' &&
+          screen.id !== 'welcome-animated-screen') {
         screen.classList.add('hidden');
       }
     });
@@ -2848,13 +2928,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     profileData = loadProfile();
     
-    if (welcomeScreen) {
-      welcomeScreen.classList.remove("hidden");
+    // Проверяем, есть ли у пользователя анкета
+    if (profileData) {
+      // Если анкета есть, показываем анимированный экран приветствия
+      showAnimatedWelcomeScreen();
+    } else {
+      // Если анкеты нет, показываем обычный экран приветствия
+      if (welcomeScreen) {
+        welcomeScreen.classList.remove("hidden");
+      }
     }
     
     if (onboardingScreen) onboardingScreen.classList.add("hidden");
     document.querySelectorAll('.screen').forEach(screen => {
-      if (screen.id !== 'welcome-screen' && screen.id !== 'screen-interests') {
+      if (screen.id !== 'welcome-screen' && 
+          screen.id !== 'screen-interests' && 
+          screen.id !== 'welcome-animated-screen') {
         screen.classList.add('hidden');
       }
     });
