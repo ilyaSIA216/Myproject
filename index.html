@@ -32,23 +32,27 @@
     <div id="animated-clover" class="animated-clover">🍀</div>
     <div id="animated-title" class="animated-title">SiaMatch</div>
     
-    <!-- ВОССТАНАВЛИВАЮ ОРИГИНАЛЬНУЮ АНИМАЦИЮ: -->
-    <!-- СЕРДЦЕ С ТЕКСТОМ ВНУТРИ -->
+    <!-- ИСПРАВЛЕННОЕ СЕРДЦЕ С ТЕКСТОМ -->
     <div class="heart-container">
       <svg class="heart-svg" viewBox="0 0 120 100" preserveAspectRatio="xMidYMid meet">
+        <!-- Более правильная форма сердца -->
         <path class="heart-path" d="
-          M 60,20
-          C 72,10 92,10 98,20
-          C 104,30 90,45 60,65
-          C 30,45 16,30 22,20
-          C 28,10 48,10 60,20
+          M 60,30
+          C 70,15 90,15 95,25
+          C 100,35 85,50 60,70
+          C 35,50 20,35 25,25
+          C 30,15 50,15 60,30
           Z
         " />
-        <foreignObject x="20" y="30" width="80" height="50">
-          <div class="heart-text">
-            <div class="heart-line">Любовь</div>
-            <div class="heart-line">начинается</div>
-            <div class="heart-line">здесь</div>
+        
+        <!-- Текст внутри сердца -->
+        <foreignObject x="0" y="0" width="120" height="100">
+          <div class="heart-text-wrapper" xmlns="http://www.w3.org/1999/xhtml">
+            <div class="heart-text">
+              <div class="heart-line line1">Любовь</div>
+              <div class="heart-line line2">начинается</div>
+              <div class="heart-line line3">здесь</div>
+            </div>
           </div>
         </foreignObject>
       </svg>
