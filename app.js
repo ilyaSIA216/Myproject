@@ -223,6 +223,17 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ Telegram WebApp обнаружен');
         
         tg.ready();
+        // iOS WHITE SCREEN FIX - обязательно между ready() и expand()
+if (tg) {
+  // Устанавливаем стабильную высоту viewport (критично для iPhone)
+  document.documentElement.style.setProperty('--tg-viewport-height', `${tg.viewportStableHeight}px`);
+  document.documentElement.style.setProperty('--tg-viewport-width', `${tg.viewportStableWidth}px`);
+  
+  // Обработчик изменения viewport (клавиатура iOS)
+  tg.onEvent('viewportChanged', (data) => {
+    document.documentElement.style.setProperty('--tg-viewport-height', `${data.height}px`);
+  });
+}
         tg.expand();
         
         if (tg.MainButton) {
