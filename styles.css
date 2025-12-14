@@ -2567,7 +2567,7 @@ select:focus {
   }
 }
 
-/* ===== НОВЫЙ АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ ===== */
+/* ===== АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ - ИСПРАВЛЕННАЯ ВЕРСИЯ ===== */
 #welcome-animated-screen {
   display: flex;
   flex-direction: column;
@@ -2580,46 +2580,85 @@ select:focus {
   top: 0;
   left: 0;
   z-index: 1001;
+  padding: 20px;
 }
 
-.welcome-animated-content {
+/* Контейнер с колоннами */
+.welcome-animated-layout {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 20px;
+  height: 100%;
+  width: 100%;
   position: relative;
 }
 
-/* Анимированный клевер - ВЫШЕ И БОЛЬШЕ */
-.animated-clover {
-  font-size: 100px;
+/* Текстовая часть - занимает оставшееся пространство */
+.welcome-text-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  text-align: center;
+  padding-bottom: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Контейнер для сердца - фиксированный внизу */
+.heart-container-wrapper {
+  height: 200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-top: auto;
+  z-index: 1;
+}
+
+/* Сердце - рисуется внизу */
+.heart-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
   opacity: 0;
-  transform: scale(0.5) translateY(-50px);
+  animation: heartContainerAppear 0.1s ease 3.5s forwards;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Анимированный клевер */
+.animated-clover {
+  font-size: 80px;
+  opacity: 0;
+  transform: scale(0.5) translateY(-30px);
   animation: cloverAppear 1.5s ease forwards;
-  margin-bottom: 30px;
-  margin-top: -50px;
+  margin-bottom: 20px;
+  margin-top: -20px;
 }
 
 @keyframes cloverAppear {
   0% {
     opacity: 0;
-    transform: scale(0.5) translateY(-50px) rotate(0deg);
+    transform: scale(0.5) translateY(-30px) rotate(0deg);
   }
   70% {
     opacity: 1;
-    transform: scale(1.2) translateY(-20px) rotate(5deg);
+    transform: scale(1.1) translateY(-10px) rotate(5deg);
   }
   100% {
     opacity: 1;
-    transform: scale(1.1) translateY(0) rotate(0deg);
+    transform: scale(1) translateY(0) rotate(0deg);
   }
 }
 
 /* Анимированный заголовок */
 .animated-title {
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 800;
   color: var(--siamatch-green-dark);
   opacity: 0;
@@ -2642,17 +2681,20 @@ select:focus {
 
 /* Анимированный подзаголовок */
 .animated-subtitle {
-  font-size: 28px;
+  font-size: 22px;
   color: #064e3b;
   opacity: 0;
   transform: translateY(20px);
   animation: subtitleAppear 1s ease 3.5s forwards;
   font-weight: 700;
-  margin-top: 20px;
+  margin-top: 15px;
   position: relative;
-  padding: 20px 40px;
+  padding: 15px 25px;
   z-index: 2;
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  backdrop-filter: blur(5px);
 }
 
 @keyframes subtitleAppear {
@@ -2666,27 +2708,7 @@ select:focus {
   }
 }
 
-/* КОНТЕЙНЕР ДЛЯ СЕРДЦА */
-.heart-container {
-  position: absolute;
-  width: 380px;
-  height: 380px;
-  opacity: 0;
-  animation: heartContainerAppear 0.1s ease 3.5s forwards;
-  z-index: 1;
-  pointer-events: none; /* Чтобы не мешало кликам */
-}
-
-@keyframes heartContainerAppear {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-/* SVG СЕРДЦА */
+/* SVG для сердца */
 .heart-svg {
   width: 100%;
   height: 100%;
@@ -2703,8 +2725,8 @@ select:focus {
   stroke-width: 4px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 1000; /* Общая длина пути */
-  stroke-dashoffset: 1000; /* Начинаем с полностью скрытого */
+  stroke-dasharray: 500; /* Общая длина пути */
+  stroke-dashoffset: 500; /* Начинаем с полностью скрытого */
   animation: drawHeart 2s ease 3.6s forwards;
   filter: drop-shadow(0 0 10px rgba(244, 114, 182, 0.6));
   transform-origin: center;
@@ -2713,15 +2735,24 @@ select:focus {
 /* Анимация рисования сердца из одной точки */
 @keyframes drawHeart {
   0% {
-    stroke-dashoffset: 1000;
+    stroke-dashoffset: 500;
     opacity: 0.8;
   }
   70% {
-    stroke-dashoffset: 200;
+    stroke-dashoffset: 100;
     opacity: 1;
   }
   100% {
     stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes heartContainerAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
     opacity: 1;
   }
 }
@@ -2741,43 +2772,52 @@ select:focus {
 /* Адаптив для маленьких экранов */
 @media (max-height: 700px) {
   .animated-clover {
-    font-size: 80px;
-    margin-top: -30px;
+    font-size: 70px;
+    margin-top: -15px;
   }
   
   .animated-title {
-    font-size: 40px;
+    font-size: 32px;
   }
   
   .animated-subtitle {
-    font-size: 24px;
-    padding: 15px 30px;
+    font-size: 20px;
+    padding: 12px 20px;
+  }
+  
+  .heart-container-wrapper {
+    height: 180px;
   }
   
   .heart-container {
-    width: 320px;
-    height: 320px;
+    width: 180px;
+    height: 180px;
   }
 }
 
 @media (max-height: 600px) {
   .animated-clover {
-    font-size: 70px;
-    margin-top: -20px;
+    font-size: 60px;
+    margin-top: -10px;
   }
   
   .animated-title {
-    font-size: 36px;
+    font-size: 28px;
   }
   
   .animated-subtitle {
-    font-size: 22px;
-    padding: 12px 25px;
+    font-size: 18px;
+    padding: 10px 18px;
+    margin-top: 10px;
+  }
+  
+  .heart-container-wrapper {
+    height: 160px;
   }
   
   .heart-container {
-    width: 280px;
-    height: 280px;
+    width: 160px;
+    height: 160px;
   }
   
   .heart-path {
@@ -2787,49 +2827,20 @@ select:focus {
 
 @media (max-width: 380px) {
   .animated-title {
-    font-size: 36px;
+    font-size: 32px;
   }
   
   .animated-subtitle {
-    font-size: 22px;
-    padding: 10px 20px;
+    font-size: 18px;
+    padding: 10px 15px;
+  }
+  
+  .heart-container-wrapper {
+    height: 150px;
   }
   
   .heart-container {
-    width: 260px;
-    height: 260px;
-  }
-}
-
-/* ===== ТОЧНОЕ ПОЗИЦИОНИРОВАНИЕ ===== */
-/* Спускаем надпись на 1 см (≈20px) */
-#animated-subtitle {
-  margin-top: 40px !important; /* Переопределяем предыдущие стили */
-}
-
-/* Спускаем сердце на 2.5 см (≈50px) */
-.heart-container {
-  top: calc(50% + 50px) !important; /* Центр + 2.5 см вниз */
-  transform: translate(-50%, -50%) !important;
-}
-
-/* Обновляем адаптив */
-@media (max-height: 700px) {
-  #animated-subtitle {
-    margin-top: 35px !important;
-  }
-  
-  .heart-container {
-    top: calc(50% + 40px) !important; /* Чуть меньше для маленьких экранов */
-  }
-}
-
-@media (max-height: 600px) {
-  #animated-subtitle {
-    margin-top: 30px !important;
-  }
-  
-  .heart-container {
-    top: calc(50% + 30px) !important;
+    width: 150px;
+    height: 150px;
   }
 }
