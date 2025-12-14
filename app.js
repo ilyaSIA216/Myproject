@@ -222,6 +222,19 @@ document.addEventListener('DOMContentLoaded', function() {
         tg = Telegram.WebApp;
         console.log('✅ Telegram WebApp обнаружен');
         
+        // Получаем элементы с проверкой на null
+        const userNameElement = document.getElementById('user-name');
+        const userAvatarElement = document.getElementById('user-avatar');
+        const userDataElement = document.getElementById('user-data');
+        
+        // Проверяем существование элемента перед работой с ним
+        if (userNameElement) {
+          const user = Telegram.WebApp.initDataUnsafe?.user;
+          if (user) {
+            userNameElement.textContent = user.first_name || 'Друг';
+          }
+        }
+        
         tg.ready();
         // iOS WHITE SCREEN FIX - обязательно между ready() и expand()
         if (tg) {
@@ -237,11 +250,16 @@ document.addEventListener('DOMContentLoaded', function() {
         tg.ready();
 
         // Всегда показываем анимацию
-        document.getElementById('welcome-animated-screen').classList.remove('hidden');
+        if (document.getElementById('welcome-animated-screen')) {
+          document.getElementById('welcome-animated-screen').classList.remove('hidden');
+        }
 
         const profileData = loadProfile();
         if (profileData) {
-          document.getElementById('username').textContent = `Привет, ${profileData.firstname || 'друг'}!`;
+          const usernameEl = document.getElementById('username');
+          if (usernameEl) {
+            usernameEl.textContent = `Привет, ${profileData.firstname || 'друг'}!`;
+          }
           setTimeout(goToFeed, 2000); // Быстро для старых
         } else {
           setTimeout(goToFeed, 4500); // Полная анимация для новых
@@ -685,47 +703,77 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function setupChatEventHandlers() {
-    document.getElementById('back-to-chats').addEventListener('click', () => {
-      document.getElementById('chat-screen').classList.add('hidden');
-      document.getElementById('screen-chats').classList.remove('hidden');
-      document.getElementById('tab-bar').classList.remove('hidden');
-      currentChatId = null;
-    });
+    const backToChatsBtn = document.getElementById('back-to-chats');
+    const sendMessageBtn = document.getElementById('send-message-btn');
+    const messageInput = document.getElementById('chat-message-input');
+    const reportBtn = document.getElementById('chat-report-btn');
+    const closeReportBtn = document.getElementById('close-report-modal-btn');
+    const cancelReportBtn = document.getElementById('cancel-report-btn');
+    const reportReasonSelect = document.getElementById('report-reason');
+    const submitReportBtn = document.getElementById('submit-report-btn');
+    const reportModal = document.getElementById('report-modal');
     
-    document.getElementById('send-message-btn').addEventListener('click', sendMessage);
+    if (backToChatsBtn) {
+      backToChatsBtn.addEventListener('click', () => {
+        document.getElementById('chat-screen').classList.add('hidden');
+        document.getElementById('screen-chats').classList.remove('hidden');
+        document.getElementById('tab-bar').classList.remove('hidden');
+        currentChatId = null;
+      });
+    }
     
-    document.getElementById('chat-message-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        sendMessage();
-      }
-    });
+    if (sendMessageBtn) {
+      sendMessageBtn.addEventListener('click', sendMessage);
+    }
     
-    document.getElementById('chat-report-btn').addEventListener('click', openReportModal);
+    if (messageInput) {
+      messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      });
+    }
     
-    document.getElementById('close-report-modal-btn').addEventListener('click', () => {
-      document.getElementById('report-modal').classList.add('hidden');
-    });
+    if (reportBtn) {
+      reportBtn.addEventListener('click', openReportModal);
+    }
     
-    document.getElementById('cancel-report-btn').addEventListener('click', () => {
-      document.getElementById('report-modal').classList.add('hidden');
-    });
-    
-    document.getElementById('report-reason').addEventListener('change', function() {
-      const customReasonDiv = document.getElementById('custom-report-reason');
-      if (this.value === 'other') {
-        customReasonDiv.classList.remove('hidden');
-      } else {
-        customReasonDiv.classList.add('hidden');
-      }
-    });
-    
-    document.getElementById('submit-report-btn').addEventListener('click', submitReport);
-    
-    document.getElementById('report-modal').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('report-modal')) {
+    if (closeReportBtn) {
+      closeReportBtn.addEventListener('click', () => {
         document.getElementById('report-modal').classList.add('hidden');
-      }
-    });
+      });
+    }
+    
+    if (cancelReportBtn) {
+      cancelReportBtn.addEventListener('click', () => {
+        document.getElementById('report-modal').classList.add('hidden');
+      });
+    }
+    
+    if (reportReasonSelect) {
+      reportReasonSelect.addEventListener('change', function() {
+        const customReasonDiv = document.getElementById('custom-report-reason');
+        if (customReasonDiv) {
+          if (this.value === 'other') {
+            customReasonDiv.classList.remove('hidden');
+          } else {
+            customReasonDiv.classList.add('hidden');
+          }
+        }
+      });
+    }
+    
+    if (submitReportBtn) {
+      submitReportBtn.addEventListener('click', submitReport);
+    }
+    
+    if (reportModal) {
+      reportModal.addEventListener('click', (e) => {
+        if (e.target === reportModal) {
+          reportModal.classList.add('hidden');
+        }
+      });
+    }
   }
   
   function loadMessagesForChat(userId) {
@@ -763,6 +811,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function sendMessage() {
     const input = document.getElementById('chat-message-input');
+    if (!input) return;
+    
     const messageText = input.value.trim();
     
     if (!messageText || !currentChatId) return;
@@ -787,18 +837,22 @@ document.addEventListener('DOMContentLoaded', function() {
     saveChatMessages();
     
     const messagesContainer = document.getElementById('chat-messages');
-    const messageElement = document.createElement('div');
-    messageElement.className = 'message message-out';
-    messageElement.innerHTML = `
-      <div class="message-content">${messageText}</div>
-      <div class="message-time">${timeString}</div>
-    `;
-    messagesContainer.appendChild(messageElement);
+    if (messagesContainer) {
+      const messageElement = document.createElement('div');
+      messageElement.className = 'message message-out';
+      messageElement.innerHTML = `
+        <div class="message-content">${messageText}</div>
+        <div class="message-time">${timeString}</div>
+      `;
+      messagesContainer.appendChild(messageElement);
+    }
     
     input.value = '';
     
     setTimeout(() => {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
     }, 100);
     
     setTimeout(() => {
@@ -868,27 +922,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const user = matchedUsers.find(u => u.id === parseInt(currentChatId));
     if (!user) return;
     
-    document.getElementById('report-user-name').textContent = `${user.name}, ${user.age}`;
+    const reportUserName = document.getElementById('report-user-name');
+    if (reportUserName) {
+      reportUserName.textContent = `${user.name}, ${user.age}`;
+    }
     
-    document.getElementById('report-reason').value = '';
-    document.getElementById('custom-report-reason').classList.add('hidden');
-    document.getElementById('custom-reason-text').value = '';
-    document.getElementById('report-additional').value = '';
+    const reportReason = document.getElementById('report-reason');
+    const customReasonDiv = document.getElementById('custom-report-reason');
+    const customReasonText = document.getElementById('custom-reason-text');
+    const reportAdditional = document.getElementById('report-additional');
     
-    document.getElementById('report-modal').classList.remove('hidden');
+    if (reportReason) reportReason.value = '';
+    if (customReasonDiv) customReasonDiv.classList.add('hidden');
+    if (customReasonText) customReasonText.value = '';
+    if (reportAdditional) reportAdditional.value = '';
+    
+    const reportModal = document.getElementById('report-modal');
+    if (reportModal) {
+      reportModal.classList.remove('hidden');
+    }
   }
   
   function submitReport() {
-    const reason = document.getElementById('report-reason').value;
-    const customReason = document.getElementById('custom-reason-text').value;
-    const additional = document.getElementById('report-additional').value;
+    const reportReason = document.getElementById('report-reason');
+    const customReasonText = document.getElementById('custom-reason-text');
+    const reportAdditional = document.getElementById('report-additional');
     
-    if (!reason) {
+    if (!reportReason || !reportReason.value) {
       showNotification('Выберите причину жалобы');
       return;
     }
     
-    if (reason === 'other' && !customReason.trim()) {
+    if (reportReason.value === 'other' && (!customReasonText || !customReasonText.value.trim())) {
       showNotification('Опишите причину жалобы');
       return;
     }
@@ -902,8 +967,8 @@ document.addEventListener('DOMContentLoaded', function() {
       reporterName: profileData?.first_name || 'Пользователь',
       reportedUserId: user.id,
       reportedUserName: user.name,
-      reason: reason === 'other' ? customReason : reason,
-      additionalInfo: additional,
+      reason: reportReason.value === 'other' ? customReasonText.value : reportReason.value,
+      additionalInfo: reportAdditional ? reportAdditional.value : '',
       chatMessages: chatMessages[currentChatId] || [],
       reporterProfile: profileData,
       reportedUserProfile: user,
@@ -919,7 +984,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     showNotification('✅ Жалоба отправлена!\n\nВаша жалоба будет рассмотрена администратором в течение 24 часов. Диалог сохранён для проверки.');
     
-    document.getElementById('report-modal').classList.add('hidden');
+    const reportModal = document.getElementById('report-modal');
+    if (reportModal) {
+      reportModal.classList.add('hidden');
+    }
     
     if (tg?.HapticFeedback) {
       try {
@@ -1377,8 +1445,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const friendIdInput = document.getElementById('friend-id-input');
       const screenshotInput = document.getElementById('invite-screenshot-input');
       
-      const friendId = friendIdInput.value.trim();
-      const screenshotFile = screenshotInput.files[0];
+      const friendId = friendIdInput ? friendIdInput.value.trim() : '';
+      const screenshotFile = screenshotInput ? screenshotInput.files[0] : null;
       
       if (!friendId && !screenshotFile) {
         showNotification('Заполните хотя бы одно поле: ID друга или загрузите скриншот');
@@ -1473,42 +1541,50 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewDiv = document.getElementById('screenshot-preview');
     const previewImg = document.getElementById('preview-image');
     
-    closeBtn.onclick = () => {
-      document.body.removeChild(modal);
-    };
-    
-    cancelBtn.onclick = () => {
-      document.body.removeChild(modal);
-    };
-    
-    screenshotInput.addEventListener('change', function() {
-      const file = this.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          previewImg.src = e.target.result;
-          previewDiv.style.display = 'block';
-          submitBtn.disabled = false;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    
-    submitBtn.onclick = () => {
-      const file = screenshotInput.files[0];
-      if (!file) {
-        showNotification('Сначала загрузите скриншот');
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const screenshotData = event.target.result;
-        submitShareForVerification(screenshotData);
+    if (closeBtn) {
+      closeBtn.onclick = () => {
         document.body.removeChild(modal);
       };
-      reader.readAsDataURL(file);
-    };
+    }
+    
+    if (cancelBtn) {
+      cancelBtn.onclick = () => {
+        document.body.removeChild(modal);
+      };
+    }
+    
+    if (screenshotInput) {
+      screenshotInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            if (previewImg) previewImg.src = e.target.result;
+            if (previewDiv) previewDiv.style.display = 'block';
+            if (submitBtn) submitBtn.disabled = false;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+    
+    if (submitBtn) {
+      submitBtn.onclick = () => {
+        const file = screenshotInput ? screenshotInput.files[0] : null;
+        if (!file) {
+          showNotification('Сначала загрузите скриншот');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const screenshotData = event.target.result;
+          submitShareForVerification(screenshotData);
+          document.body.removeChild(modal);
+        };
+        reader.readAsDataURL(file);
+      };
+    }
     
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
@@ -1572,31 +1648,33 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(notification);
     
     const copyBtn = document.getElementById('bonus-copy-btn');
-    copyBtn.addEventListener('click', () => {
-      if (link) {
-        navigator.clipboard.writeText(link).then(() => {
-          showNotification('✅ Ссылка скопирована в буфер обмена!');
-        }).catch(() => {
-          const textArea = document.createElement('textarea');
-          textArea.value = link;
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textArea);
-          showNotification('✅ Ссылка скопирована!');
-        });
-      }
-      
-      notification.style.animation = 'bonusDisappear 0.3s ease forwards';
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        if (link) {
+          navigator.clipboard.writeText(link).then(() => {
+            showNotification('✅ Ссылка скопирована в буфер обмена!');
+          }).catch(() => {
+            const textArea = document.createElement('textarea');
+            textArea.value = link;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showNotification('✅ Ссылка скопирована!');
+          });
         }
-        if (style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-      }, 300);
-    });
+        
+        notification.style.animation = 'bonusDisappear 0.3s ease forwards';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+          if (style.parentNode) {
+            style.parentNode.removeChild(style);
+          }
+        }, 300);
+      });
+    }
     
     setTimeout(() => {
       if (notification.parentNode) {
@@ -2618,15 +2696,17 @@ function updateCandidatePhoto() {
     const photoUrl = candidatePhotos[currentPhotoIndex];
     const photoElement = document.getElementById("candidate-photo");
     
-    // Предзагрузка следующего фото для плавного переключения
-    if (candidatePhotos.length > 1) {
-      const nextIndex = (currentPhotoIndex + 1) % candidatePhotos.length;
-      const nextPhotoUrl = candidatePhotos[nextIndex];
-      const img = new Image();
-      img.src = nextPhotoUrl;
+    if (photoElement) {
+      // Предзагрузка следующего фото для плавного переключения
+      if (candidatePhotos.length > 1) {
+        const nextIndex = (currentPhotoIndex + 1) % candidatePhotos.length;
+        const nextPhotoUrl = candidatePhotos[nextIndex];
+        const img = new Image();
+        img.src = nextPhotoUrl;
+      }
+      
+      photoElement.src = photoUrl;
     }
-    
-    photoElement.src = photoUrl;
   }
 }
 
@@ -2724,12 +2804,21 @@ function updatePhotoIndicators() {
   // ===== ФУНКЦИЯ goToFeed =====
   function goToFeed() {
     // ✅ ПРЯМО показываем ленту
-    document.getElementById('welcome-animated-screen').classList.add('hidden');
-    document.getElementById('screen-feed').classList.remove('hidden');
-    document.getElementById('tab-bar').classList.remove('hidden');
+    if (document.getElementById('welcome-animated-screen')) {
+      document.getElementById('welcome-animated-screen').classList.add('hidden');
+    }
+    if (document.getElementById('screen-feed')) {
+      document.getElementById('screen-feed').classList.remove('hidden');
+    }
+    if (document.getElementById('tab-bar')) {
+      document.getElementById('tab-bar').classList.remove('hidden');
+    }
     
     // Активируем вкладку ленты
-    document.querySelector('.tab-btn[data-tab="feed"]').classList.add('active');
+    const feedTabBtn = document.querySelector('.tab-btn[data-tab="feed"]');
+    if (feedTabBtn) {
+      feedTabBtn.classList.add('active');
+    }
     document.querySelectorAll('.tab-btn:not([data-tab="feed"])').forEach(btn => {
       btn.classList.remove('active');
     });
@@ -2759,12 +2848,20 @@ function updatePhotoIndicators() {
     const filtered = getFilteredCandidates();
     
     if (filtered.length === 0) {
-      document.getElementById("candidate-name").textContent = "";
-      document.getElementById("candidate-age").textContent = "";
-      document.getElementById("candidate-city").textContent = "";
-      document.getElementById("candidate-bio").textContent = "";
-      document.getElementById("candidate-photo").src = "";
-      document.getElementById("candidate-interests").innerHTML = "";
+      const candidateName = document.getElementById("candidate-name");
+      const candidateAge = document.getElementById("candidate-age");
+      const candidateCity = document.getElementById("candidate-city");
+      const candidateBio = document.getElementById("candidate-bio");
+      const candidatePhoto = document.getElementById("candidate-photo");
+      const candidateInterests = document.getElementById("candidate-interests");
+      const feedStatus = document.getElementById("feed-status");
+      
+      if (candidateName) candidateName.textContent = "";
+      if (candidateAge) candidateAge.textContent = "";
+      if (candidateCity) candidateCity.textContent = "";
+      if (candidateBio) candidateBio.textContent = "";
+      if (candidatePhoto) candidatePhoto.src = "";
+      if (candidateInterests) candidateInterests.innerHTML = "";
       
       const verifiedBadge = document.getElementById('candidate-verified');
       if (verifiedBadge) verifiedBadge.classList.add('hidden');
@@ -2772,8 +2869,9 @@ function updatePhotoIndicators() {
       const boostBadge = document.getElementById('candidate-boost');
       if (boostBadge) boostBadge.classList.add('hidden');
       
-      document.getElementById("feed-status").textContent = 
-        "Нет подходящих анкет по вашим фильтрам. Попробуйте изменить параметры поиска 🍀";
+      if (feedStatus) {
+        feedStatus.textContent = "Нет подходящих анкет по вашим фильтрам. Попробуйте изменить параметры поиска 🍀";
+      }
       
       candidatePhotos = [];
       candidateInterests = [];
@@ -2794,11 +2892,17 @@ function updatePhotoIndicators() {
     candidateInterests = candidate.interests || [];
     currentPhotoIndex = 0;
     
-    document.getElementById("candidate-name").textContent = candidate.name;
-    document.getElementById("candidate-age").textContent = candidate.age;
-    document.getElementById("candidate-city").textContent = candidate.city;
-    document.getElementById("candidate-bio").textContent = candidate.bio;
-    document.getElementById("feed-status").textContent = "";
+    const candidateName = document.getElementById("candidate-name");
+    const candidateAge = document.getElementById("candidate-age");
+    const candidateCity = document.getElementById("candidate-city");
+    const candidateBio = document.getElementById("candidate-bio");
+    const feedStatus = document.getElementById("feed-status");
+    
+    if (candidateName) candidateName.textContent = candidate.name;
+    if (candidateAge) candidateAge.textContent = candidate.age;
+    if (candidateCity) candidateCity.textContent = candidate.city;
+    if (candidateBio) candidateBio.textContent = candidate.bio;
+    if (feedStatus) feedStatus.textContent = "";
     
     updateCandidatePhoto();
     updateCandidateInterests();
@@ -2909,10 +3013,20 @@ function updatePhotoIndicators() {
     if (card) card.style.transform = 'translateY(0)';
     
     setTimeout(() => {
-      const ageValue = Number(document.getElementById("age").value);
-      const gender = document.getElementById("gender").value;
-      const city = document.getElementById("city").value;
-      const bio = document.getElementById("bio").value.trim();
+      const ageInput = document.getElementById("age");
+      const genderSelect = document.getElementById("gender");
+      const cityInput = document.getElementById("city");
+      const bioTextarea = document.getElementById("bio");
+      
+      if (!ageInput || !genderSelect || !cityInput || !bioTextarea) {
+        showNotification("Ошибка: не найдены поля формы");
+        return;
+      }
+      
+      const ageValue = Number(ageInput.value);
+      const gender = genderSelect.value;
+      const city = cityInput.value;
+      const bio = bioTextarea.value.trim();
       
       if (!ageValue || ageValue < 18 || ageValue > 99) {
         showNotification("Возраст должен быть от 18 до 99 лет");
@@ -3173,36 +3287,40 @@ function updatePhotoIndicators() {
     // Drag & Drop
     let draggedItem = null;
     
-    container.addEventListener('dragstart', (e) => {
-      draggedItem = e.target.closest('.photo-reorder-item');
-      if (draggedItem) {
-        draggedItem.classList.add('dragging');
-      }
-    });
-    
-    container.addEventListener('dragend', (e) => {
-      if (draggedItem) {
-        draggedItem.classList.remove('dragging');
-        draggedItem = null;
-      }
-    });
-    
-    container.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      if (!draggedItem) return;
+    if (container) {
+      container.addEventListener('dragstart', (e) => {
+        draggedItem = e.target.closest('.photo-reorder-item');
+        if (draggedItem) {
+          draggedItem.classList.add('dragging');
+        }
+      });
       
-      const afterElement = getDragAfterElement(container, e.clientY);
+      container.addEventListener('dragend', (e) => {
+        if (draggedItem) {
+          draggedItem.classList.remove('dragging');
+          draggedItem = null;
+        }
+      });
       
-      if (afterElement == null) {
-        container.appendChild(draggedItem);
-      } else {
-        container.insertBefore(draggedItem, afterElement);
-      }
-    });
+      container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!draggedItem) return;
+        
+        const afterElement = getDragAfterElement(container, e.clientY);
+        
+        if (afterElement == null) {
+          container.appendChild(draggedItem);
+        } else {
+          container.insertBefore(draggedItem, afterElement);
+        }
+      });
+    }
   }
   
   function loadProfilePhotosForReorder() {
     const container = document.getElementById('photo-reorder-list');
+    if (!container) return;
+    
     const profile = loadProfile();
     const photos = profile?.photos || [];
     
@@ -3246,15 +3364,19 @@ function updatePhotoIndicators() {
   function updatePhotoNumbers() {
     const items = document.querySelectorAll('.photo-reorder-item');
     items.forEach((item, index) => {
-      item.querySelector('.photo-reorder-number').textContent = index + 1;
+      const numberElement = item.querySelector('.photo-reorder-number');
+      if (numberElement) {
+        numberElement.textContent = index + 1;
+      }
     });
   }
   
   function savePhotoOrderAndBack() {
     const items = document.querySelectorAll('.photo-reorder-item');
-    const newOrder = Array.from(items).map(item => 
-      item.querySelector('.photo-reorder-preview').src
-    );
+    const newOrder = Array.from(items).map(item => {
+      const preview = item.querySelector('.photo-reorder-preview');
+      return preview ? preview.src : '';
+    }).filter(src => src);
     
     const profile = loadProfile();
     if (profile) {
@@ -3359,8 +3481,11 @@ function updatePhotoIndicators() {
   }
   
   function handleCancelEdit() {
-    document.getElementById('profile-display').classList.remove('hidden');
-    document.getElementById('profile-edit').classList.add('hidden');
+    const profileDisplay = document.getElementById('profile-display');
+    const profileEdit = document.getElementById('profile-edit');
+    
+    if (profileDisplay) profileDisplay.classList.remove('hidden');
+    if (profileEdit) profileEdit.classList.add('hidden');
   }
   
   function initProfile() {
@@ -3425,6 +3550,48 @@ function initApp() {
     cancelEditBtn.addEventListener('click', handleCancelEdit);
   }
   
+  // Функция для загрузки фото профиля
+  function handleProfilePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification('Фото слишком большое (максимум 5MB)');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      // Сохраняем фото в профиле
+      if (!profileData) {
+        profileData = {};
+      }
+      
+      if (!profileData.photos) {
+        profileData.photos = [];
+      }
+      
+      // Добавляем новое фото (можно ограничить количество)
+      if (profileData.photos.length >= 3) {
+        showNotification('Можно добавить не более 3 фото');
+        return;
+      }
+      
+      profileData.photos.push(event.target.result);
+      saveProfile(profileData);
+      
+      // Обновляем превью если есть
+      const preview = document.getElementById('profile-photo-preview');
+      if (preview) {
+        preview.src = event.target.result;
+        preview.style.display = 'block';
+      }
+      
+      showNotification('Фото профиля добавлено! 📸');
+    };
+    reader.readAsDataURL(file);
+  }
+  
   // Загрузка фото в основном профиле
   if (profilePhotoInput) {
     profilePhotoInput.addEventListener('change', handleProfilePhotoUpload);
@@ -3444,6 +3611,10 @@ function initApp() {
       const reader = new FileReader();
       reader.onload = function(event) {
         // Добавляем как новое фото
+        if (!profileData) {
+          profileData = {};
+        }
+        
         if (!profileData.photos) {
           profileData.photos = [];
         }
