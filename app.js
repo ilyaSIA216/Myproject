@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     datingGoal: ''
   };
   
-  // Добавляем состояние верификации
+  // Верификация
   let verificationStatus = 'not_verified';
   let verificationPhoto = null;
   
@@ -42,21 +42,19 @@ document.addEventListener('DOMContentLoaded', function() {
   let remainingSwipes = 20;
   let maxSwipesPerDay = 20;
   
-  // СИСТЕМА ЧАТОВ И ЖАЛОБ
+  // Система чатов и жалоб
   let matchedUsers = [];
   let currentChatId = null;
   let chatMessages = {};
   let userReports = [];
   
-  // НОВАЯ СИСТЕМА: Ожидающие подтверждения бонусы
+  // Ожидающие подтверждения бонусы
   let pendingBonusVerifications = [];
   
-  // ===== НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ СВАЙПОВ И ФОТОГРАФИЙ =====
+  // Система свайпов и фотографий
   let candidatePhotos = [];
   let currentPhotoIndex = 0;
   let candidateInterests = [];
-
-  // Для свайпов
   let swipeStartX = 0;
   let swipeStartY = 0;
   let isSwiping = false;
@@ -250,7 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (heightDiff > 100) {
       keyboardHeight = heightDiff;
-      
       document.body.classList.add('keyboard-open');
       
       if (card) {
@@ -904,12 +901,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🔍 Инициализирую систему фильтров');
     
     loadSearchFilters();
-    
-    const openFiltersBtn = document.getElementById("open-filters-btn");
-    if (openFiltersBtn) {
-      openFiltersBtn.parentNode.removeChild(openFiltersBtn);
-    }
-    
     initSearchFilters();
   }
   
@@ -1037,25 +1028,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadBoostStatus();
     updateBoostUI();
-    
-    const boostProfileBtn = document.getElementById('boostProfileBtn');
-    if (boostProfileBtn && boostProfileBtn.parentNode) {
-      boostProfileBtn.parentNode.removeChild(boostProfileBtn);
-    }
-    
-    const boostFormSection = document.getElementById('boost-form-section');
-    if (boostFormSection && boostFormSection.parentNode) {
-      boostFormSection.parentNode.removeChild(boostFormSection);
-    }
-    
-    const boostInfoRow = document.querySelector('.profile-info-row:nth-child(5)');
-    if (boostInfoRow) {
-      const boostStatusSpan = boostInfoRow.querySelector('#boost-status');
-      if (boostStatusSpan) {
-        updateBoostStatusElement(boostStatusSpan);
-      }
-    }
-    
     setInterval(updateBoostTimer, 1000);
   }
   
@@ -1243,7 +1215,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // ===== СИСТЕМА БОНУСНЫХ СВАЙПОВ И БУСТОВ (ОБНОВЛЕННАЯ) =====
+  // ===== СИСТЕМА БОНУСНЫХ СВАЙПОВ И БУСТОВ =====
   function initBonusSystem() {
     console.log('🎁 Инициализирую систему бонусов');
     
@@ -1277,7 +1249,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const referralCode = generateReferralCode();
     const referralLink = `https://t.me/SiaMatchBot?start=${referralCode}`;
     
-    // СОЗДАЕМ МОДАЛЬНОЕ ОКНО ДЛЯ СКРИНШОТА ПРИГЛАШЕНИЯ
     showInviteVerificationModal(referralLink);
   }
   
@@ -1288,7 +1259,6 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (e) {}
     }
     
-    // СОЗДАЕМ МОДАЛЬНОЕ ОКНО ДЛЯ ЗАГРУЗКИ СКРИНШОТА STORIES
     showShareVerificationModal();
   }
   
@@ -1333,7 +1303,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.body.appendChild(modal);
     
-    // Обработчики событий
     document.getElementById('close-invite-modal-btn').onclick = () => {
       document.body.removeChild(modal);
     };
@@ -1355,16 +1324,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       if (friendId) {
-        // Отправляем ID друга на проверку
         submitInviteForVerification(parseInt(friendId));
         document.body.removeChild(modal);
       } else if (screenshotFile) {
-        // Загружаем скриншот
         const reader = new FileReader();
         reader.onload = function(event) {
           const screenshotData = event.target.result;
           
-          // Создаем запрос на проверку с скриншотом
           const verificationRequest = {
             id: Date.now(),
             userId: profileData?.tg_id,
@@ -1390,7 +1356,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
     
-    // Закрытие по клику вне модального окна
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         document.body.removeChild(modal);
@@ -1439,7 +1404,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.body.appendChild(modal);
     
-    // Обработчики событий
     const closeBtn = document.getElementById('close-share-modal-btn');
     const cancelBtn = document.getElementById('cancel-share-verification');
     const submitBtn = document.getElementById('submit-share-verification');
@@ -1484,7 +1448,6 @@ document.addEventListener('DOMContentLoaded', function() {
       reader.readAsDataURL(file);
     };
     
-    // Закрытие по клику вне модального окна
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         document.body.removeChild(modal);
@@ -2217,16 +2180,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!candidateCard || !photosContainer) return;
     
-    // Убираем старые кнопки
     const actions = document.querySelector('.actions');
     if (actions) {
       actions.style.display = 'none';
     }
     
-    // Инициализируем свайпы
     initSwipeGestures(candidateCard);
-    
-    // Инициализируем переключение фото по тапам
     initPhotoSwitching(photosContainer);
   }
 
@@ -2235,7 +2194,6 @@ document.addEventListener('DOMContentLoaded', function() {
     cardElement.addEventListener('touchmove', handleTouchMove, { passive: false });
     cardElement.addEventListener('touchend', handleTouchEnd, { passive: true });
     
-    // Для десктопа
     cardElement.addEventListener('mousedown', handleMouseDown, { passive: true });
     cardElement.addEventListener('mousemove', handleMouseMove, { passive: false });
     cardElement.addEventListener('mouseup', handleMouseEnd, { passive: true });
@@ -2243,23 +2201,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function initPhotoSwitching(photosContainer) {
-    const leftArea = photosContainer.querySelector('.left-swipe-area');
-    const rightArea = photosContainer.querySelector('.right-swipe-area');
-    
-    if (leftArea) {
-      leftArea.addEventListener('click', () => switchPhoto(-1));
-    }
-    
-    if (rightArea) {
-      rightArea.addEventListener('click', () => switchPhoto(1));
-    }
-    
-    // Также поддерживаем свайпы по фото
     photosContainer.addEventListener('touchstart', handlePhotoTouchStart, { passive: true });
     photosContainer.addEventListener('touchend', handlePhotoTouchEnd, { passive: true });
   }
 
-  // Обработчики для свайпов
   function handleTouchStart(e) {
     const touch = e.touches[0];
     swipeStartX = touch.clientX;
@@ -2279,7 +2224,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const deltaX = touch.clientX - swipeStartX;
     const deltaY = touch.clientY - swipeStartY;
     
-    // Если свайп вверх/вниз - это скролл страницы
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
       isSwiping = false;
       return;
@@ -2291,7 +2235,6 @@ document.addEventListener('DOMContentLoaded', function() {
     candidateCard.style.transform = `translateX(${deltaX}px) rotate(${deltaX * 0.1}deg)`;
     candidateCard.style.opacity = Math.max(opacity, 0.5);
     
-    // Показываем подсказку
     if (deltaX > 50) {
       showSwipeFeedback('like');
     } else if (deltaX < -50) {
@@ -2311,22 +2254,17 @@ document.addEventListener('DOMContentLoaded', function() {
     candidateCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
     
     if (Math.abs(deltaX) > 100) {
-      // Свайп выполнен
       if (deltaX > 0) {
-        // Свайп вправо - лайк
         handleSwipeRight();
       } else {
-        // Свайп влево - дизлайк
         handleSwipeLeft();
       }
     } else {
-      // Возвращаем на место
       candidateCard.style.transform = 'translateX(0) rotate(0deg)';
       candidateCard.style.opacity = 1;
     }
   }
 
-  // Обработчики для мыши
   function handleMouseDown(e) {
     swipeStartX = e.clientX;
     swipeStartY = e.clientY;
@@ -2345,7 +2283,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const deltaX = e.clientX - swipeStartX;
     const deltaY = e.clientY - swipeStartY;
     
-    // Если свайп вверх/вниз - это скролл страницы
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
       isSwiping = false;
       return;
@@ -2357,7 +2294,6 @@ document.addEventListener('DOMContentLoaded', function() {
     candidateCard.style.transform = `translateX(${deltaX}px) rotate(${deltaX * 0.1}deg)`;
     candidateCard.style.opacity = Math.max(opacity, 0.5);
     
-    // Показываем подсказку
     if (deltaX > 50) {
       showSwipeFeedback('like');
     } else if (deltaX < -50) {
@@ -2376,14 +2312,12 @@ document.addEventListener('DOMContentLoaded', function() {
     candidateCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
     
     if (Math.abs(deltaX) > 100) {
-      // Свайп выполнен
       if (deltaX > 0) {
         handleSwipeRight();
       } else {
         handleSwipeLeft();
       }
     } else {
-      // Возвращаем на место
       candidateCard.style.transform = 'translateX(0) rotate(0deg)';
       candidateCard.style.opacity = 1;
     }
@@ -2400,7 +2334,6 @@ document.addEventListener('DOMContentLoaded', function() {
     candidateCard.style.opacity = 1;
   }
 
-  // Обработчики для переключения фото
   function handlePhotoTouchStart(e) {
     const touch = e.touches[0];
     swipeStartX = touch.clientX;
@@ -2412,16 +2345,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (Math.abs(deltaX) > 30) {
       if (deltaX > 0) {
-        // Свайп вправо - предыдущее фото
         switchPhoto(-1);
       } else {
-        // Свайп влево - следующее фото
         switchPhoto(1);
       }
     }
   }
 
-  // Функции обработки свайпов
   function handleSwipeRight() {
     showSwipeAnimation('right');
     
@@ -2468,7 +2398,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 800);
   }
 
-  // Переключение фотографий
   function switchPhoto(direction) {
     if (candidatePhotos.length <= 1) return;
     
@@ -2482,13 +2411,74 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateCandidatePhoto();
     
-    // Анимация переключения
     const photoElement = document.getElementById('candidate-photo');
     photoElement.style.opacity = '0';
     
     setTimeout(() => {
       photoElement.style.opacity = '1';
     }, 50);
+  }
+  
+  function updateCandidatePhoto() {
+    if (candidatePhotos.length > 0 && currentPhotoIndex < candidatePhotos.length) {
+      const photoUrl = candidatePhotos[currentPhotoIndex];
+      document.getElementById("candidate-photo").src = photoUrl;
+    }
+  }
+
+  function updateCandidateInterests() {
+    const interestsContainer = document.getElementById('candidate-interests');
+    if (!interestsContainer) return;
+    
+    interestsContainer.innerHTML = '';
+    
+    const interestLabels = {
+      'travel': 'Путешествия',
+      'movies': 'Кино',
+      'art': 'Искусство',
+      'sport': 'Спорт',
+      'photography': 'Фотография',
+      'dancing': 'Танцы',
+      'music': 'Музыка',
+      'cooking': 'Кулинария',
+      'business': 'Бизнес',
+      'gaming': 'Гейминг',
+      'cars': 'Автомобили',
+      'anime': 'Аниме',
+      'tattoos': 'Татуировки',
+      'piercing': 'Пирсинг',
+      'workout': 'Тренировки',
+      'wine': 'Вино',
+      'boardgames': 'Настольные игры'
+    };
+    
+    candidateInterests.forEach(interest => {
+      const tag = document.createElement('div');
+      tag.className = 'interest-tag-small';
+      tag.textContent = interestLabels[interest] || interest;
+      interestsContainer.appendChild(tag);
+    });
+  }
+
+  function updatePhotoIndicators() {
+    const indicatorsContainer = document.querySelector('.photo-indicators');
+    if (!indicatorsContainer) return;
+    
+    indicatorsContainer.innerHTML = '';
+    
+    for (let i = 0; i < candidatePhotos.length; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = `photo-indicator ${i === currentPhotoIndex ? 'active' : ''}`;
+      indicator.dataset.index = i;
+      
+      indicator.addEventListener('click', () => {
+        currentPhotoIndex = i;
+        updateCandidatePhoto();
+        updatePhotoIndicators();
+      });
+      
+      indicatorsContainer.appendChild(indicator);
+    }
   }
   
   // ===== ОБРАБОТЧИК КНОПКИ "НАЧАТЬ ЗНАКОМСТВО" =====
@@ -2513,7 +2503,6 @@ document.addEventListener('DOMContentLoaded', function() {
       welcomeScreen.classList.add("hidden");
     }
     
-    // Также скрываем анимированный экран, если он показан
     if (animatedWelcomeScreen) {
       animatedWelcomeScreen.classList.add('hidden');
     }
@@ -2531,44 +2520,35 @@ document.addEventListener('DOMContentLoaded', function() {
   function showAnimatedWelcomeScreen() {
     if (!animatedWelcomeScreen) return;
     
-    // Скрываем обычный экран приветствия
     if (welcomeScreen) {
       welcomeScreen.classList.add('hidden');
     }
     
-    // Показываем анимированный экран
     animatedWelcomeScreen.classList.remove('hidden');
     
-    // Слушаем событие завершения анимации
     const animatedSubtitle = document.getElementById('animated-subtitle');
     if (animatedSubtitle) {
-      // Используем setTimeout как запасной вариант
       setTimeout(() => {
         hideAnimatedWelcomeScreen();
-      }, 6500); // 6.5 секунд - общая длительность анимации
+      }, 6500);
       
-      // Также слушаем анимацию CSS
       animatedSubtitle.addEventListener('animationend', function() {
         setTimeout(hideAnimatedWelcomeScreen, 2000);
       }, { once: true });
     }
   }
   
-  // ===== ФУНКЦИЯ: СКРЫТЬ АНИМИРОВАННЫЙ ЭКРАН И ПОКАЗАТЬ ПРИЛОЖЕНИЕ =====
   function hideAnimatedWelcomeScreen() {
     if (!animatedWelcomeScreen) return;
     
-    // Добавляем анимацию исчезновения
     animatedWelcomeScreen.style.animation = 'fadeOutScreen 0.8s ease forwards';
     
     setTimeout(() => {
       animatedWelcomeScreen.classList.add('hidden');
       animatedWelcomeScreen.style.animation = '';
       
-      // Показываем главное приложение
       showMainApp();
       
-      // Включаем все системы
       initVerification();
       initLikesSystem();
       initInterestsSystem();
@@ -2578,10 +2558,8 @@ document.addEventListener('DOMContentLoaded', function() {
       initChatsSystem();
       initBonusSystem();
       
-      // Устанавливаем активную вкладку
       setActiveTab("feed");
       
-      // Показываем приветственное уведомление
       setTimeout(() => {
         showNotification("🍀 С возвращением в SiaMatch!\n\nЖелаем вам найти свою идеальную пару! ❤️");
       }, 500);
@@ -2664,7 +2642,7 @@ document.addEventListener('DOMContentLoaded', function() {
           } catch (e) {}
         }
         
-        loadPendingBonuses(); // Загружаем ожидающие бонусы
+        loadPendingBonuses();
         
         initVerification();
         initLikesSystem();
@@ -2687,7 +2665,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // ===== ПОКАЗАТЬ ОСНОВНОЕ ПРИЛОЖЕНИЕ =====
   function showMainApp() {
-    // Скрываем все приветственные экраны
     if (welcomeScreen) welcomeScreen.classList.add("hidden");
     if (animatedWelcomeScreen) animatedWelcomeScreen.classList.add("hidden");
     if (onboardingScreen) onboardingScreen.classList.add("hidden");
@@ -2696,7 +2673,7 @@ document.addEventListener('DOMContentLoaded', function() {
       tabBar.classList.remove("hidden");
     }
     
-    loadPendingBonuses(); // Загружаем ожидающие бонусы
+    loadPendingBonuses();
     
     initVerification();
     initLikesSystem();
@@ -2774,7 +2751,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function initFeed() {
     currentIndex = 0;
     initSearchFilters();
-    initSwipeSystem(); // Инициализируем систему свайпов
+    initSwipeSystem();
     showCurrentCandidate();
   }
   
@@ -2872,7 +2849,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const candidate = filtered[currentIndex];
     currentCandidateId = candidate.id;
     
-    // Обновляем фотографии
     candidatePhotos = candidate.photos || [candidate.photo];
     candidateInterests = candidate.interests || [];
     currentPhotoIndex = 0;
@@ -2906,68 +2882,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function updateCandidatePhoto() {
-    if (candidatePhotos.length > 0 && currentPhotoIndex < candidatePhotos.length) {
-      const photoUrl = candidatePhotos[currentPhotoIndex];
-      document.getElementById("candidate-photo").src = photoUrl;
-    }
-  }
-
-  function updateCandidateInterests() {
-    const interestsContainer = document.getElementById('candidate-interests');
-    if (!interestsContainer) return;
-    
-    interestsContainer.innerHTML = '';
-    
-    const interestLabels = {
-      'travel': 'Путешествия',
-      'movies': 'Кино',
-      'art': 'Искусство',
-      'sport': 'Спорт',
-      'photography': 'Фотография',
-      'dancing': 'Танцы',
-      'music': 'Музыка',
-      'cooking': 'Кулинария',
-      'business': 'Бизнес',
-      'gaming': 'Гейминг',
-      'cars': 'Автомобили',
-      'anime': 'Аниме',
-      'tattoos': 'Татуировки',
-      'piercing': 'Пирсинг',
-      'workout': 'Тренировки',
-      'wine': 'Вино',
-      'boardgames': 'Настольные игры'
-    };
-    
-    candidateInterests.forEach(interest => {
-      const tag = document.createElement('div');
-      tag.className = 'interest-tag-small';
-      tag.textContent = interestLabels[interest] || interest;
-      interestsContainer.appendChild(tag);
-    });
-  }
-
-  function updatePhotoIndicators() {
-    const indicatorsContainer = document.querySelector('.photo-indicators');
-    if (!indicatorsContainer) return;
-    
-    indicatorsContainer.innerHTML = '';
-    
-    for (let i = 0; i < candidatePhotos.length; i++) {
-      const indicator = document.createElement('div');
-      indicator.className = `photo-indicator ${i === currentPhotoIndex ? 'active' : ''}`;
-      indicator.dataset.index = i;
-      
-      indicator.addEventListener('click', () => {
-        currentPhotoIndex = i;
-        updateCandidatePhoto();
-        updatePhotoIndicators();
-      });
-      
-      indicatorsContainer.appendChild(indicator);
-    }
-  }
-  
   function handleLike() {
     if (!useSwipe()) return;
     
@@ -3035,7 +2949,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateVerificationUI();
     updateBoostUI();
     initInterestsSystem();
-    initProfilePhotos(); // Инициализируем управление фото профиля
+    initProfilePhotos();
   }
 
   function initProfilePhotos() {
@@ -3067,7 +2981,6 @@ document.addEventListener('DOMContentLoaded', function() {
       photoUpload.addEventListener('change', handleProfilePhotoUpload);
     }
     
-    // Инициализируем свайпы по фото профиля
     const profilePhotosContainer = document.querySelector('.profile-photos-container');
     if (profilePhotosContainer) {
       profilePhotosContainer.addEventListener('touchstart', handleProfilePhotoTouchStart);
@@ -3085,10 +2998,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!container || !indicators) return;
     
-    // Очищаем контейнер
     container.innerHTML = '';
     
-    // Добавляем фото
     profileData.photos.forEach((photoUrl, index) => {
       const img = document.createElement('img');
       img.className = `profile-main-photo ${index === 0 ? 'active' : ''}`;
@@ -3097,7 +3008,6 @@ document.addEventListener('DOMContentLoaded', function() {
       container.appendChild(img);
     });
     
-    // Обновляем индикаторы
     indicators.innerHTML = '';
     profileData.photos.forEach((_, index) => {
       const indicator = document.createElement('div');
@@ -3106,12 +3016,10 @@ document.addEventListener('DOMContentLoaded', function() {
       indicators.appendChild(indicator);
     });
     
-    // Обновляем счетчик
     if (photosCount) {
       photosCount.textContent = `${profileData.photos.length}/3 фото`;
     }
     
-    // Блокируем кнопку удаления, если фото меньше 2
     if (removeBtn) {
       removeBtn.disabled = profileData.photos.length <= 1;
     }
@@ -3153,7 +3061,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function removeCurrentPhoto() {
     if (!profileData.photos || profileData.photos.length <= 1) return;
     
-    profileData.photos.splice(0, 1); // Удаляем текущее (первое) фото
+    profileData.photos.splice(0, 1);
     saveProfile(profileData);
     updateProfilePhotos();
     
@@ -3170,12 +3078,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const deltaX = touch.clientX - swipeStartX;
     
     if (Math.abs(deltaX) > 30 && profileData.photos && profileData.photos.length > 1) {
-      const currentIndex = 0; // Первое фото активно
+      const currentIndex = 0;
       const nextIndex = deltaX > 0 ? 
         (currentIndex - 1 + profileData.photos.length) % profileData.photos.length :
         (currentIndex + 1) % profileData.photos.length;
       
-      // Перемещаем фото
       const temp = profileData.photos[currentIndex];
       profileData.photos[currentIndex] = profileData.photos[nextIndex];
       profileData.photos[nextIndex] = temp;
@@ -3446,12 +3353,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     profileData = loadProfile();
     
-    // Проверяем, есть ли у пользователя анкета
     if (profileData) {
-      // Если анкета есть, показываем анимированный экран приветствия
       showAnimatedWelcomeScreen();
     } else {
-      // Если анкеты нет, показываем обычный экран приветствия
       if (welcomeScreen) {
         welcomeScreen.classList.remove("hidden");
       }
@@ -3474,9 +3378,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 300);
     }
     
-    // ИНИЦИАЛИЗАЦИЯ СВАЙПОВ
     initSwipeSystem();
-    
     initLikesSystem();
     initInterestsSystem();
     initFiltersSystem();
