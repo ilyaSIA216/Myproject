@@ -152,7 +152,7 @@
         </div>
       </div>
 
-      <!-- ОБНОВЛЕННЫЙ ЭКРАН ЛЕНТЫ -->
+      <!-- ЭКРАН ЛЕНТЫ -->
       <div id="screen-feed" class="screen hidden">
         <div class="screen-content">
           <!-- ЗАГОЛОВОК С КНОПКОЙ ФИЛЬТРОВ -->
@@ -178,10 +178,6 @@
               
               <!-- ИНДИКАТОРЫ ДЛЯ ФОТОГРАФИЙ -->
               <div class="photo-indicators"></div>
-              
-              <!-- КНОПКИ ДЛЯ ЛИСТАНИЯ (НЕВИДИМЫЕ НА ПК, РАБОТАЮТ ПО ТАПАМ) -->
-              <div class="photo-swipe-area left-swipe-area"></div>
-              <div class="photo-swipe-area right-swipe-area"></div>
             </div>
             
             <div class="candidate-info">
@@ -200,14 +196,20 @@
             </div>
           </div>
           
-<!-- ДОБАВИМ ВМЕСТО НЕГО ЛЕГКУЮ ПОДСКАЗКУ -->
-<div class="swipe-hint">
-  <div class="swipe-hint-text">👆 Проведите пальцем по фото для свайпа</div>
-  <div class="swipe-hint-icons">
-    <span class="swipe-hint-icon-left">← ✖️ Дизлайк</span>
-    <span class="swipe-hint-icon-right">❤️ Лайк →</span>
-  </div>
-</div>
+          <!-- КНОПКИ ДЕЙСТВИЙ УБРАНЫ - ИСПОЛЬЗУЕМ СВАЙПЫ -->
+          <div class="actions" style="display: none;">
+            <button id="btn-dislike" class="btn-circle btn-dislike">✖️</button>
+            <button id="btn-like" class="btn-circle btn-like">❤️</button>
+          </div>
+          
+          <!-- СВАЙП-ИНСТРУКЦИЯ -->
+          <div class="swipe-hint">
+            <div class="swipe-hint-text">👆 Проведите пальцем по карточке для свайпа</div>
+            <div class="swipe-hint-icons">
+              <span class="swipe-hint-icon-left">← ✖️ Дизлайк</span>
+              <span class="swipe-hint-icon-right">❤️ Лайк →</span>
+            </div>
+          </div>
           
           <!-- СТАТУС ЛЕНТЫ -->
           <div id="feed-status" class="feed-status"></div>
@@ -368,23 +370,22 @@
               <button id="edit-profile-btn" class="settings-btn">⚙️</button>
             </div>
             
-            <!-- ОБНОВЛЕННАЯ СЕКЦИЯ ФОТО И ОСНОВНОЙ ИНФОРМАЦИИ -->
+            <!-- ФОТО И ОСНОВНАЯ ИНФОРМАЦИЯ -->
             <div class="profile-info-card">
               <div class="profile-photo-section">
                 <div class="profile-photos-container">
-                  <!-- Фото будут добавляться динамически -->
+                  <!-- Фото будут добавлены динамически -->
                 </div>
                 
                 <div class="profile-photo-indicators"></div>
                 
                 <div class="profile-photo-controls">
-                  <button id="add-photo-btn" class="add-photo-btn">+ Добавить фото</button>
-                  <button id="remove-photo-btn" class="remove-photo-btn">- Удалить текущее</button>
+                  <button id="add-photo-btn" class="add-photo-btn">📸 Добавить фото</button>
+                  <button id="remove-photo-btn" class="remove-photo-btn">🗑️ Удалить текущее</button>
                 </div>
                 
+                <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" />
                 <div id="photos-count" class="photos-count">0/3 фото</div>
-                
-                <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" multiple />
               </div>
               
               <div class="profile-details">
@@ -713,7 +714,7 @@
     </div>
   </div>
 
-  <!-- ДОБАВЛЕННЫЕ ЭЛЕМЕНТЫ ДЛЯ АНИМАЦИЙ СВАЙПОВ -->
+  <!-- ДОБАВИМ ЭЛЕМЕНТЫ ДЛЯ АНИМАЦИЙ СВАЙПОВ -->
   <div id="swipe-feedback" class="swipe-feedback hidden"></div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
