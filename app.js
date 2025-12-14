@@ -51,6 +51,17 @@ document.addEventListener('DOMContentLoaded', function() {
   // НОВАЯ СИСТЕМА: Ожидающие подтверждения бонусы
   let pendingBonusVerifications = [];
   
+  // ===== НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ СВАЙПОВ И ФОТОГРАФИЙ =====
+  let candidatePhotos = [];
+  let currentPhotoIndex = 0;
+  let candidateInterests = [];
+
+  // Для свайпов
+  let swipeStartX = 0;
+  let swipeStartY = 0;
+  let isSwiping = false;
+  let currentCandidateId = null;
+  
   // Демо-данные кандидатов
   const candidates = [
     {
@@ -60,10 +71,14 @@ document.addEventListener('DOMContentLoaded', function() {
       gender: "female",
       city: "Москва",
       bio: "Люблю кофе ☕ Москва ❤️. Ищу серьезные отношения.",
-      photo: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=800",
+      photos: [
+        "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/1239288/pexels-photo-1239288.jpeg?auto=compress&cs=tinysrgb&w=800"
+      ],
       verified: true,
       verification_status: 'verified',
-      interests: ["travel", "movies", "photography", "tattoos"],
+      interests: ["travel", "movies", "photography", "tattoos", "wine"],
       dating_goal: "marriage",
       boosted: true,
       boost_end: Date.now() + 24 * 60 * 60 * 1000
@@ -75,10 +90,13 @@ document.addEventListener('DOMContentLoaded', function() {
       gender: "male",
       city: "Санкт-Петербург",
       bio: "Инженер, люблю спорт и путешествия. Ищу активную девушку.",
-      photo: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800",
+      photos: [
+        "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=800"
+      ],
       verified: false,
       verification_status: 'pending',
-      interests: ["sport", "travel", "cars", "workout"],
+      interests: ["sport", "travel", "cars", "workout", "photography"],
       dating_goal: "dating",
       boosted: false
     },
@@ -89,10 +107,14 @@ document.addEventListener('DOMContentLoaded', function() {
       gender: "female",
       city: "Москва",
       bio: "Фотограф, люблю искусство и природу. Ищу творческого человека.",
-      photo: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=800",
+      photos: [
+        "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/1239288/pexels-photo-1239288.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=800"
+      ],
       verified: true,
       verification_status: 'verified',
-      interests: ["art", "photography", "travel", "wine"],
+      interests: ["art", "photography", "travel", "wine", "tattoos"],
       dating_goal: "friendship",
       boosted: false
     }
@@ -1392,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <li>Сделайте скриншот приложения SiaMatch</li>
               <li>Опубликуйте в Stories Telegram или Instagram</li>
               <li>Сделайте скриншот вашей публикации</li>
-              <li>Загрузите скриншот для проверки</li>
+              <li>Загрузите скриншот для проверка</li>
               <li>После проверки вы получите 24-часовой буст!</li>
             </ol>
           </div>
@@ -2186,6 +2208,289 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // ===== СИСТЕМА СВАЙПОВ И УПРАВЛЕНИЯ ФОТОГРАФИЯМИ =====
+  function initSwipeSystem() {
+    console.log('🔄 Инициализирую систему свайпов и фотографий');
+    
+    const candidateCard = document.getElementById('candidate-card');
+    const photosContainer = document.querySelector('.candidate-photos-container');
+    
+    if (!candidateCard || !photosContainer) return;
+    
+    // Убираем старые кнопки
+    const actions = document.querySelector('.actions');
+    if (actions) {
+      actions.style.display = 'none';
+    }
+    
+    // Инициализируем свайпы
+    initSwipeGestures(candidateCard);
+    
+    // Инициализируем переключение фото по тапам
+    initPhotoSwitching(photosContainer);
+  }
+
+  function initSwipeGestures(cardElement) {
+    cardElement.addEventListener('touchstart', handleTouchStart, { passive: true });
+    cardElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+    cardElement.addEventListener('touchend', handleTouchEnd, { passive: true });
+    
+    // Для десктопа
+    cardElement.addEventListener('mousedown', handleMouseDown, { passive: true });
+    cardElement.addEventListener('mousemove', handleMouseMove, { passive: false });
+    cardElement.addEventListener('mouseup', handleMouseEnd, { passive: true });
+    cardElement.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+  }
+
+  function initPhotoSwitching(photosContainer) {
+    const leftArea = photosContainer.querySelector('.left-swipe-area');
+    const rightArea = photosContainer.querySelector('.right-swipe-area');
+    
+    if (leftArea) {
+      leftArea.addEventListener('click', () => switchPhoto(-1));
+    }
+    
+    if (rightArea) {
+      rightArea.addEventListener('click', () => switchPhoto(1));
+    }
+    
+    // Также поддерживаем свайпы по фото
+    photosContainer.addEventListener('touchstart', handlePhotoTouchStart, { passive: true });
+    photosContainer.addEventListener('touchend', handlePhotoTouchEnd, { passive: true });
+  }
+
+  // Обработчики для свайпов
+  function handleTouchStart(e) {
+    const touch = e.touches[0];
+    swipeStartX = touch.clientX;
+    swipeStartY = touch.clientY;
+    isSwiping = true;
+    
+    const candidateCard = document.getElementById('candidate-card');
+    candidateCard.style.transition = 'none';
+  }
+
+  function handleTouchMove(e) {
+    if (!isSwiping) return;
+    
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - swipeStartX;
+    const deltaY = touch.clientY - swipeStartY;
+    
+    // Если свайп вверх/вниз - это скролл страницы
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      isSwiping = false;
+      return;
+    }
+    
+    const candidateCard = document.getElementById('candidate-card');
+    const opacity = 1 - Math.abs(deltaX) / 200;
+    
+    candidateCard.style.transform = `translateX(${deltaX}px) rotate(${deltaX * 0.1}deg)`;
+    candidateCard.style.opacity = Math.max(opacity, 0.5);
+    
+    // Показываем подсказку
+    if (deltaX > 50) {
+      showSwipeFeedback('like');
+    } else if (deltaX < -50) {
+      showSwipeFeedback('dislike');
+    }
+  }
+
+  function handleTouchEnd(e) {
+    if (!isSwiping) return;
+    
+    isSwiping = false;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - swipeStartX;
+    
+    const candidateCard = document.getElementById('candidate-card');
+    candidateCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    
+    if (Math.abs(deltaX) > 100) {
+      // Свайп выполнен
+      if (deltaX > 0) {
+        // Свайп вправо - лайк
+        handleSwipeRight();
+      } else {
+        // Свайп влево - дизлайк
+        handleSwipeLeft();
+      }
+    } else {
+      // Возвращаем на место
+      candidateCard.style.transform = 'translateX(0) rotate(0deg)';
+      candidateCard.style.opacity = 1;
+    }
+  }
+
+  // Обработчики для мыши
+  function handleMouseDown(e) {
+    swipeStartX = e.clientX;
+    swipeStartY = e.clientY;
+    isSwiping = true;
+    
+    const candidateCard = document.getElementById('candidate-card');
+    candidateCard.style.transition = 'none';
+    e.preventDefault();
+  }
+
+  function handleMouseMove(e) {
+    if (!isSwiping) return;
+    
+    e.preventDefault();
+    
+    const deltaX = e.clientX - swipeStartX;
+    const deltaY = e.clientY - swipeStartY;
+    
+    // Если свайп вверх/вниз - это скролл страницы
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      isSwiping = false;
+      return;
+    }
+    
+    const candidateCard = document.getElementById('candidate-card');
+    const opacity = 1 - Math.abs(deltaX) / 200;
+    
+    candidateCard.style.transform = `translateX(${deltaX}px) rotate(${deltaX * 0.1}deg)`;
+    candidateCard.style.opacity = Math.max(opacity, 0.5);
+    
+    // Показываем подсказку
+    if (deltaX > 50) {
+      showSwipeFeedback('like');
+    } else if (deltaX < -50) {
+      showSwipeFeedback('dislike');
+    }
+  }
+
+  function handleMouseEnd(e) {
+    if (!isSwiping) return;
+    
+    isSwiping = false;
+    
+    const deltaX = e.clientX - swipeStartX;
+    
+    const candidateCard = document.getElementById('candidate-card');
+    candidateCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    
+    if (Math.abs(deltaX) > 100) {
+      // Свайп выполнен
+      if (deltaX > 0) {
+        handleSwipeRight();
+      } else {
+        handleSwipeLeft();
+      }
+    } else {
+      // Возвращаем на место
+      candidateCard.style.transform = 'translateX(0) rotate(0deg)';
+      candidateCard.style.opacity = 1;
+    }
+  }
+
+  function handleMouseLeave(e) {
+    if (!isSwiping) return;
+    
+    isSwiping = false;
+    
+    const candidateCard = document.getElementById('candidate-card');
+    candidateCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    candidateCard.style.transform = 'translateX(0) rotate(0deg)';
+    candidateCard.style.opacity = 1;
+  }
+
+  // Обработчики для переключения фото
+  function handlePhotoTouchStart(e) {
+    const touch = e.touches[0];
+    swipeStartX = touch.clientX;
+  }
+
+  function handlePhotoTouchEnd(e) {
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - swipeStartX;
+    
+    if (Math.abs(deltaX) > 30) {
+      if (deltaX > 0) {
+        // Свайп вправо - предыдущее фото
+        switchPhoto(-1);
+      } else {
+        // Свайп влево - следующее фото
+        switchPhoto(1);
+      }
+    }
+  }
+
+  // Функции обработки свайпов
+  function handleSwipeRight() {
+    showSwipeAnimation('right');
+    
+    setTimeout(() => {
+      handleLike();
+    }, 300);
+  }
+
+  function handleSwipeLeft() {
+    showSwipeAnimation('left');
+    
+    setTimeout(() => {
+      handleDislike();
+    }, 300);
+  }
+
+  function showSwipeAnimation(direction) {
+    const candidateCard = document.getElementById('candidate-card');
+    
+    if (direction === 'left') {
+      candidateCard.classList.add('swipe-left');
+    } else {
+      candidateCard.classList.add('swipe-right');
+    }
+    
+    setTimeout(() => {
+      candidateCard.classList.remove('swipe-left', 'swipe-right');
+      candidateCard.style.transform = 'translateX(0) rotate(0deg)';
+      candidateCard.style.opacity = 1;
+    }, 500);
+  }
+
+  function showSwipeFeedback(type) {
+    const feedback = document.getElementById('swipe-feedback');
+    
+    if (!feedback) return;
+    
+    feedback.textContent = type === 'like' ? '❤️' : '✖️';
+    feedback.className = `swipe-feedback ${type}`;
+    feedback.classList.remove('hidden');
+    
+    setTimeout(() => {
+      feedback.classList.add('hidden');
+    }, 800);
+  }
+
+  // Переключение фотографий
+  function switchPhoto(direction) {
+    if (candidatePhotos.length <= 1) return;
+    
+    currentPhotoIndex += direction;
+    
+    if (currentPhotoIndex < 0) {
+      currentPhotoIndex = candidatePhotos.length - 1;
+    } else if (currentPhotoIndex >= candidatePhotos.length) {
+      currentPhotoIndex = 0;
+    }
+    
+    updateCandidatePhoto();
+    
+    // Анимация переключения
+    const photoElement = document.getElementById('candidate-photo');
+    photoElement.style.opacity = '0';
+    
+    setTimeout(() => {
+      photoElement.style.opacity = '1';
+    }, 50);
+  }
+  
   // ===== ОБРАБОТЧИК КНОПКИ "НАЧАТЬ ЗНАКОМСТВО" =====
   function setupStartButton() {
     if (!startBtn) return;
@@ -2221,33 +2526,33 @@ document.addEventListener('DOMContentLoaded', function() {
       showOnboarding();
     }
   }
-  
-// ===== ПОКАЗАТЬ АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ =====
-function showAnimatedWelcomeScreen() {
-  if (!animatedWelcomeScreen) return;
-  
-  // Скрываем обычный экран приветствия
-  if (welcomeScreen) {
-    welcomeScreen.classList.add('hidden');
-  }
-  
-  // Показываем анимированный экран
-  animatedWelcomeScreen.classList.remove('hidden');
-  
-  // Слушаем событие завершения анимации
-  const animatedSubtitle = document.getElementById('animated-subtitle');
-  if (animatedSubtitle) {
-    // Используем setTimeout как запасной вариант
-    setTimeout(() => {
-      hideAnimatedWelcomeScreen();
-    }, 6500); // 6.5 секунд - общая длительность анимации
+
+  // ===== ПОКАЗАТЬ АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ =====
+  function showAnimatedWelcomeScreen() {
+    if (!animatedWelcomeScreen) return;
     
-    // Также слушаем анимацию CSS
-    animatedSubtitle.addEventListener('animationend', function() {
-      setTimeout(hideAnimatedWelcomeScreen, 2000);
-    }, { once: true });
+    // Скрываем обычный экран приветствия
+    if (welcomeScreen) {
+      welcomeScreen.classList.add('hidden');
+    }
+    
+    // Показываем анимированный экран
+    animatedWelcomeScreen.classList.remove('hidden');
+    
+    // Слушаем событие завершения анимации
+    const animatedSubtitle = document.getElementById('animated-subtitle');
+    if (animatedSubtitle) {
+      // Используем setTimeout как запасной вариант
+      setTimeout(() => {
+        hideAnimatedWelcomeScreen();
+      }, 6500); // 6.5 секунд - общая длительность анимации
+      
+      // Также слушаем анимацию CSS
+      animatedSubtitle.addEventListener('animationend', function() {
+        setTimeout(hideAnimatedWelcomeScreen, 2000);
+      }, { once: true });
+    }
   }
-}
   
   // ===== ФУНКЦИЯ: СКРЫТЬ АНИМИРОВАННЫЙ ЭКРАН И ПОКАЗАТЬ ПРИЛОЖЕНИЕ =====
   function hideAnimatedWelcomeScreen() {
@@ -2469,20 +2774,8 @@ function showAnimatedWelcomeScreen() {
   function initFeed() {
     currentIndex = 0;
     initSearchFilters();
+    initSwipeSystem(); // Инициализируем систему свайпов
     showCurrentCandidate();
-    
-    const btnLike = document.getElementById("btn-like");
-    const btnDislike = document.getElementById("btn-dislike");
-    
-    if (btnLike) {
-      btnLike.onclick = null;
-      btnLike.addEventListener('click', handleLike);
-    }
-    
-    if (btnDislike) {
-      btnDislike.onclick = null;
-      btnDislike.addEventListener('click', handleDislike);
-    }
   }
   
   function initFiltersTab() {
@@ -2534,6 +2827,7 @@ function showAnimatedWelcomeScreen() {
       document.getElementById("candidate-city").textContent = "";
       document.getElementById("candidate-bio").textContent = "";
       document.getElementById("candidate-photo").src = "";
+      document.getElementById("candidate-interests").innerHTML = "";
       
       const verifiedBadge = document.getElementById('candidate-verified');
       if (verifiedBadge) verifiedBadge.classList.add('hidden');
@@ -2543,6 +2837,11 @@ function showAnimatedWelcomeScreen() {
       
       document.getElementById("feed-status").textContent = 
         "Нет подходящих анкет по вашим фильтрам. Попробуйте изменить параметры поиска 🍀";
+      
+      candidatePhotos = [];
+      candidateInterests = [];
+      currentPhotoIndex = 0;
+      updatePhotoIndicators();
       return;
     }
     
@@ -2552,6 +2851,7 @@ function showAnimatedWelcomeScreen() {
       document.getElementById("candidate-city").textContent = "";
       document.getElementById("candidate-bio").textContent = "";
       document.getElementById("candidate-photo").src = "";
+      document.getElementById("candidate-interests").innerHTML = "";
       
       const verifiedBadge = document.getElementById('candidate-verified');
       if (verifiedBadge) verifiedBadge.classList.add('hidden');
@@ -2561,17 +2861,31 @@ function showAnimatedWelcomeScreen() {
       
       document.getElementById("feed-status").textContent = 
         "На сегодня всё! Загляните позже 🍀";
+      
+      candidatePhotos = [];
+      candidateInterests = [];
+      currentPhotoIndex = 0;
+      updatePhotoIndicators();
       return;
     }
     
     const candidate = filtered[currentIndex];
+    currentCandidateId = candidate.id;
+    
+    // Обновляем фотографии
+    candidatePhotos = candidate.photos || [candidate.photo];
+    candidateInterests = candidate.interests || [];
+    currentPhotoIndex = 0;
     
     document.getElementById("candidate-name").textContent = candidate.name;
     document.getElementById("candidate-age").textContent = candidate.age;
     document.getElementById("candidate-city").textContent = candidate.city;
     document.getElementById("candidate-bio").textContent = candidate.bio;
-    document.getElementById("candidate-photo").src = candidate.photo;
     document.getElementById("feed-status").textContent = "";
+    
+    updateCandidatePhoto();
+    updateCandidateInterests();
+    updatePhotoIndicators();
     
     const verifiedBadge = document.getElementById('candidate-verified');
     if (verifiedBadge) {
@@ -2589,6 +2903,68 @@ function showAnimatedWelcomeScreen() {
       } else {
         boostBadge.classList.add('hidden');
       }
+    }
+  }
+
+  function updateCandidatePhoto() {
+    if (candidatePhotos.length > 0 && currentPhotoIndex < candidatePhotos.length) {
+      const photoUrl = candidatePhotos[currentPhotoIndex];
+      document.getElementById("candidate-photo").src = photoUrl;
+    }
+  }
+
+  function updateCandidateInterests() {
+    const interestsContainer = document.getElementById('candidate-interests');
+    if (!interestsContainer) return;
+    
+    interestsContainer.innerHTML = '';
+    
+    const interestLabels = {
+      'travel': 'Путешествия',
+      'movies': 'Кино',
+      'art': 'Искусство',
+      'sport': 'Спорт',
+      'photography': 'Фотография',
+      'dancing': 'Танцы',
+      'music': 'Музыка',
+      'cooking': 'Кулинария',
+      'business': 'Бизнес',
+      'gaming': 'Гейминг',
+      'cars': 'Автомобили',
+      'anime': 'Аниме',
+      'tattoos': 'Татуировки',
+      'piercing': 'Пирсинг',
+      'workout': 'Тренировки',
+      'wine': 'Вино',
+      'boardgames': 'Настольные игры'
+    };
+    
+    candidateInterests.forEach(interest => {
+      const tag = document.createElement('div');
+      tag.className = 'interest-tag-small';
+      tag.textContent = interestLabels[interest] || interest;
+      interestsContainer.appendChild(tag);
+    });
+  }
+
+  function updatePhotoIndicators() {
+    const indicatorsContainer = document.querySelector('.photo-indicators');
+    if (!indicatorsContainer) return;
+    
+    indicatorsContainer.innerHTML = '';
+    
+    for (let i = 0; i < candidatePhotos.length; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = `photo-indicator ${i === currentPhotoIndex ? 'active' : ''}`;
+      indicator.dataset.index = i;
+      
+      indicator.addEventListener('click', () => {
+        currentPhotoIndex = i;
+        updateCandidatePhoto();
+        updatePhotoIndicators();
+      });
+      
+      indicatorsContainer.appendChild(indicator);
     }
   }
   
@@ -2659,6 +3035,156 @@ function showAnimatedWelcomeScreen() {
     updateVerificationUI();
     updateBoostUI();
     initInterestsSystem();
+    initProfilePhotos(); // Инициализируем управление фото профиля
+  }
+
+  function initProfilePhotos() {
+    const addPhotoBtn = document.getElementById('add-photo-btn');
+    const removePhotoBtn = document.getElementById('remove-photo-btn');
+    const photoUpload = document.getElementById('profile-photo-upload');
+    
+    if (!profileData.photos) {
+      profileData.photos = [];
+      if (profileData.custom_photo_url) {
+        profileData.photos.push(profileData.custom_photo_url);
+      }
+      saveProfile(profileData);
+    }
+    
+    updateProfilePhotos();
+    
+    if (addPhotoBtn) {
+      addPhotoBtn.addEventListener('click', () => {
+        photoUpload.click();
+      });
+    }
+    
+    if (removePhotoBtn) {
+      removePhotoBtn.addEventListener('click', removeCurrentPhoto);
+    }
+    
+    if (photoUpload) {
+      photoUpload.addEventListener('change', handleProfilePhotoUpload);
+    }
+    
+    // Инициализируем свайпы по фото профиля
+    const profilePhotosContainer = document.querySelector('.profile-photos-container');
+    if (profilePhotosContainer) {
+      profilePhotosContainer.addEventListener('touchstart', handleProfilePhotoTouchStart);
+      profilePhotosContainer.addEventListener('touchend', handleProfilePhotoTouchEnd);
+    }
+  }
+
+  function updateProfilePhotos() {
+    if (!profileData.photos || profileData.photos.length === 0) return;
+    
+    const container = document.querySelector('.profile-photos-container');
+    const indicators = document.querySelector('.profile-photo-indicators');
+    const photosCount = document.getElementById('photos-count');
+    const removeBtn = document.getElementById('remove-photo-btn');
+    
+    if (!container || !indicators) return;
+    
+    // Очищаем контейнер
+    container.innerHTML = '';
+    
+    // Добавляем фото
+    profileData.photos.forEach((photoUrl, index) => {
+      const img = document.createElement('img');
+      img.className = `profile-main-photo ${index === 0 ? 'active' : ''}`;
+      img.src = photoUrl;
+      img.alt = `Фото ${index + 1}`;
+      container.appendChild(img);
+    });
+    
+    // Обновляем индикаторы
+    indicators.innerHTML = '';
+    profileData.photos.forEach((_, index) => {
+      const indicator = document.createElement('div');
+      indicator.className = `profile-photo-indicator ${index === 0 ? 'active' : ''}`;
+      indicator.dataset.index = index;
+      indicators.appendChild(indicator);
+    });
+    
+    // Обновляем счетчик
+    if (photosCount) {
+      photosCount.textContent = `${profileData.photos.length}/3 фото`;
+    }
+    
+    // Блокируем кнопку удаления, если фото меньше 2
+    if (removeBtn) {
+      removeBtn.disabled = profileData.photos.length <= 1;
+    }
+  }
+
+  function handleProfilePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification('Фото слишком большое (максимум 5MB)');
+      return;
+    }
+    
+    if (profileData.photos.length >= 3) {
+      showNotification('Можно добавить не более 3 фото');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const photoUrl = event.target.result;
+      
+      if (!profileData.photos) {
+        profileData.photos = [];
+      }
+      
+      profileData.photos.push(photoUrl);
+      saveProfile(profileData);
+      updateProfilePhotos();
+      
+      showNotification('Фото добавлено! 📸');
+    };
+    reader.readAsDataURL(file);
+    
+    e.target.value = '';
+  }
+
+  function removeCurrentPhoto() {
+    if (!profileData.photos || profileData.photos.length <= 1) return;
+    
+    profileData.photos.splice(0, 1); // Удаляем текущее (первое) фото
+    saveProfile(profileData);
+    updateProfilePhotos();
+    
+    showNotification('Фото удалено');
+  }
+
+  function handleProfilePhotoTouchStart(e) {
+    const touch = e.touches[0];
+    swipeStartX = touch.clientX;
+  }
+
+  function handleProfilePhotoTouchEnd(e) {
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - swipeStartX;
+    
+    if (Math.abs(deltaX) > 30 && profileData.photos && profileData.photos.length > 1) {
+      const currentIndex = 0; // Первое фото активно
+      const nextIndex = deltaX > 0 ? 
+        (currentIndex - 1 + profileData.photos.length) % profileData.photos.length :
+        (currentIndex + 1) % profileData.photos.length;
+      
+      // Перемещаем фото
+      const temp = profileData.photos[currentIndex];
+      profileData.photos[currentIndex] = profileData.photos[nextIndex];
+      profileData.photos[nextIndex] = temp;
+      
+      saveProfile(profileData);
+      updateProfilePhotos();
+      
+      showNotification('Фото изменено местами');
+    }
   }
   
   function updateProfileDisplay() {
@@ -2947,6 +3473,9 @@ function showAnimatedWelcomeScreen() {
         window.scrollTo(0, 0);
       }, 300);
     }
+    
+    // ИНИЦИАЛИЗАЦИЯ СВАЙПОВ
+    initSwipeSystem();
     
     initLikesSystem();
     initInterestsSystem();
