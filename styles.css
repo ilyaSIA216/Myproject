@@ -2842,3 +2842,49 @@ select:focus {
     height: 150px;
   }
 }
+
+/* Индикаторы свайпа для фото */
+.photo-swipe-indicator {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.candidate-photos-container:hover .photo-swipe-indicator {
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .photo-swipe-indicator {
+    opacity: 0.7 !important; /* Всегда показываем на мобильных */
+  }
+}
+
+/* Индикаторы для фотографий */
+.photo-indicators {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  z-index: 10;
+}
+
+.photo-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.photo-indicator.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+.photo-indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
