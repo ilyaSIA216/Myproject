@@ -224,45 +224,43 @@ document.addEventListener('DOMContentLoaded', function() {
         
         tg.ready();
         // iOS WHITE SCREEN FIX - обязательно между ready() и expand()
-if (tg) {
-  // Устанавливаем стабильную высоту viewport (критично для iPhone)
-  document.documentElement.style.setProperty('--tg-viewport-height', `${tg.viewportStableHeight}px`);
-  document.documentElement.style.setProperty('--tg-viewport-width', `${tg.viewportStableWidth}px`);
-  
-  // Обработчик изменения viewport (клавиатура iOS)
-  tg.onEvent('viewportChanged', (data) => {
-    document.documentElement.style.setProperty('--tg-viewport-height', `${data.height}px`);
-  });
-}
+        if (tg) {
+          // Устанавливаем стабильную высоту viewport (критично для iPhone)
+          document.documentElement.style.setProperty('--tg-viewport-height', `${tg.viewportStableHeight}px`);
+          document.documentElement.style.setProperty('--tg-viewport-width', `${tg.viewportStableWidth}px`);
+          
+          // Обработчик изменения viewport (клавиатура iOS)
+          tg.onEvent('viewportChanged', (data) => {
+            document.documentElement.style.setProperty('--tg-viewport-height', `${data.height}px`);
+          });
+        }
         tg.ready();
 
-// ✅ ТЕПЕРЬ ВСЕГДА анимированный экран
-document.getElementById('welcome-animated-screen').classList.remove('hidden');
+        // ✅ ТЕПЕРЬ ВСЕГДА анимированный экран
+        document.getElementById('welcome-animated-screen').classList.remove('hidden');
 
-// Проверка анкеты для быстрого перехода
-const profileData = loadProfile();
-if (profileData) {
-  document.getElementById('username').textContent = `Привет, ${profileData.firstname || 'друг'}!`;
-  // Быстрый переход через 2с для зарегистрированных
-  setTimeout(goToFeed, 2000);
-} else {
-  // Полная анимация 4.5с для новых
-  setTimeout(goToFeed, 4500);
-}
+        // Проверка анкеты для быстрого перехода
+        const profileData = loadProfile();
+        if (profileData) {
+          document.getElementById('username').textContent = `Привет, ${profileData.firstname || 'друг'}!`;
+          // Быстрый переход через 2с для зарегистрированных
+          setTimeout(goToFeed, 2000);
+        } else {
+          // Полная анимация 4.5с для новых
+          setTimeout(goToFeed, 4500);
+        }
 
-tg.expand();
+        tg.expand();
 
-function goToFeed() {
-  document.getElementById('tab-bar').classList.remove('hidden');
-  setActiveTab('feed');
-  loadLikesData();
-  loadSwipesCount();
-  initSwipesSystem();
-  initChatsSystem();
-  updateLikesUI();
-}
-
-tg.expand();
+        function goToFeed() {
+          document.getElementById('tab-bar').classList.remove('hidden');
+          setActiveTab('feed');
+          loadLikesData();
+          loadSwipesCount();
+          initSwipesSystem();
+          initChatsSystem();
+          updateLikesUI();
+        }
 
         tg.expand();
         
@@ -1058,7 +1056,7 @@ tg.expand();
         if (tg?.HapticFeedback) {
           try {
             tg.HapticFeedback.impactOccurred('medium');
-          } catch (e) {}
+        } catch (e) {}
         }
       });
     }
@@ -3146,6 +3144,114 @@ function updatePhotoIndicators() {
     }
   }
   
+  // ===== ИНИЦИАЛИЗАЦИЯ ПЕРЕСТАНОВКИ ФОТО =====
+  function initPhotoReorder() {
+    const container = document.getElementById('photo-reorder-list');
+    const doneBtn = document.getElementById('done-photo-order-btn');
+    
+    if (!doneBtn) return;
+    
+    doneBtn.addEventListener('click', savePhotoOrderAndBack);
+    
+    loadProfilePhotosForReorder();
+    
+    // Drag & Drop
+    let draggedItem = null;
+    
+    container.addEventListener('dragstart', (e) => {
+      draggedItem = e.target.closest('.photo-reorder-item');
+      if (draggedItem) {
+        draggedItem.classList.add('dragging');
+      }
+    });
+    
+    container.addEventListener('dragend', (e) => {
+      if (draggedItem) {
+        draggedItem.classList.remove('dragging');
+        draggedItem = null;
+      }
+    });
+    
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!draggedItem) return;
+      
+      const afterElement = getDragAfterElement(container, e.clientY);
+      
+      if (afterElement == null) {
+        container.appendChild(draggedItem);
+      } else {
+        container.insertBefore(draggedItem, afterElement);
+      }
+    });
+  }
+  
+  function loadProfilePhotosForReorder() {
+    const container = document.getElementById('photo-reorder-list');
+    const profile = loadProfile();
+    const photos = profile?.photos || [];
+    
+    if (photos.length === 0) {
+      container.innerHTML = `
+        <div class="photo-reorder-empty">
+          <div class="empty-icon">📸</div>
+          <p>Добавьте фото в профиле</p>
+          <p class="empty-hint">Сначала добавьте минимум 1 фото</p>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = photos.map((photo, index) => `
+      <div class="photo-reorder-item" draggable="true">
+        <div class="photo-reorder-number">${index + 1}</div>
+        <img src="${photo}" alt="Фото ${index + 1}" class="photo-reorder-preview">
+        <div class="drag-handle">⋮⋮</div>
+      </div>
+    `).join('');
+    
+    // Обновляем номера после drag
+    updatePhotoNumbers();
+  }
+  
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.photo-reorder-item:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+  
+  function updatePhotoNumbers() {
+    const items = document.querySelectorAll('.photo-reorder-item');
+    items.forEach((item, index) => {
+      item.querySelector('.photo-reorder-number').textContent = index + 1;
+    });
+  }
+  
+  function savePhotoOrderAndBack() {
+    const items = document.querySelectorAll('.photo-reorder-item');
+    const newOrder = Array.from(items).map(item => 
+      item.querySelector('.photo-reorder-preview').src
+    );
+    
+    const profile = loadProfile();
+    if (profile) {
+      profile.photos = newOrder;
+      saveProfile(profile);
+      showNotification('✅ Порядок фото сохранен!');
+    }
+    
+    // Возврат к профилю
+    setActiveTab('profile');
+  }
+  
   // ===== ПРОФИЛЬ =====
   function updateProfileDisplay() {
     if (!profileData) return;
@@ -3182,9 +3288,9 @@ function updatePhotoIndicators() {
   }
   
   function handleEditProfile() {
-    document.getElementById('profile-display').classList.add('hidden');
-    document.getElementById('profile-edit').classList.remove('hidden');
-    updateEditForm();
+    // Теперь при нажатии на кнопку редактирования показываем экран перестановки фото
+    initPhotoReorder();
+    // На экране профиля теперь есть функция drag-and-drop, так что просто показываем его
   }
   
   function handleSaveProfileChanges() {
@@ -3241,425 +3347,6 @@ function updatePhotoIndicators() {
     updateVerificationUI();
     updateBoostUI();
     initInterestsSystem();
-    initProfilePhotos();
-  }
-
-  // ===== СИСТЕМА ФОТО ПРОФИЛЯ =====
-  function initProfilePhotos() {
-    console.log('📸 Инициализирую систему фото профиля');
-    
-    const addPhotoBtn = document.getElementById('add-photo-btn');
-    const removePhotoBtn = document.getElementById('remove-photo-btn');
-    const photoUpload = document.getElementById('profile-photo-upload');
-    const photosCount = document.getElementById('photos-count');
-    
-    // Инициализируем фото профиля
-    if (!profileData.photos) {
-      profileData.photos = [];
-      // Если есть старое фото из анкеты, добавляем его
-      if (profileData.custom_photo_url) {
-        profileData.photos.push(profileData.custom_photo_url);
-      }
-      saveProfile(profileData);
-    }
-    
-    updateProfilePhotos();
-    
-    // Кнопка добавления фото (В ОСНОВНОМ ПРОФИЛЕ)
-    if (addPhotoBtn) {
-      addPhotoBtn.addEventListener('click', () => {
-        console.log('📸 Кнопка добавления фото нажата');
-        if (profileData.photos && profileData.photos.length >= 3) {
-          showNotification('Можно добавить не более 3 фото');
-          return;
-        }
-        photoUpload.click();
-      });
-    }
-    
-    // Кнопка удаления текущего фото (В ОСНОВНОМ ПРОФИЛЕ)
-    if (removePhotoBtn) {
-      removePhotoBtn.addEventListener('click', () => {
-        console.log('🗑️ Кнопка удаления фото нажата');
-        removeCurrentPhoto();
-      });
-    }
-    
-    // Загрузка фото (В ОСНОВНОМ ПРОФИЛЕ)
-    if (photoUpload) {
-      photoUpload.addEventListener('change', (e) => {
-        console.log('📁 Выбран файл для загрузки');
-        handleProfilePhotoUpload(e);
-      });
-    }
-    
-    // Свайпы для изменения порядка фото (В РЕДАКТОРЕ ПРОФИЛЯ ⚙️)
-    const profilePhotosContainer = document.querySelector('.profile-photos-container');
-    if (profilePhotosContainer) {
-      console.log('📱 Настройка свайпов для фото профиля');
-      
-      // Добавляем обработчики для редактора
-      profilePhotosContainer.addEventListener('touchstart', handleProfilePhotoTouchStart, { passive: true });
-      profilePhotosContainer.addEventListener('touchend', handleProfilePhotoTouchEnd, { passive: true });
-      
-      // Также для мыши
-      profilePhotosContainer.addEventListener('mousedown', handleProfilePhotoMouseDown);
-      profilePhotosContainer.addEventListener('mouseup', handleProfilePhotoMouseUp);
-      profilePhotosContainer.addEventListener('mouseleave', handleProfilePhotoMouseLeave);
-    }
-    
-    // Обновляем фото при переключении в режим редактирования
-    document.getElementById('edit-profile-btn').addEventListener('click', function() {
-      setTimeout(updateProfilePhotoHint, 100);
-    });
-    
-    document.getElementById('cancel-profile-edit').addEventListener('click', function() {
-      setTimeout(updateProfilePhotoHint, 100);
-    });
-  }
-
-  // ===== УПРАВЛЕНИЕ ФОТО В ОСНОВНОМ ПРОФИЛЕ =====
-  function handleProfilePhotoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) {
-      console.log('❌ Файл не выбран');
-      return;
-    }
-    
-    console.log('📤 Загрузка фото:', file.name, file.size);
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification('Фото слишком большое (максимум 5MB)');
-      return;
-    }
-    
-    if (profileData.photos && profileData.photos.length >= 3) {
-      showNotification('Можно добавить не более 3 фото');
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const photoUrl = event.target.result;
-      
-      if (!profileData.photos) {
-        profileData.photos = [];
-      }
-      
-      profileData.photos.push(photoUrl);
-      saveProfile(profileData);
-      updateProfilePhotos();
-      
-      showNotification('Фото добавлено! 📸');
-      
-      // Очищаем input
-      e.target.value = '';
-    };
-    
-    reader.onerror = function() {
-      showNotification('❌ Ошибка при загрузке фото');
-    };
-    
-    reader.readAsDataURL(file);
-  }
-  
-  function removeCurrentPhoto() {
-    console.log('🗑️ Удаление текущего фото');
-    
-    if (!profileData.photos || profileData.photos.length <= 1) {
-      showNotification('Нельзя удалить последнее фото');
-      return;
-    }
-    
-    profileData.photos.splice(0, 1); // Удаляем текущее (первое) фото
-    saveProfile(profileData);
-    updateProfilePhotos();
-    
-    showNotification('Фото удалено');
-  }
-
-  // ===== СВАЙПЫ ДЛЯ ИЗМЕНЕНИЯ ПОРЯДКА ФОТО В РЕДАКТОРЕ ⚙️ =====
-  let profilePhotoSwipeStartX = 0;
-  let profilePhotoSwipeStartY = 0;
-  let isProfilePhotoSwiping = false;
-  
-  function handleProfilePhotoTouchStart(e) {
-    if (!isEditingProfile()) {
-      console.log('⚠️ Свайпы фото: не в режиме редактирования');
-      return; // Только в режиме редактирования
-    }
-    
-    if (profileData.photos && profileData.photos.length <= 1) return;
-    
-    const touch = e.touches[0];
-    profilePhotoSwipeStartX = touch.clientX;
-    profilePhotoSwipeStartY = touch.clientY;
-    isProfilePhotoSwiping = false;
-    console.log('📱 Начало свайпа фото');
-  }
-  
-  function handleProfilePhotoTouchEnd(e) {
-    if (!isEditingProfile()) return; // Только в режиме редактирования
-    
-    if (!profilePhotoSwipeStartX && !profilePhotoSwipeStartY) return;
-    
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - profilePhotoSwipeStartX;
-    const deltaY = touch.clientY - profilePhotoSwipeStartY;
-    
-    console.log('📱 Конец свайпа фото', deltaX, deltaY);
-    
-    // Если горизонтальное движение значительное - меняем порядок
-    if (Math.abs(deltaX) > 30 && Math.abs(deltaY) < 50 && profileData.photos && profileData.photos.length > 1) {
-      if (deltaX > 0) {
-        // Свайп вправо - перемещаем текущее фото вправо
-        movePhotoRight();
-      } else {
-        // Свайп влево - перемещаем текущее фото влево
-        movePhotoLeft();
-      }
-    }
-    
-    profilePhotoSwipeStartX = 0;
-    profilePhotoSwipeStartY = 0;
-    isProfilePhotoSwiping = false;
-  }
-  
-  function handleProfilePhotoMouseDown(e) {
-    if (!isEditingProfile()) return; // Только в режиме редактирования
-    
-    if (profileData.photos && profileData.photos.length <= 1) return;
-    
-    profilePhotoSwipeStartX = e.clientX;
-    profilePhotoSwipeStartY = e.clientY;
-    isProfilePhotoSwiping = false;
-    console.log('🖱️ Начало свайпа фото (мышь)');
-  }
-  
-  function handleProfilePhotoMouseUp(e) {
-    if (!isEditingProfile()) return; // Только в режиме редактирования
-    
-    if (!profilePhotoSwipeStartX && !profilePhotoSwipeStartY) return;
-    
-    const deltaX = e.clientX - profilePhotoSwipeStartX;
-    const deltaY = e.clientY - profilePhotoSwipeStartY;
-    
-    console.log('🖱️ Конец свайпа фото (мышь)', deltaX, deltaY);
-    
-    if (Math.abs(deltaX) > 30 && Math.abs(deltaY) < 50 && profileData.photos && profileData.photos.length > 1) {
-      if (deltaX > 0) {
-        movePhotoRight();
-      } else {
-        movePhotoLeft();
-      }
-    }
-    
-    profilePhotoSwipeStartX = 0;
-    profilePhotoSwipeStartY = 0;
-    isProfilePhotoSwiping = false;
-  }
-  
-  function handleProfilePhotoMouseLeave(e) {
-    if (!isEditingProfile()) return;
-    
-    profilePhotoSwipeStartX = 0;
-    profilePhotoSwipeStartY = 0;
-    isProfilePhotoSwiping = false;
-  }
-  
-  function movePhotoRight() {
-    console.log('➡️ Перемещение фото вправо');
-    
-    if (!profileData.photos || profileData.photos.length < 2) return;
-    
-    const currentIndex = 0; // Первое фото активно
-    const nextIndex = (currentIndex + 1) % profileData.photos.length;
-    
-    // Меняем местами текущее и следующее фото
-    const temp = profileData.photos[currentIndex];
-    profileData.photos[currentIndex] = profileData.photos[nextIndex];
-    profileData.photos[nextIndex] = temp;
-    
-    saveProfile(profileData);
-    updateProfilePhotos();
-    
-    showNotification('Фото перемещено →');
-    
-    // Вибрация для обратной связи
-    if (navigator.vibrate) {
-      navigator.vibrate(30);
-    }
-  }
-  
-  function movePhotoLeft() {
-    console.log('⬅️ Перемещение фото влево');
-    
-    if (!profileData.photos || profileData.photos.length < 2) return;
-    
-    const currentIndex = 0; // Первое фото активно
-    const prevIndex = (currentIndex - 1 + profileData.photos.length) % profileData.photos.length;
-    
-    // Меняем местами текущее и предыдущее фото
-    const temp = profileData.photos[currentIndex];
-    profileData.photos[currentIndex] = profileData.photos[prevIndex];
-    profileData.photos[prevIndex] = temp;
-    
-    saveProfile(profileData);
-    updateProfilePhotos();
-    
-    showNotification('Фото перемещено ←');
-    
-    // Вибрация для обратной связи
-    if (navigator.vibrate) {
-      navigator.vibrate(30);
-    }
-  }
-  
-  function isEditingProfile() {
-    // Проверяем, открыт ли редактор профиля (шестеренка)
-    const profileEdit = document.getElementById('profile-edit');
-    return profileEdit && !profileEdit.classList.contains('hidden');
-  }
-  
-  function updateProfilePhotos() {
-    console.log('🔄 Обновление фото профиля', profileData.photos);
-    
-    if (!profileData.photos || profileData.photos.length === 0) {
-      // Показываем placeholder если нет фото
-      const container = document.querySelector('.profile-photos-container');
-      const indicators = document.querySelector('.profile-photo-indicators');
-      const photosCount = document.getElementById('photos-count');
-      const removeBtn = document.getElementById('remove-photo-btn');
-      
-      if (container) {
-        container.innerHTML = '<div class="profile-photo-placeholder">📷</div>';
-      }
-      
-      if (indicators) {
-        indicators.innerHTML = '';
-      }
-      
-      if (photosCount) {
-        photosCount.textContent = '0/3 фото';
-      }
-      
-      if (removeBtn) {
-        removeBtn.disabled = true;
-      }
-      
-      updateProfilePhotoHint();
-      return;
-    }
-    
-    const container = document.querySelector('.profile-photos-container');
-    const indicators = document.querySelector('.profile-photo-indicators');
-    const photosCount = document.getElementById('photos-count');
-    const removeBtn = document.getElementById('remove-photo-btn');
-    
-    if (!container || !indicators) {
-      console.log('❌ Контейнеры фото не найдены');
-      return;
-    }
-    
-    // Очищаем контейнер
-    container.innerHTML = '';
-    
-    // Добавляем фото
-    profileData.photos.forEach((photoUrl, index) => {
-      const img = document.createElement('img');
-      img.className = `profile-main-photo ${index === 0 ? 'active' : ''}`;
-      img.src = photoUrl;
-      img.alt = `Фото ${index + 1}`;
-      img.style.opacity = index === 0 ? '1' : '0';
-      img.style.transition = 'opacity 0.3s ease';
-      img.style.position = 'absolute';
-      img.style.top = '0';
-      img.style.left = '0';
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      img.style.borderRadius = '50%';
-      container.appendChild(img);
-    });
-    
-    // Обновляем индикаторы
-    indicators.innerHTML = '';
-    profileData.photos.forEach((_, index) => {
-      const indicator = document.createElement('div');
-      indicator.className = `profile-photo-indicator ${index === 0 ? 'active' : ''}`;
-      indicator.dataset.index = index;
-      
-      // Клик по индикатору переключает на это фото
-      indicator.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (profileData.photos.length > 1) {
-          const selectedIndex = parseInt(indicator.dataset.index);
-          if (selectedIndex > 0) {
-            const selectedPhoto = profileData.photos[selectedIndex];
-            
-            // Перемещаем выбранное фото на первое место
-            profileData.photos.splice(selectedIndex, 1);
-            profileData.photos.unshift(selectedPhoto);
-            
-            saveProfile(profileData);
-            updateProfilePhotos();
-            
-            showNotification('Фото сделано главным');
-          }
-        }
-      });
-      
-      indicators.appendChild(indicator);
-    });
-    
-    // Обновляем счетчик
-    if (photosCount) {
-      photosCount.textContent = `${profileData.photos.length}/3 фото`;
-    }
-    
-    // Блокируем кнопку удаления, если фото меньше 2
-    if (removeBtn) {
-      removeBtn.disabled = profileData.photos.length <= 1;
-    }
-    
-    updateProfilePhotoHint();
-  }
-  
-  function updateProfilePhotoHint() {
-    const container = document.querySelector('.profile-photos-container');
-    
-    if (!container) return;
-    
-    // Удаляем старую подсказку
-    const oldHint = container.querySelector('.profile-photo-hint');
-    if (oldHint) {
-      oldHint.remove();
-    }
-    
-    // Добавляем подсказку только в режиме редактирования и если есть более 1 фото
-    if (isEditingProfile() && profileData.photos && profileData.photos.length > 1) {
-      const hint = document.createElement('div');
-      hint.className = 'profile-photo-hint';
-      hint.textContent = '←→ Свайпайте для изменения порядка';
-      hint.style.cssText = `
-        position: absolute;
-        bottom: -30px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-size: 12px;
-        color: #666;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 5px 10px;
-        border-radius: 10px;
-        margin: 0 auto;
-        width: fit-content;
-        z-index: 10;
-        border: 1px solid #bbf7d0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      `;
-      container.appendChild(hint);
-    }
   }
 
 // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
@@ -3741,7 +3428,6 @@ function initApp() {
         
         profileData.photos.push(event.target.result);
         saveProfile(profileData);
-        updateProfilePhotos();
         
         const preview = document.getElementById('edit-photo-preview');
         if (preview) {
