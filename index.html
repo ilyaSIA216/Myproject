@@ -371,16 +371,23 @@
               <button id="edit-profile-btn" class="settings-btn">⚙️</button>
             </div>
             
-            <!-- ФОТО И ОСНОВНАЯ ИНФОРМАЦИЯ -->
+            <!-- ОБНОВЛЕННАЯ СЕКЦИЯ ФОТО И ОСНОВНОЙ ИНФОРМАЦИИ -->
             <div class="profile-info-card">
               <div class="profile-photo-section">
-                <img id="profile-photo-preview" class="profile-main-photo" />
-                <div class="profile-upload-btn">
-                  <label for="profile-photo-upload" class="photo-upload-label">
-                    📸 Изменить фото
-                  </label>
-                  <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" />
+                <div class="profile-photos-container">
+                  <!-- Фото будут добавляться динамически -->
                 </div>
+                
+                <div class="profile-photo-indicators"></div>
+                
+                <div class="profile-photo-controls">
+                  <button id="add-photo-btn" class="add-photo-btn">+ Добавить фото</button>
+                  <button id="remove-photo-btn" class="remove-photo-btn">- Удалить текущее</button>
+                </div>
+                
+                <div id="photos-count" class="photos-count">0/3 фото</div>
+                
+                <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" multiple />
               </div>
               
               <div class="profile-details">
