@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
   let keyboardHeight = 0;
   let originalHeight = window.innerHeight;
   
+  // Новые переменные для перетаскивания фотографий
+  let draggedPhotoIndex = null;
+  let draggedOverPhotoIndex = null;
+  
   // Фильтры поиска
   let searchFilters = {
     minAge: 18,
@@ -900,16 +904,16 @@ document.addEventListener('DOMContentLoaded', function() {
   function initFiltersSystem() {
     console.log('🔍 Инициализирую систему фильтров');
     
-  loadSearchFilters();
-  
-  // УДАЛЯЕМ КНОПКУ ФИЛЬТРОВ ИЗ ЗАГОЛОВКА ЛЕНТЫ
-  const openFiltersBtn = document.getElementById("open-filters-btn");
-  if (openFiltersBtn && openFiltersBtn.parentNode) {
-    openFiltersBtn.parentNode.removeChild(openFiltersBtn);
+    loadSearchFilters();
+    
+    // УДАЛЯЕМ КНОПКУ ФИЛЬТРОВ ИЗ ЗАГОЛОВКА ЛЕНТЫ
+    const openFiltersBtn = document.getElementById("open-filters-btn");
+    if (openFiltersBtn && openFiltersBtn.parentNode) {
+      openFiltersBtn.parentNode.removeChild(openFiltersBtn);
+    }
+    
+    initSearchFilters();
   }
-  
-  initSearchFilters();
-}
   
   function initSearchFilters() {
     loadSearchFilters();
@@ -3299,6 +3303,9 @@ function updatePhotoIndicators() {
     document.getElementById('profile-display').classList.add('hidden');
     document.getElementById('profile-edit').classList.remove('hidden');
     
+    // Инициализируем перетаскивание фото
+    initPhotoDragAndDrop();
+    
     if (tg?.HapticFeedback) {
       try {
         tg.HapticFeedback.selectionChanged();
@@ -3380,6 +3387,220 @@ function updatePhotoIndicators() {
       }
     };
     reader.readAsDataURL(file);
+  }
+  
+  // ===== ФУНКЦИИ ПЕРЕТАСКИВАНИЯ ФОТОГРАФИЙ =====
+  
+  function initPhotoDragAndDrop() {
+    const container = document.getElementById('all-photos-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!profileData.photos || profileData.photos.length === 0) {
+      container.innerHTML = `
+        <div class="no-photos-message">
+          <div class="no-photos-icon">📸</div>
+          <div class="no-photos-text">У вас нет фотографий</div>
+        </div>
+      `;
+      return;
+    }
+    
+    // Отображаем все фото
+    profileData.photos.forEach((photoUrl, index) => {
+      const photoItem = document.createElement('div');
+      photoItem.className = `photo-item ${index === 0 ? 'main-photo' : ''}`;
+      photoItem.draggable = true;
+      photoItem.dataset.index = index;
+      
+      photoItem.innerHTML = `
+        <div class="photo-number">${index + 1}</div>
+        <img src="${photoUrl}" alt="Фото ${index + 1}" />
+      `;
+      
+      // События для перетаскивания
+      photoItem.addEventListener('dragstart', handleDragStart);
+      photoItem.addEventListener('dragover', handleDragOver);
+      photoItem.addEventListener('dragenter', handleDragEnter);
+      photoItem.addEventListener('dragleave', handleDragLeave);
+      photoItem.addEventListener('drop', handleDrop);
+      photoItem.addEventListener('dragend', handleDragEnd);
+      
+      container.appendChild(photoItem);
+    });
+    
+    // Создаем кнопки управления
+    createPhotoControls();
+  }
+
+  function handleDragStart(e) {
+    draggedPhotoIndex = parseInt(e.target.dataset.index);
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Для мобильных устройств
+    if (isIOS) {
+      e.dataTransfer.setData('text/plain', draggedPhotoIndex.toString());
+    }
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleDragEnter(e) {
+    e.preventDefault();
+    if (e.target.classList.contains('photo-item')) {
+      draggedOverPhotoIndex = parseInt(e.target.dataset.index);
+      e.target.style.border = '3px dashed var(--siamatch-green)';
+    }
+  }
+
+  function handleDragLeave(e) {
+    if (e.target.classList.contains('photo-item')) {
+      e.target.style.border = '3px solid transparent';
+    }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    
+    if (e.target.classList.contains('photo-item')) {
+      draggedOverPhotoIndex = parseInt(e.target.dataset.index);
+      
+      if (draggedPhotoIndex !== null && draggedOverPhotoIndex !== null && 
+          draggedPhotoIndex !== draggedOverPhotoIndex) {
+        // Меняем фото местами
+        swapPhotos(draggedPhotoIndex, draggedOverPhotoIndex);
+      }
+      
+      e.target.style.border = '3px solid transparent';
+    }
+  }
+
+  function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    
+    // Сбрасываем стили всех фото
+    document.querySelectorAll('.photo-item').forEach(item => {
+      item.style.border = '3px solid transparent';
+    });
+    
+    draggedPhotoIndex = null;
+    draggedOverPhotoIndex = null;
+  }
+
+  function swapPhotos(index1, index2) {
+    if (!profileData.photos || profileData.photos.length < 2) return;
+    
+    // Меняем местами
+    const temp = profileData.photos[index1];
+    profileData.photos[index1] = profileData.photos[index2];
+    profileData.photos[index2] = temp;
+    
+    // Сохраняем изменения
+    saveProfile(profileData);
+    
+    // Обновляем отображение
+    initPhotoDragAndDrop();
+    
+    // Показываем уведомление
+    showNotification(`🔄 Фото ${index1 + 1} и ${index2 + 1} поменялись местами!`);
+    
+    // Вибрация (если доступно)
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+  }
+  
+  function createPhotoControls() {
+    const controlsContainer = document.getElementById('photo-controls');
+    if (!controlsContainer) return;
+    
+    controlsContainer.innerHTML = '';
+    
+    if (!profileData.photos || profileData.photos.length < 2) return;
+    
+    const controls = document.createElement('div');
+    controls.className = 'photo-buttons';
+    controls.innerHTML = `
+      <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
+        <button class="photo-move-btn move-up">⬆ Поднять</button>
+        <button class="photo-move-btn move-down">⬇ Опустить</button>
+      </div>
+    `;
+    
+    controlsContainer.appendChild(controls);
+    
+    // Обработчики для кнопок
+    document.querySelector('.move-up')?.addEventListener('click', function() {
+      movePhotoUp();
+    });
+    
+    document.querySelector('.move-down')?.addEventListener('click', function() {
+      movePhotoDown();
+    });
+  }
+
+  function movePhotoUp() {
+    // Находим активное фото
+    const activePhoto = document.querySelector('.photo-item.main-photo');
+    if (!activePhoto) return;
+    
+    const currentIndex = parseInt(activePhoto.dataset.index);
+    if (currentIndex <= 0) return;
+    
+    swapPhotos(currentIndex, currentIndex - 1);
+  }
+
+  function movePhotoDown() {
+    const activePhoto = document.querySelector('.photo-item.main-photo');
+    if (!activePhoto) return;
+    
+    const currentIndex = parseInt(activePhoto.dataset.index);
+    if (currentIndex >= profileData.photos.length - 1) return;
+    
+    swapPhotos(currentIndex, currentIndex + 1);
+  }
+  
+  function setupPhotoTouchEvents() {
+    if (!isIOS) return;
+    
+    let touchStartIndex = null;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoveThreshold = 50;
+    
+    document.addEventListener('touchstart', function(e) {
+      const photoItem = e.target.closest('.photo-item');
+      if (photoItem) {
+        touchStartIndex = parseInt(photoItem.dataset.index);
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+    
+    document.addEventListener('touchend', function(e) {
+      if (touchStartIndex === null) return;
+      
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaX = Math.abs(touchEndX - touchStartX);
+      const deltaY = Math.abs(touchEndY - touchStartY);
+      
+      const photoItem = e.target.closest('.photo-item');
+      if (photoItem && deltaX > touchMoveThreshold && deltaY < touchMoveThreshold) {
+        const touchEndIndex = parseInt(photoItem.dataset.index);
+        
+        if (touchStartIndex !== touchEndIndex) {
+          swapPhotos(touchStartIndex, touchEndIndex);
+        }
+      }
+      
+      touchStartIndex = null;
+    }, { passive: true });
   }
   
   // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
@@ -3474,6 +3695,9 @@ function updatePhotoIndicators() {
     initTelegram();
     setupStartButton();
     setupTabButtons();
+    
+    // Настройка touch-событий для перетаскивания фото
+    setupPhotoTouchEvents();
     
     const editProfileBtn = document.getElementById('edit-profile-btn');
     const saveChangesBtn = document.getElementById('save-profile-changes');
