@@ -1613,7 +1613,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         reader.readAsDataURL(file);
       }
-    };
+    });
     
     submitBtn.onclick = () => {
       const file = screenshotInput.files[0];
