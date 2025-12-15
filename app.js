@@ -4352,7 +4352,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Настраиваем обработчики
     setupStartButton();
-    setupTabButtons();
+    updateTabBar();
     
     // Инициализируем все системы
     setTimeout(() => {
