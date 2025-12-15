@@ -330,31 +330,89 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function saveProfile(obj) {
     try {
-      // Проверяем данные перед сохранением
+      console.log('🔄 Сохранение профиля...', obj);
+      
       if (!obj || typeof obj !== 'object') {
-        console.error('Некорректный объект профиля');
+        console.error('❌ Некорректный объект профиля');
         return false;
       }
       
-      // Проверяем обязательные поля
-      const requiredFields = ['tg_id', 'first_name', 'age', 'gender', 'city', 'bio'];
-      for (const field of requiredFields) {
-        if (!obj[field]) {
-          console.error(`Отсутствует обязательное поле: ${field}`);
-          return false;
-        }
-      }
-      
-      // Убедимся, что photos - массив
-      if (!Array.isArray(obj.photos)) {
+      // Убедимся, что photos - это правильный массив
+      if (obj.photos && !Array.isArray(obj.photos)) {
+        console.warn('⚠️ photos не является массивом, исправляем...');
+        obj.photos = [];
+      } else if (!obj.photos) {
         obj.photos = [];
       }
       
-      localStorage.setItem("siamatch_profile", JSON.stringify(obj));
-      console.log('✅ Профиль сохранен:', obj);
+      // Очистим данные, которые могут вызвать проблемы с сериализацией
+      const profileToSave = {
+        tg_id: obj.tg_id || 1,
+        first_name: obj.first_name || "Пользователь",
+        age: obj.age || 18,
+        gender: obj.gender || "",
+        city: obj.city || "",
+        bio: obj.bio || "",
+        photos: obj.photos || [], // Гарантируем, что это массив
+        verification_status: obj.verification_status || 'not_verified'
+      };
+      
+      // Проверим каждое фото - если это Data URL, он может быть слишком длинным
+      if (profileToSave.photos.length > 0) {
+        console.log(`📸 Сохраняется ${profileToSave.photos.length} фото`);
+        
+        // Обрежем слишком длинные Data URL для безопасности
+        profileToSave.photos = profileToSave.photos.map(photo => {
+          if (typeof photo === 'string' && photo.startsWith('data:image')) {
+            if (photo.length > 1000000) { // Примерно 1MB
+              console.warn('⚠️ Фото слишком большое, обрезаем для безопасности');
+              return photo.substring(0, 500000) + '...'; // Обрежем
+            }
+          }
+          return photo;
+        });
+      }
+      
+      const jsonString = JSON.stringify(profileToSave);
+      
+      // Проверим размер данных
+      const sizeInMB = (new Blob([jsonString]).size / 1024 / 1024).toFixed(2);
+      if (sizeInMB > 5) {
+        console.warn(`⚠️ Данные профиля слишком большие: ${sizeInMB}MB`);
+        // Удалим фото, чтобы уменьшить размер
+        profileToSave.photos = [];
+      }
+      
+      localStorage.setItem("siamatch_profile", JSON.stringify(profileToSave));
+      
+      console.log('✅ Профиль сохранен. Размер:', sizeInMB + 'MB');
+      console.log('📸 Сохраненные фото:', profileToSave.photos.length);
+      
       return true;
     } catch (e) {
       console.error("❌ Ошибка сохранения профиля:", e);
+      
+      // Попробуем сохранить без фото
+      try {
+        if (obj) {
+          const fallbackProfile = {
+            tg_id: obj.tg_id || 1,
+            first_name: obj.first_name || "Пользователь",
+            age: obj.age || 18,
+            gender: obj.gender || "",
+            city: obj.city || "",
+            bio: obj.bio || "",
+            photos: [], // Сохраняем пустой массив фото
+            verification_status: obj.verification_status || 'not_verified'
+          };
+          localStorage.setItem("siamatch_profile", JSON.stringify(fallbackProfile));
+          console.log('✅ Профиль сохранен без фото');
+          return true;
+        }
+      } catch (e2) {
+        console.error("❌ Не удалось сохранить даже упрощенный профиль:", e2);
+      }
+      
       return false;
     }
   }
@@ -2202,7 +2260,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showNotification('❌ Ошибка при сохранении цели');
     }
   }
-  
+
 // ===== СИСТЕМА СВАЙПОВ И УПРАВЛЕНИЯ ФОТОГРАФИЯМИ =====
 function initSwipeSystem() {
   console.log('🔄 Инициализирую систему свайпов и фотографий');
@@ -2807,6 +2865,7 @@ function updatePhotoIndicators() {
         gender,
         city,
         bio,
+        photos: [],
         verification_status: 'not_verified'
       };
       
@@ -3132,12 +3191,17 @@ function updatePhotoIndicators() {
     const removePhotoBtn = document.getElementById('remove-photo-btn');
     const photoUpload = document.getElementById('profile-photo-upload');
     
-    if (!profileData.photos) {
+    // ИНИЦИАЛИЗИРУЕМ МАССИВ ФОТО ПРАВИЛЬНО
+    if (!profileData.photos || !Array.isArray(profileData.photos)) {
       profileData.photos = [];
+      
+      // Если есть старое фото, добавляем его
       if (profileData.custom_photo_url) {
         profileData.photos.push(profileData.custom_photo_url);
+        // Очищаем старое поле, чтобы не было дублирования
+        delete profileData.custom_photo_url;
+        saveProfile(profileData);
       }
-      saveProfile(profileData);
     }
     
     updateProfilePhotos();
@@ -3218,15 +3282,20 @@ function updatePhotoIndicators() {
     reader.onload = function(event) {
       const photoUrl = event.target.result;
       
-      if (!profileData.photos) {
+      // Убедимся, что photos - это массив
+      if (!Array.isArray(profileData.photos)) {
         profileData.photos = [];
       }
       
       profileData.photos.push(photoUrl);
-      saveProfile(profileData);
-      updateProfilePhotos();
       
-      showNotification('Фото добавлено! 📸');
+      // Сохраняем ПРАВИЛЬНО
+      if (saveProfile(profileData)) {
+        updateProfilePhotos();
+        showNotification('Фото добавлено! 📸');
+      } else {
+        showNotification('Ошибка при сохранении фото');
+      }
     };
     reader.readAsDataURL(file);
     
@@ -3234,13 +3303,20 @@ function updatePhotoIndicators() {
   }
 
   function removeCurrentPhoto() {
-    if (!profileData.photos || profileData.photos.length <= 1) return;
+    if (!profileData.photos || profileData.photos.length <= 1) {
+      showNotification('Нужно оставить хотя бы одно фото');
+      return;
+    }
     
-    profileData.photos.splice(0, 1);
-    saveProfile(profileData);
-    updateProfilePhotos();
+    // Удаляем текущее (первое) фото
+    profileData.photos.shift();
     
-    showNotification('Фото удалено');
+    if (saveProfile(profileData)) {
+      updateProfilePhotos();
+      showNotification('Фото удалено');
+    } else {
+      showNotification('Ошибка при удалении фото');
+    }
   }
 
   function handleProfilePhotoTouchStart(e) {
@@ -3373,15 +3449,26 @@ function updatePhotoIndicators() {
           return;
         }
         
-        // Обновляем данные профиля
-        profileData.age = age;
-        profileData.gender = gender;
-        profileData.city = city;
-        profileData.bio = bio;
+        // Важно: сохраняем фото отдельно, они не в форме
+        const currentPhotos = profileData.photos || [];
+        
+        // Создаем обновленный объект профиля
+        const updatedProfile = {
+          ...profileData,
+          age: age,
+          gender: gender,
+          city: city,
+          bio: bio,
+          photos: currentPhotos // Сохраняем текущие фото
+        };
         
         // Сохраняем
-        if (saveProfile(profileData)) {
+        if (saveProfile(updatedProfile)) {
+          // Обновляем глобальную переменную
+          profileData = updatedProfile;
+          
           updateProfileDisplay();
+          updateProfilePhotos(); // Важно: обновляем отображение фото
           
           // Плавно скрываем режим редактирования
           document.getElementById('profile-edit').style.opacity = '0';
@@ -3399,7 +3486,7 @@ function updatePhotoIndicators() {
             } catch (e) {}
           }
         } else {
-          showNotification("❌ Ошибка при сохранении профиля в localStorage");
+          showNotification("❌ Ошибка при сохранении профиля");
         }
       } catch (error) {
         console.error('Ошибка при сохранении профиля:', error);
@@ -3818,12 +3905,48 @@ function updatePhotoIndicators() {
     });
   }
   
+  // ===== ФУНКЦИЯ ДЛЯ ОЧИСТКИ СЛИШКОМ БОЛЬШИХ ФОТО =====
+  function cleanupLargePhotos() {
+    try {
+      const saved = localStorage.getItem("siamatch_profile");
+      if (saved) {
+        const data = JSON.parse(saved);
+        
+        if (data.photos && Array.isArray(data.photos)) {
+          let hasLargePhotos = false;
+          
+          data.photos = data.photos.filter(photo => {
+            if (typeof photo === 'string' && photo.startsWith('data:image')) {
+              if (photo.length > 500000) { // Более 500KB
+                console.warn('⚠️ Удаляем слишком большое фото:', photo.length);
+                hasLargePhotos = true;
+                return false;
+              }
+            }
+            return true;
+          });
+          
+          if (hasLargePhotos) {
+            localStorage.setItem("siamatch_profile", JSON.stringify(data));
+            console.log('✅ Очищены слишком большие фото');
+            showNotification('⚠️ Некоторые фото были слишком большими и удалены для стабильной работы приложения');
+          }
+        }
+      }
+    } catch (e) {
+      console.error('❌ Ошибка при очистке фото:', e);
+    }
+  }
+  
   // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
   function initApp() {
     if (hasInitialized) return;
     hasInitialized = true;
     
     console.log('🎬 Инициализация приложения...');
+    
+    // Очистка слишком больших фото перед началом
+    cleanupLargePhotos();
     
     initTelegram();
     setupStartButton();
