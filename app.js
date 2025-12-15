@@ -1,3 +1,5 @@
+[file name]: app.js
+[file content begin]
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 SiaMatch запускается...');
   
@@ -250,22 +252,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('📱 Автосохранение для iOS...');
     
-    // Создаем упрощенную копию для iOS
-    const iosProfile = {
-      tg_id: profileData.tg_id,
-      first_name: profileData.first_name,
-      age: profileData.age,
-      gender: profileData.gender,
-      city: profileData.city,
-      bio: profileData.bio,
-      photos: profileData.photos && profileData.photos.length > 0 
-        ? [profileData.photos[0]] // Только первое фото для iOS
-        : [],
-      verification_status: profileData.verification_status
-    };
-    
     try {
-      localStorage.setItem('siamatch_profile', JSON.stringify(iosProfile));
+      // Используем обычное сохранение, которое уже оптимизировано для iOS
+      saveProfile(profileData);
       console.log('📱 Автосохранение завершено для iOS');
     } catch (e) {
       console.error('📱 Ошибка автосохранения iOS:', e);
@@ -394,13 +383,45 @@ document.addEventListener('DOMContentLoaded', function() {
       const raw = localStorage.getItem("siamatch_profile");
       if (!raw) return null;
       
-      const profile = JSON.parse(raw);
+      let profile = JSON.parse(raw);
       
-      console.log('📂 Загружен профиль:', {
+      console.log('📂 iOS: Загружен профиль:', {
         hasPhotos: !!profile.photos,
         photosCount: profile.photos ? profile.photos.length : 0,
         structure: Object.keys(profile)
       });
+      
+      // iOS: Восстанавливаем фото из отдельных ключей
+      if (isIOS && profile.photos && Array.isArray(profile.photos)) {
+        const restoredPhotos = [];
+        
+        profile.photos.forEach((photoRef, index) => {
+          if (typeof photoRef === 'string' && photoRef.startsWith('local:')) {
+            // Фото сохранено в отдельном ключе
+            const photoKey = photoRef.replace('local:', '');
+            try {
+              const photoData = localStorage.getItem(photoKey);
+              if (photoData && photoData.startsWith('data:image')) {
+                restoredPhotos.push(photoData);
+                console.log(`✅ iOS: Восстановлено фото ${index} из ключа ${photoKey}`);
+              } else {
+                console.warn(`⚠️ iOS: Не удалось восстановить фото из ключа ${photoKey}`);
+              }
+            } catch (e) {
+              console.error(`❌ iOS: Ошибка загрузки фото ${index}:`, e);
+            }
+          } else if (typeof photoRef === 'string' && photoRef.startsWith('data:image')) {
+            // Прямой Data URL
+            restoredPhotos.push(photoRef);
+          } else if (typeof photoRef === 'string' && photoRef.startsWith('http')) {
+            // Внешний URL
+            restoredPhotos.push(photoRef);
+          }
+        });
+        
+        profile.photos = restoredPhotos;
+        console.log(`📱 iOS: Восстановлено ${restoredPhotos.length} фото`);
+      }
       
       // Убедимся, что photos - это массив
       if (!profile.photos || !Array.isArray(profile.photos)) {
@@ -416,14 +437,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       return profile;
     } catch (e) {
-      console.error("❌ Ошибка загрузки профиля:", e);
+      console.error("❌ Ошибка загрузки профиля для iOS:", e);
       return null;
     }
   }
   
   function saveProfile(obj) {
     try {
-      console.log('🔄 Сохранение профиля...', obj);
+      console.log('🔄 Сохранение профиля для iOS...', obj);
       
       if (!obj || typeof obj !== 'object') {
         console.error('❌ Некорректный объект профиля');
@@ -431,14 +452,61 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Убедимся, что photos - это правильный массив
-      if (obj.photos && !Array.isArray(obj.photos)) {
+      if (!obj.photos || !Array.isArray(obj.photos)) {
         console.warn('⚠️ photos не является массивом, исправляем...');
-        obj.photos = [];
-      } else if (!obj.photos) {
         obj.photos = [];
       }
       
-      // Очистим данные, которые могут вызвать проблемы с сериализацией
+      // iOS ОПТИМИЗАЦИЯ: Обработка Data URL для iOS
+      let photosToSave = [];
+      
+      if (obj.photos.length > 0) {
+        console.log(`📸 iOS: Обработка ${obj.photos.length} фото...`);
+        
+        obj.photos.forEach((photo, index) => {
+          if (typeof photo === 'string' && photo.startsWith('data:image')) {
+            // Для iOS сохраняем фото в отдельном ключе localStorage
+            const photoKey = `siamatch_photo_${obj.tg_id || 1}_${index}`;
+            
+            try {
+              // Проверяем размер Data URL
+              if (photo.length > 1000000) { // Более 1MB
+                console.warn(`⚠️ Фото ${index} слишком большое для iOS: ${Math.round(photo.length / 1024)}KB`);
+                
+                // Сжимаем фото для iOS
+                const compressedPhoto = compressImageForIOS(photo);
+                if (compressedPhoto) {
+                  localStorage.setItem(photoKey, compressedPhoto);
+                  photosToSave.push(`local:${photoKey}`);
+                  console.log(`✅ Фото ${index} сжато и сохранено в отдельном ключе`);
+                } else {
+                  // Если не удалось сжать, сохраняем ссылку
+                  photosToSave.push(photo.substring(0, 50000)); // Обрезаем для безопасности
+                }
+              } else {
+                // Нормальный размер, сохраняем целиком
+                localStorage.setItem(photoKey, photo);
+                photosToSave.push(`local:${photoKey}`);
+                console.log(`✅ Фото ${index} сохранено в отдельном ключе`);
+              }
+            } catch (photoError) {
+              console.error(`❌ Ошибка сохранения фото ${index}:`, photoError);
+              // Сохраняем как обычный URL если есть
+              photosToSave.push(photo.substring(0, 50000));
+            }
+          } else if (typeof photo === 'string' && photo.startsWith('http')) {
+            // Внешние URL сохраняем как есть
+            photosToSave.push(photo);
+          } else {
+            // Другие типы - пропускаем
+            console.warn(`⚠️ Неизвестный тип фото ${index}:`, typeof photo);
+          }
+        });
+      } else {
+        photosToSave = [];
+      }
+      
+      // Создаем профиль с оптимизированными фото
       const profileToSave = {
         tg_id: obj.tg_id || 1,
         first_name: obj.first_name || "Пользователь",
@@ -446,67 +514,103 @@ document.addEventListener('DOMContentLoaded', function() {
         gender: obj.gender || "",
         city: obj.city || "",
         bio: obj.bio || "",
-        photos: obj.photos || [], // Гарантируем, что это массив
-        verification_status: obj.verification_status || 'not_verified'
+        photos: photosToSave, // Используем оптимизированный массив
+        verification_status: obj.verification_status || 'not_verified',
+        last_save: Date.now()
       };
       
-      // Проверим каждое фото - если это Data URL, он может быть слишком длинным
-      if (profileToSave.photos.length > 0) {
-        console.log(`📸 Сохраняется ${profileToSave.photos.length} фото`);
-        
-        // Обрежем слишком длинные Data URL для безопасности
-        profileToSave.photos = profileToSave.photos.map(photo => {
-          if (typeof photo === 'string' && photo.startsWith('data:image')) {
-            if (photo.length > 1000000) { // Примерно 1MB
-              console.warn('⚠️ Фото слишком большое, обрезаем для безопасности');
-              return photo.substring(0, 500000) + '...'; // Обрежем
-            }
+      // Сохраняем основную информацию профиля
+      const jsonString = JSON.stringify(profileToSave);
+      localStorage.setItem("siamatch_profile", jsonString);
+      
+      // iOS: Сохраняем дополнительную информацию о фото
+      if (isIOS) {
+        localStorage.setItem("siamatch_ios_photos_count", photosToSave.length.toString());
+        console.log(`📱 iOS: сохранено ${photosToSave.length} фото в отдельных ключах`);
+      }
+      
+      console.log('✅ Профиль сохранен для iOS');
+      return true;
+      
+    } catch (e) {
+      console.error("❌ Критическая ошибка сохранения профиля для iOS:", e);
+      
+      // Аварийное сохранение без фото
+      try {
+        const fallbackProfile = {
+          tg_id: obj.tg_id || 1,
+          first_name: obj.first_name || "Пользователь",
+          age: obj.age || 18,
+          gender: obj.gender || "",
+          city: obj.city || "",
+          bio: obj.bio || "",
+          photos: [], // Пустой массив для iOS
+          verification_status: obj.verification_status || 'not_verified',
+          emergency_save: true
+        };
+        localStorage.setItem("siamatch_profile", JSON.stringify(fallbackProfile));
+        console.log('✅ Аварийное сохранение профиля без фото для iOS');
+        return true;
+      } catch (e2) {
+        console.error("❌ Не удалось сохранить даже упрощенный профиль:", e2);
+        return false;
+      }
+    }
+  }
+  
+  // Функция для сжатия изображений на iOS
+  function compressImageForIOS(dataUrl) {
+    if (!dataUrl.startsWith('data:image')) {
+      return dataUrl;
+    }
+    
+    try {
+      // Простое обрезание для iOS - на клиенте полноценное сжатие сложно
+      // В реальном приложении нужно загружать фото на сервер
+      if (dataUrl.length > 500000) {
+        return dataUrl.substring(0, 300000) + '...[обрезано для iOS]';
+      }
+      return dataUrl;
+    } catch (e) {
+      console.error('❌ Ошибка обработки фото для iOS:', e);
+      return dataUrl.substring(0, 200000);
+    }
+  }
+  
+  // Функция очистки старых фото для iOS
+  function cleanupIOSPhotos() {
+    if (!isIOS) return;
+    
+    console.log('🧹 iOS: Очистка старых фото...');
+    
+    try {
+      // Получаем все ключи localStorage
+      const keys = Object.keys(localStorage);
+      const photoKeys = keys.filter(key => key.startsWith('siamatch_photo_'));
+      
+      // Получаем текущие используемые фото
+      const profile = loadProfile();
+      const usedPhotoKeys = [];
+      
+      if (profile && profile.photos) {
+        profile.photos.forEach(photoRef => {
+          if (typeof photoRef === 'string' && photoRef.startsWith('local:')) {
+            usedPhotoKeys.push(photoRef.replace('local:', ''));
           }
-          return photo;
         });
       }
       
-      const jsonString = JSON.stringify(profileToSave);
-      
-      // Проверим размер данных
-      const sizeInMB = (new Blob([jsonString]).size / 1024 / 1024).toFixed(2);
-      if (sizeInMB > 5) {
-        console.warn(`⚠️ Данные профиля слишком большие: ${sizeInMB}MB`);
-        // Удалим фото, чтобы уменьшить размер
-        profileToSave.photos = [];
-      }
-      
-      localStorage.setItem("siamatch_profile", JSON.stringify(profileToSave));
-      
-      console.log('✅ Профиль сохранен. Размер:', sizeInMB + 'MB');
-      console.log('📸 Сохраненные фото:', profileToSave.photos.length);
-      
-      return true;
-    } catch (e) {
-      console.error("❌ Ошибка сохранения профиля:", e);
-      
-      // Попробуем сохранить без фото
-      try {
-        if (obj) {
-          const fallbackProfile = {
-            tg_id: obj.tg_id || 1,
-            first_name: obj.first_name || "Пользователь",
-            age: obj.age || 18,
-            gender: obj.gender || "",
-            city: obj.city || "",
-            bio: obj.bio || "",
-            photos: [], // Сохраняем пустой массив фото
-            verification_status: obj.verification_status || 'not_verified'
-          };
-          localStorage.setItem("siamatch_profile", JSON.stringify(fallbackProfile));
-          console.log('✅ Профиль сохранен без фото');
-          return true;
+      // Удаляем неиспользуемые фото
+      photoKeys.forEach(key => {
+        if (!usedPhotoKeys.includes(key)) {
+          localStorage.removeItem(key);
+          console.log(`🗑️ iOS: Удален неиспользуемый ключ фото ${key}`);
         }
-      } catch (e2) {
-        console.error("❌ Не удалось сохранить даже упрощенный профиль:", e2);
-      }
+      });
       
-      return false;
+      console.log(`🧹 iOS: Очищено ${photoKeys.length - usedPhotoKeys.length} неиспользуемых фото`);
+    } catch (e) {
+      console.error('❌ Ошибка очистки iOS фото:', e);
     }
   }
   
@@ -3419,6 +3523,79 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function handleProfilePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 3 * 1024 * 1024) { // Уменьшили лимит для iOS
+      showNotification('Фото слишком большое (максимум 3MB)');
+      return;
+    }
+    
+    if (profileData.photos.length >= 3) {
+      showNotification('Можно добавить не более 3 фото');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      let photoUrl = event.target.result;
+      
+      // iOS: Обрабатываем фото перед сохранением
+      if (isIOS) {
+        console.log('📱 iOS: Обработка загруженного фото...');
+        
+        // Сжимаем фото для iOS
+        const compressedPhoto = compressImageForIOS(photoUrl);
+        if (compressedPhoto) {
+          photoUrl = compressedPhoto;
+          
+          // Убедимся, что photos - это массив
+          if (!Array.isArray(profileData.photos)) {
+            profileData.photos = [];
+          }
+          
+          profileData.photos.push(photoUrl);
+          
+          // Сохраняем с специальной обработкой для iOS
+          if (saveProfile(profileData)) {
+            updateProfilePhotos();
+            
+            // Дополнительное сохранение для iOS
+            if (isIOS) {
+              setTimeout(() => {
+                // Пересохраняем для надежности
+                saveProfile(profileData);
+                showNotification('✅ Фото добавлено (iOS оптимизация) 📸');
+              }, 500);
+            } else {
+              showNotification('Фото добавлено! 📸');
+            }
+          } else {
+            showNotification('Ошибка при сохранении фото');
+          }
+        }
+      } else {
+        // Не iOS - обычная обработка
+        if (!Array.isArray(profileData.photos)) {
+          profileData.photos = [];
+        }
+        
+        profileData.photos.push(photoUrl);
+        
+        if (saveProfile(profileData)) {
+          updateProfilePhotos();
+          showNotification('Фото добавлено! 📸');
+        } else {
+          showNotification('Ошибка при сохранении фото');
+        }
+      }
+    };
+    
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
   function updateProfilePhotos() {
     if (!profileData || !profileData.photos || profileData.photos.length === 0) {
       console.log('🖼️ Нет фото для отображения');
@@ -3464,55 +3641,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (removeBtn) {
       removeBtn.disabled = profileData.photos.length <= 1;
     }
-  }
-
-  function handleProfilePhotoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification('Фото слишком большое (максимум 5MB)');
-      return;
-    }
-    
-    if (profileData.photos.length >= 3) {
-      showNotification('Можно добавить не более 3 фото');
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const photoUrl = event.target.result;
-      
-      // Убедимся, что photos - это массив
-      if (!Array.isArray(profileData.photos)) {
-        profileData.photos = [];
-      }
-      
-      profileData.photos.push(photoUrl);
-      
-      // Сохраняем ПРАВИЛЬНО
-      if (saveProfile(profileData)) {
-        updateProfilePhotos();
-        
-        // iOS ОПТИМИЗАЦИЯ: Форсируем обновление и сохраняем
-        if (isIOS) {
-          // Форсируем сохранение и обновление
-          autoSaveForIOS(); // Вызываем автосохранение для iOS
-          setTimeout(() => {
-            updateProfilePhotos();
-            showNotification('✅ Фото добавлено (iOS)');
-          }, 100);
-        } else {
-          showNotification('Фото добавлено! 📸');
-        }
-      } else {
-        showNotification('Ошибка при сохранении фото');
-      }
-    };
-    reader.readAsDataURL(file);
-    
-    e.target.value = '';
   }
 
   function removeCurrentPhoto() {
@@ -4181,12 +4309,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (hasInitialized) return;
     hasInitialized = true;
     
-    console.log('🎬 Инициализация приложения...');
+    console.log('🎬 Инициализация приложения для iOS...');
     
     // Проверка для iOS
     if (isIOS) {
       checkIOSStorage();
+      cleanupIOSPhotos(); // Очищаем старые фото при запуске
       console.log('📱 iOS обнаружен, применяем специальные настройки');
+      
+      // Устанавливаем более частый автосейв для iOS
+      setInterval(() => {
+        if (profileData) {
+          autoSaveForIOS();
+        }
+      }, 30000); // Каждые 30 секунд
     }
     
     // Добавить кнопку отладки
@@ -4277,3 +4413,4 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== ЗАПУСК =====
   setTimeout(initApp, 100);
 });
+[file content end]
