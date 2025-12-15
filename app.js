@@ -330,7 +330,28 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function saveProfile(obj) {
     try {
+      // Проверяем данные перед сохранением
+      if (!obj || typeof obj !== 'object') {
+        console.error('Некорректный объект профиля');
+        return false;
+      }
+      
+      // Проверяем обязательные поля
+      const requiredFields = ['tg_id', 'first_name', 'age', 'gender', 'city', 'bio'];
+      for (const field of requiredFields) {
+        if (!obj[field]) {
+          console.error(`Отсутствует обязательное поле: ${field}`);
+          return false;
+        }
+      }
+      
+      // Убедимся, что photos - массив
+      if (!Array.isArray(obj.photos)) {
+        obj.photos = [];
+      }
+      
       localStorage.setItem("siamatch_profile", JSON.stringify(obj));
+      console.log('✅ Профиль сохранен:', obj);
       return true;
     } catch (e) {
       console.error("❌ Ошибка сохранения профиля:", e);
@@ -3324,26 +3345,65 @@ function updatePhotoIndicators() {
         return;
       }
       
-      profileData.age = Number(document.getElementById("edit-age").value);
-      profileData.gender = document.getElementById("edit-gender").value;
-      profileData.city = document.getElementById("edit-city").value;
-      profileData.bio = document.getElementById("edit-bio").value.trim();
-      
-      if (saveProfile(profileData)) {
-        updateProfileDisplay();
+      try {
+        // Получаем данные из формы
+        const age = Number(document.getElementById("edit-age").value);
+        const gender = document.getElementById("edit-gender").value;
+        const city = document.getElementById("edit-city").value;
+        const bio = document.getElementById("edit-bio").value.trim();
         
-        document.getElementById('profile-display').classList.remove('hidden');
-        document.getElementById('profile-edit').classList.add('hidden');
-        
-        showNotification("✅ Профиль обновлён!");
-        
-        if (tg?.HapticFeedback) {
-          try {
-            tg.HapticFeedback.impactOccurred('light');
-        } catch (e) {}
+        // Проверяем данные
+        if (!age || age < 18 || age > 99) {
+          showNotification("Возраст должен быть от 18 до 99 лет");
+          return;
         }
-      } else {
-        showNotification("❌ Ошибка при обновлении профиля");
+        
+        if (!gender) {
+          showNotification("Выберите пол");
+          return;
+        }
+        
+        if (!city) {
+          showNotification("Выберите город");
+          return;
+        }
+        
+        if (!bio || bio.length < 10) {
+          showNotification("О себе минимум 10 символов");
+          return;
+        }
+        
+        // Обновляем данные профиля
+        profileData.age = age;
+        profileData.gender = gender;
+        profileData.city = city;
+        profileData.bio = bio;
+        
+        // Сохраняем
+        if (saveProfile(profileData)) {
+          updateProfileDisplay();
+          
+          // Плавно скрываем режим редактирования
+          document.getElementById('profile-edit').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('profile-display').classList.remove('hidden');
+            document.getElementById('profile-edit').classList.add('hidden');
+            document.getElementById('profile-edit').style.opacity = '1';
+          }, 300);
+          
+          showNotification("✅ Профиль обновлён!");
+          
+          if (tg?.HapticFeedback) {
+            try {
+              tg.HapticFeedback.impactOccurred('light');
+            } catch (e) {}
+          }
+        } else {
+          showNotification("❌ Ошибка при сохранении профиля в localStorage");
+        }
+      } catch (error) {
+        console.error('Ошибка при сохранении профиля:', error);
+        showNotification("❌ Ошибка при обновлении профиля: " + error.message);
       }
     }, 300);
   }
@@ -3410,9 +3470,14 @@ function updatePhotoIndicators() {
     // Отображаем все фото
     profileData.photos.forEach((photoUrl, index) => {
       const photoItem = document.createElement('div');
-      photoItem.className = `photo-item ${index === 0 ? 'main-photo' : ''}`;
+      photoItem.className = `photo-item`;
       photoItem.draggable = true;
       photoItem.dataset.index = index;
+      
+      // Пометим первое фото как главное
+      if (index === 0) {
+        photoItem.classList.add('main-photo');
+      }
       
       photoItem.innerHTML = `
         <div class="photo-number">${index + 1}</div>
@@ -3426,6 +3491,19 @@ function updatePhotoIndicators() {
       photoItem.addEventListener('dragleave', handleDragLeave);
       photoItem.addEventListener('drop', handleDrop);
       photoItem.addEventListener('dragend', handleDragEnd);
+      
+      // Обработчик клика для выбора главного фото
+      photoItem.addEventListener('click', (e) => {
+        if (e.target.closest('.photo-number')) return; // Не сработает на номере
+        
+        // Снимаем выделение со всех фото
+        document.querySelectorAll('.photo-item').forEach(item => {
+          item.classList.remove('main-photo');
+        });
+        
+        // Выделяем текущее фото
+        photoItem.classList.add('main-photo');
+      });
       
       container.appendChild(photoItem);
     });
@@ -3495,6 +3573,12 @@ function updatePhotoIndicators() {
   function swapPhotos(index1, index2) {
     if (!profileData.photos || profileData.photos.length < 2) return;
     
+    // Проверяем индексы
+    if (index1 < 0 || index1 >= profileData.photos.length || 
+        index2 < 0 || index2 >= profileData.photos.length) {
+      return;
+    }
+    
     // Меняем местами
     const temp = profileData.photos[index1];
     profileData.photos[index1] = profileData.photos[index2];
@@ -3526,43 +3610,92 @@ function updatePhotoIndicators() {
     const controls = document.createElement('div');
     controls.className = 'photo-buttons';
     controls.innerHTML = `
-      <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
-        <button class="photo-move-btn move-up">⬆ Поднять</button>
-        <button class="photo-move-btn move-down">⬇ Опустить</button>
+      <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center; flex-wrap: wrap;">
+        <button id="move-up-btn" class="primary" style="flex: 1; min-width: 120px; padding: 12px;">⬆ Поднять</button>
+        <button id="move-down-btn" class="primary" style="flex: 1; min-width: 120px; padding: 12px;">⬇ Опустить</button>
+        <button id="set-main-btn" class="primary" style="flex: 1; min-width: 140px; padding: 12px;">⭐ Главное</button>
       </div>
     `;
     
     controlsContainer.appendChild(controls);
     
     // Обработчики для кнопок
-    document.querySelector('.move-up')?.addEventListener('click', function() {
+    document.getElementById('move-up-btn').addEventListener('click', function() {
       movePhotoUp();
     });
     
-    document.querySelector('.move-down')?.addEventListener('click', function() {
+    document.getElementById('move-down-btn').addEventListener('click', function() {
       movePhotoDown();
+    });
+    
+    document.getElementById('set-main-btn').addEventListener('click', function() {
+      setAsMainPhoto();
     });
   }
 
   function movePhotoUp() {
-    // Находим активное фото
     const activePhoto = document.querySelector('.photo-item.main-photo');
-    if (!activePhoto) return;
+    if (!activePhoto) {
+      showNotification('Сначала выберите фото, нажав на него');
+      return;
+    }
     
     const currentIndex = parseInt(activePhoto.dataset.index);
-    if (currentIndex <= 0) return;
+    if (currentIndex <= 0) {
+      showNotification('Фото уже наверху');
+      return;
+    }
     
     swapPhotos(currentIndex, currentIndex - 1);
   }
 
   function movePhotoDown() {
     const activePhoto = document.querySelector('.photo-item.main-photo');
-    if (!activePhoto) return;
+    if (!activePhoto) {
+      showNotification('Сначала выберите фото, нажав на него');
+      return;
+    }
     
     const currentIndex = parseInt(activePhoto.dataset.index);
-    if (currentIndex >= profileData.photos.length - 1) return;
+    if (currentIndex >= profileData.photos.length - 1) {
+      showNotification('Фото уже внизу');
+      return;
+    }
     
     swapPhotos(currentIndex, currentIndex + 1);
+  }
+
+  function setAsMainPhoto() {
+    const activePhoto = document.querySelector('.photo-item.main-photo');
+    if (!activePhoto) {
+      showNotification('Сначала выберите фото, нажав на него');
+      return;
+    }
+    
+    const currentIndex = parseInt(activePhoto.dataset.index);
+    
+    // Если фото уже первое, ничего не делаем
+    if (currentIndex === 0) {
+      showNotification('Это фото уже главное');
+      return;
+    }
+    
+    // Перемещаем фото на первую позицию
+    const photoToMove = profileData.photos[currentIndex];
+    profileData.photos.splice(currentIndex, 1); // Удаляем с текущей позиции
+    profileData.photos.unshift(photoToMove); // Добавляем в начало
+    
+    // Сохраняем изменения
+    saveProfile(profileData);
+    
+    // Обновляем отображение
+    initPhotoDragAndDrop();
+    
+    showNotification(`📸 Фото ${currentIndex + 1} теперь главное!`);
+    
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
   }
   
   function setupPhotoTouchEvents() {
