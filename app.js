@@ -321,7 +321,29 @@ document.addEventListener('DOMContentLoaded', function() {
   function loadProfile() {
     try {
       const raw = localStorage.getItem("siamatch_profile");
-      return raw ? JSON.parse(raw) : null;
+      if (!raw) return null;
+      
+      const profile = JSON.parse(raw);
+      
+      console.log('📂 Загружен профиль:', {
+        hasPhotos: !!profile.photos,
+        photosCount: profile.photos ? profile.photos.length : 0,
+        structure: Object.keys(profile)
+      });
+      
+      // Убедимся, что photos - это массив
+      if (!profile.photos || !Array.isArray(profile.photos)) {
+        profile.photos = [];
+      }
+      
+      // Переносим старое фото в массив если нужно
+      if (profile.custom_photo_url && !profile.photos.includes(profile.custom_photo_url)) {
+        profile.photos.push(profile.custom_photo_url);
+        delete profile.custom_photo_url;
+        console.log('📸 Перенесено старое фото в массив');
+      }
+      
+      return profile;
     } catch (e) {
       console.error("❌ Ошибка загрузки профиля:", e);
       return null;
@@ -415,6 +437,77 @@ document.addEventListener('DOMContentLoaded', function() {
       
       return false;
     }
+  }
+  
+  // ===== ОТЛАДКА LOCALSTORAGE =====
+  function debugLocalStorage() {
+    console.log('🔍 Проверка localStorage:');
+    
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('siamatch')) {
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          console.log(`📦 ${key}:`, {
+            тип: typeof data,
+            размер: localStorage.getItem(key).length,
+            фото: data.photos ? `${data.photos.length} шт` : 'нет',
+            ключи: Object.keys(data)
+          });
+        } catch (e) {
+          console.log(`📦 ${key}:`, localStorage.getItem(key).substring(0, 100) + '...');
+        }
+      }
+    });
+  }
+  
+  // ===== ПРИНУДИТЕЛЬНОЕ СОХРАНЕНИЕ И ПЕРЕЗАГРУЗКА =====
+  function forceSaveAndReload() {
+    console.log('💾 Принудительное сохранение...');
+    
+    if (!profileData) {
+      showNotification('Нет данных профиля для сохранения');
+      return;
+    }
+    
+    // Сохраняем текущее состояние
+    if (saveProfile(profileData)) {
+      console.log('✅ Профиль сохранен принудительно');
+      
+      // Перезагружаем данные
+      profileData = loadProfile();
+      
+      // Обновляем интерфейс
+      updateProfilePhotos();
+      
+      showNotification('✅ Данные сохранены и перезагружены');
+      
+      // Показываем отладку
+      debugLocalStorage();
+    } else {
+      showNotification('❌ Ошибка при сохранении');
+    }
+  }
+  
+  // ===== КНОПКА ОТЛАДКИ =====
+  function addDebugButton() {
+    const debugBtn = document.createElement('button');
+    debugBtn.textContent = '🐛 Отладка';
+    debugBtn.style.cssText = `
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      background: #ff4757;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 20px;
+      z-index: 9999;
+      font-size: 12px;
+      opacity: 0.7;
+    `;
+    debugBtn.addEventListener('click', forceSaveAndReload);
+    document.body.appendChild(debugBtn);
   }
   
   // ===== НОВАЯ СИСТЕМА: ОЖИДАЮЩИЕ ПОДТВЕРЖДЕНИЯ БОНУСЫ =====
@@ -2907,6 +3000,20 @@ function updatePhotoIndicators() {
       tabBar.classList.remove("hidden");
     }
     
+    // Загружаем профиль ПЕРЕД инициализацией систем
+    profileData = loadProfile();
+    
+    console.log('🏠 Показ главного приложения:', {
+      профиль: !!profileData,
+      фото: profileData?.photos?.length || 0
+    });
+    
+    if (!profileData) {
+      console.error('❌ Нет данных профиля!');
+      showNotification('Ошибка загрузки профиля');
+      return;
+    }
+    
     loadPendingBonuses();
     
     initVerification();
@@ -3173,17 +3280,31 @@ function updatePhotoIndicators() {
   
   // ===== ПРОФИЛЬ =====
   function initProfile() {
+    // Сначала загружаем профиль
     profileData = loadProfile();
+    
+    if (!profileData) {
+      console.error('❌ Нет данных профиля');
+      return;
+    }
+    
+    console.log('👤 Инициализация профиля:', {
+      имя: profileData.first_name,
+      фото: profileData.photos ? `${profileData.photos.length} шт` : 'нет',
+      все_данные: profileData
+    });
     
     if (profileData) {
       updateProfileDisplay();
       updateEditForm();
     }
     
+    // ВАЖНО: Инициализируем фото ПЕРЕД обновлением UI
+    initProfilePhotos();
+    
     updateVerificationUI();
     updateBoostUI();
     initInterestsSystem();
-    initProfilePhotos();
   }
 
   function initProfilePhotos() {
@@ -3228,26 +3349,36 @@ function updatePhotoIndicators() {
   }
 
   function updateProfilePhotos() {
-    if (!profileData.photos || profileData.photos.length === 0) return;
+    if (!profileData || !profileData.photos || profileData.photos.length === 0) {
+      console.log('🖼️ Нет фото для отображения');
+      return;
+    }
     
     const container = document.querySelector('.profile-photos-container');
     const indicators = document.querySelector('.profile-photo-indicators');
     const photosCount = document.getElementById('photos-count');
     const removeBtn = document.getElementById('remove-photo-btn');
     
-    if (!container || !indicators) return;
+    if (!container || !indicators) {
+      console.warn('⚠️ Нет элементов для отображения фото');
+      return;
+    }
+    
+    console.log('🖼️ Отображение фото:', profileData.photos.length);
     
     container.innerHTML = '';
     
-    profileData.photos.forEach((photoUrl, index) => {
+    // Отображаем только первое фото (главное)
+    if (profileData.photos[0]) {
       const img = document.createElement('img');
-      img.className = `profile-main-photo ${index === 0 ? 'active' : ''}`;
-      img.src = photoUrl;
-      img.alt = `Фото ${index + 1}`;
+      img.className = 'profile-main-photo active';
+      img.src = profileData.photos[0];
+      img.alt = 'Главное фото';
       container.appendChild(img);
-    });
+    }
     
     indicators.innerHTML = '';
+    // Показываем индикаторы для всех фото
     profileData.photos.forEach((_, index) => {
       const indicator = document.createElement('div');
       indicator.className = `profile-photo-indicator ${index === 0 ? 'active' : ''}`;
@@ -3352,6 +3483,16 @@ function updatePhotoIndicators() {
     const profileCityElem = document.getElementById('profile-city-display');
     const profilePhotoElem = document.getElementById('profile-photo-preview');
     
+    if (!profileData) {
+      console.warn('⚠️ Нет данных профиля для отображения');
+      return;
+    }
+    
+    console.log('🔄 Обновление отображения профиля:', {
+      имя: profileData.first_name,
+      фото: profileData.photos?.length || 0
+    });
+    
     if (profileNameElem) {
       profileNameElem.textContent = profileData.first_name || "Пользователь";
     }
@@ -3372,9 +3513,9 @@ function updatePhotoIndicators() {
       profileCityElem.textContent = profileData.city || "";
     }
     
-    if (profilePhotoElem && profileData.custom_photo_url) {
-      profilePhotoElem.src = profileData.custom_photo_url;
-      profilePhotoElem.style.display = 'block';
+    // Удалите эту часть - фото теперь отображаются через updateProfilePhotos
+    if (profilePhotoElem) {
+      profilePhotoElem.style.display = 'none';
     }
   }
   
@@ -3944,6 +4085,12 @@ function updatePhotoIndicators() {
     hasInitialized = true;
     
     console.log('🎬 Инициализация приложения...');
+    
+    // Добавить кнопку отладки
+    addDebugButton();
+    
+    // Отладка
+    debugLocalStorage();
     
     // Очистка слишком больших фото перед началом
     cleanupLargePhotos();
