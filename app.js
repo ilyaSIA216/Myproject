@@ -1613,7 +1613,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         reader.readAsDataURL(file);
       }
-    });
+    };
     
     submitBtn.onclick = () => {
       const file = screenshotInput.files[0];
@@ -3423,7 +3423,17 @@ function updatePhotoIndicators() {
       // Сохраняем ПРАВИЛЬНО
       if (saveProfile(profileData)) {
         updateProfilePhotos();
-        showNotification('Фото добавлено! 📸');
+        
+        // iOS ОПТИМИЗАЦИЯ: Форсируем обновление и сохраняем
+        if (isIOS) {
+          // Форсируем сохранение и обновление
+          setTimeout(() => {
+            updateProfilePhotos();
+            showNotification('✅ Фото добавлено (iOS)');
+          }, 100);
+        } else {
+          showNotification('Фото добавлено! 📸');
+        }
       } else {
         showNotification('Ошибка при сохранении фото');
       }
@@ -4149,10 +4159,14 @@ function updatePhotoIndicators() {
     
     if (tabBar) tabBar.classList.add("hidden");
     
+    // iOS ОПТИМИЗАЦИЯ: Увеличиваем таймауты для iOS
     if (isIOS) {
+      console.log('📱 iOS обнаружен, применяем специальные настройки');
+      
+      // Увеличиваем таймауты для iOS
       setTimeout(() => {
         window.scrollTo(0, 0);
-      }, 300);
+      }, 500);
     }
     
     initSwipeSystem();
