@@ -3188,7 +3188,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showMainApp();
         
         setTimeout(() => {
-          showNotification("✅ Профиль сохранён! Добро пожаловать в SiaMatch 🍀\n\nТеперь вы можете:\n1. Пройти верификацию анкеты (+20 свайпов)\n2. Выбрать свои интересы\nn3. Настроить фильтры поиска\n4. Познакомиться с людьми в чатах\n5. Получить бонусные свайпы и бусты!");
+          showNotification("✅ Профиль сохранён! Добро пожаловать в SiaMatch 🍀\n\nТеперь вы можете:\n1. Пройти верификацию анкеты (+20 свайпов)\n2. Выбрать свои интересы\n3. Настроить фильтры поиска\n4. Познакомиться с людьми в чатах\n5. Получить бонусные свайпы и бусты!");
         }, 300);
       } else {
         showNotification("❌ Ошибка при сохранении профиля");
@@ -3196,46 +3196,70 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 300);
   }
   
-  // ===== ПОКАЗАТЬ ОСНОВНОЕ ПРИЛОЖЕНИЕ =====
-  function showMainApp() {
-    if (welcomeScreen) welcomeScreen.classList.add("hidden");
-    if (animatedWelcomeScreen) animatedWelcomeScreen.classList.add("hidden");
-    if (onboardingScreen) onboardingScreen.classList.add("hidden");
+  // ===== ФУНКЦИИ ДЛЯ УПРАВЛЕНИЯ ЭКРАНАМИ =====
+  function showWelcomeScreen() {
+    if (welcomeScreen) welcomeScreen.classList.remove('hidden');
+    if (animatedWelcomeScreen) animatedWelcomeScreen.classList.remove('hidden');
+    if (appRoot) appRoot.classList.add('hidden');
+    if (tabBar) tabBar.classList.add('hidden');
     
-    if (tabBar) {
-      tabBar.classList.remove("hidden");
-    }
-    
-    // Загружаем профиль ПЕРЕД инициализацией систем
-    profileData = loadProfile();
-    
-    console.log('🏠 Показ главного приложения:', {
-      профиль: !!profileData,
-      фото: profileData?.photos?.length || 0
-    });
-    
-    if (!profileData) {
-      console.error('❌ Нет данных профиля!');
-      showNotification('Ошибка загрузки профиля');
-      return;
-    }
-    
-    loadPendingBonuses();
-    
-    initVerification();
-    initLikesSystem();
-    initInterestsSystem();
-    initFiltersSystem();
-    initBoostSystem();
-    initSwipesSystem();
-    initChatsSystem();
-    initBonusSystem();
-    
-    setActiveTab("feed");
+    console.log('📱 Показан экран приветствия');
   }
   
-  // ===== УПРАВЛЕНИЕ ТАБАМИ =====
+  function hideWelcomeScreen() {
+    if (welcomeScreen) welcomeScreen.classList.add('hidden');
+    if (animatedWelcomeScreen) animatedWelcomeScreen.classList.add('hidden');
+    if (appRoot) appRoot.classList.remove('hidden');
+    
+    console.log('📱 Скрыт экран приветствия');
+  }
+  
+  function showMainApp() {
+    if (tabBar) tabBar.classList.remove('hidden');
+    
+    // Скрываем все экраны
+    document.querySelectorAll('.screen').forEach(screen => {
+      if (screen.id !== 'welcome-screen' && 
+          screen.id !== 'welcome-animated-screen') {
+        screen.classList.add('hidden');
+      }
+    });
+    
+    // Показываем экран свайпов
+    const swipesScreen = document.getElementById('screen-feed');
+    if (swipesScreen) {
+      swipesScreen.classList.remove('hidden');
+    }
+    
+    console.log('✅ Главное приложение показано');
+  }
+  
+  // ===== ФУНКЦИИ ДЛЯ ВКЛАДОК =====
+  function updateTabBar() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs?.forEach((tab, index) => {
+      // Удаляем старые обработчики
+      const newTab = tab.cloneNode(true);
+      tab.parentNode.replaceChild(newTab, tab);
+      
+      // Добавляем новый обработчик
+      newTab.addEventListener('click', () => {
+        const tabName = newTab.dataset.tab;
+        setActiveTab(tabName);
+        
+        if (tg?.HapticFeedback) {
+          try {
+            tg.HapticFeedback.selectionChanged();
+          } catch (e) {}
+        }
+      });
+    });
+    
+    console.log('✅ Вкладки инициализированы');
+  }
+  
   function setActiveTab(tab) {
+    // Скрываем все экраны
     document.querySelectorAll('.screen').forEach(screen => {
       if (screen.id !== 'welcome-screen' && 
           screen.id !== 'chat-screen' && 
@@ -3245,16 +3269,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
+    // Если не чаты, скрываем экран чата
     if (tab !== 'chats' && document.getElementById('chat-screen')) {
       document.getElementById('chat-screen').classList.add('hidden');
     }
     
+    // Показываем нужный экран
     const screenId = 'screen-' + tab;
     const screen = document.getElementById(screenId);
     if (screen) {
       screen.classList.remove('hidden');
     }
     
+    // Обновляем активные кнопки
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
@@ -3292,6 +3319,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     });
+  }
+  
+  // ===== ИНИЦИАЛИЗАЦИЯ СВАЙПИНГА =====
+  function initSwiping() {
+    console.log('🔄 Инициализация системы свайпов');
+    initSwipeSystem();
+    showCurrentCandidate();
   }
   
   // ===== ЛЕНТА СВАЙПОВ С ФИЛЬТРАЦИЕЙ =====
@@ -4335,25 +4369,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
+  // ===== ИСПРАВЛЕННАЯ ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
   async function initApp() {
     if (hasInitialized) return;
     hasInitialized = true;
     
-    console.log('🎬 Инициализация приложения для iOS...');
+    console.log('🚀 Инициализация...');
     
-    // Проверка для iOS
+    // iOS проверка
     if (isIOS) {
       checkIOSStorage();
-      cleanupIOSPhotos(); // Очищаем старые фото при запуске
-      console.log('📱 iOS обнаружен, применяем специальные настройки');
-      
-      // Устанавливаем более частый автосейв для iOS
-      setInterval(() => {
-        if (profileData) {
-          autoSaveForIOS();
-        }
-      }, 30000); // Каждые 30 секунд
+      cleanupIOSPhotos();
     }
     
     // Добавить кнопку отладки
@@ -4367,84 +4393,48 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initTelegram();
     
-    // ✅ ВАЖНО: Загружаем профиль из CloudStorage ПЕРЕД показом приложения
-    profileData = await loadProfile(); // await обязательно!
-    if (profileData) {
-      updateProfilePhotos();
-      showMainApp();
+    // ✅ КРИТИЧЕСКИЙ ФИКС: Загружаем профиль сразу
+    profileData = await loadProfile();
+    console.log('Профиль:', profileData ? `${profileData.first_name} (${profileData.photos?.length} фото)` : 'ОТСУТСТВУЕТ');
+    
+    // ✅ ПРОВЕРКА: Показываем приветствие если НЕТ полного профиля
+    if (!profileData || 
+        !profileData.first_name || 
+        !profileData.age || 
+        profileData.photos?.length === 0) {
+      console.log('➡️ Показываем приветствие (профиль неполный)');
+      showWelcomeScreen();
+      
+      // Настраиваем обработчики кнопок приветствия
+      setupStartButton();
+      setupTabButtons();
+      
+      return;
     }
     
+    // Профиль полный - показываем главное приложение
+    hideWelcomeScreen();
+    showMainApp();
+    initSwiping();
+    updateTabBar();
+    
+    // Настраиваем обработчики
     setupStartButton();
     setupTabButtons();
     
-    // Настройка touch-событий для перетаскивания фото
-    setupPhotoTouchEvents();
-    
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    const saveChangesBtn = document.getElementById('save-profile-changes');
-    const cancelEditBtn = document.getElementById('cancel-profile-edit');
-    const profilePhotoInput = document.getElementById('profile-photo-upload');
-    const editPhotoInput = document.getElementById('edit-photo-upload');
-    
-    if (editProfileBtn) {
-      editProfileBtn.addEventListener('click', handleEditProfile);
-    }
-    
-    if (saveChangesBtn) {
-      saveChangesBtn.addEventListener('click', handleSaveProfileChanges);
-    }
-    
-    if (cancelEditBtn) {
-      cancelEditBtn.addEventListener('click', handleCancelEdit);
-    }
-    
-    if (profilePhotoInput) {
-      profilePhotoInput.addEventListener('change', handlePhotoUpload);
-    }
-    
-    if (editPhotoInput) {
-      editPhotoInput.addEventListener('change', handlePhotoUpload);
-    }
-    
-    if (profileData) {
-      showAnimatedWelcomeScreen();
-    } else {
-      if (welcomeScreen) {
-        welcomeScreen.classList.remove("hidden");
-      }
-    }
-    
-    if (onboardingScreen) onboardingScreen.classList.add("hidden");
-    document.querySelectorAll('.screen').forEach(screen => {
-      if (screen.id !== 'welcome-screen' && 
-          screen.id !== 'screen-interests' && 
-          screen.id !== 'welcome-animated-screen') {
-        screen.classList.add('hidden');
-      }
-    });
-    
-    if (tabBar) tabBar.classList.add("hidden");
-    
-    // iOS ОПТИМИЗАЦИЯ: Увеличиваем таймауты для iOS
-    if (isIOS) {
-      console.log('📱 iOS обнаружен, применяем специальные настройки');
+    // Инициализируем все системы
+    setTimeout(() => {
+      initVerification();
+      initLikesSystem();
+      initInterestsSystem();
+      initFiltersSystem();
+      initBoostSystem();
+      initSwipesSystem();
+      initChatsSystem();
+      initBonusSystem();
       
-      // Увеличиваем таймауты для iOS
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 500);
-    }
-    
-    initSwipeSystem();
-    initLikesSystem();
-    initInterestsSystem();
-    initFiltersSystem();
-    initBoostSystem();
-    initSwipesSystem();
-    initChatsSystem();
-    initBonusSystem();
-    
-    console.log('✅ Приложение инициализировано');
+      console.log('✅ Все системы инициализированы');
+    }, 100);
   }
   
   // ===== ЗАПУСК =====
