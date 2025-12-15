@@ -4352,7 +4352,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hideWelcomeScreen();
       showMainApp();
       updateTabBar();  // ← ВАЖНО!
-      initSwiping();
+   //   initSwiping();
     }
     
     // Настраиваем обработчики
