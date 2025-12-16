@@ -253,6 +253,15 @@ function setupProfileEventHandlers() {
   }
   
   // ❌ УДАЛЕНО: editPhotoInput обработчик
+  
+  // ✅ ДОБАВЛЕНО: обработчик для кнопки добавления фото
+  const addPhotoBtn = document.getElementById('add-photo-btn');
+  if (addPhotoBtn) {
+    addPhotoBtn.addEventListener('click', () => {
+      const input = document.getElementById('profile-photo-upload');
+      if (input) input.click();
+    });
+  }
 }
 
 // ===== УПРАВЛЕНИЕ ПРОФИЛЕМ =====
