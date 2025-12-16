@@ -766,157 +766,299 @@
 
   <!-- ✅ ИСПРАВЛЕННЫЙ ПОРЯДОК СКРИПТОВ -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
-  <!-- ✅ ЗАГРУЗКА МОДУЛЕЙ С ПРОВЕРКОЙ ПОДДЕРЖКИ -->
-  <script>
-    // Функция для проверки поддержки ES6 modules
-    function supportsES6() {
-      try {
-        new Function('import("")');
-        return true;
-      } catch (err) {
-        return false;
-      }
-    }
+
+   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  // Простая инициализация
+  window.addEventListener('DOMContentLoaded', function() {
+    console.log('📱 SiaMatch запускается...');
     
-    // Главная функция инициализации
-    async function initializeApp() {
-      const tg = window.Telegram?.WebApp;
+    // Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      console.log('✅ Telegram WebApp обнаружен');
+      tg.expand();
       
-      if (tg) {
-        // Инициализация Telegram
-        tg.expand();
-        tg.enableClosingConfirmation();
-        tg.setHeaderColor('#f43f5e');
-        tg.setBackgroundColor('#ffffff');
-        
-        // Показываем экран приветствия
-        setTimeout(() => {
-          showScreen('welcome-screen');
-        }, 300);
-        
-        // Загружаем модули
-        if (supportsES6()) {
-          try {
-            // Динамически загружаем модули
-            await Promise.all([
-              loadModule('core.js'),
-              loadModule('swipe.js'),
-              loadModule('chat.js'),
-              loadModule('ui.js')
-            ]);
-            
-            // Инициализируем модули
-            await loadModule('app.js');
-            
-            console.log('✅ Все модули загружены успешно');
-          } catch (error) {
-            console.error('❌ Ошибка загрузки модулей:', error);
-            // Fallback: загружаем монолитный файл
-            loadFallbackScript();
-          }
-        } else {
-          // Браузер не поддерживает ES6 modules
-          loadFallbackScript();
+      // Устанавливаем имя пользователя
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        const usernameElement = document.getElementById('username');
+        if (usernameElement) {
+          const username = user.username ? `@${user.username}` : user.first_name || 'Пользователь';
+          usernameElement.textContent = username;
         }
-      } else {
-        console.log('Telegram Web App не инициализирован');
-        // Тестовый режим
-        setTimeout(() => {
-          showScreen('welcome-screen');
-        }, 300);
       }
     }
     
-    // Функция загрузки модуля
-    function loadModule(src) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.type = 'module';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
+    // Показываем начальный экран
+    const welcomeScreen = document.getElementById('welcome-screen');
+    if (welcomeScreen) {
+      welcomeScreen.classList.remove('hidden');
     }
     
-    // Fallback для старых браузеров
-    function loadFallbackScript() {
-      const script = document.createElement('script');
-      script.src = 'app.bundle.js';
-      script.onload = () => console.log('✅ Монолитный bundle загружен');
-      script.onerror = () => console.error('❌ Ошибка загрузки bundle');
-      document.head.appendChild(script);
-    }
-    
-    // Базовая функция показа экрана
-    function showScreen(screenId) {
-      const screens = document.querySelectorAll('.screen, #welcome-screen');
-      screens.forEach(screen => {
-        screen.classList.add('hidden');
-      });
+    // ===== ОБРАБОТЧИК КНОПКИ "НАЧАТЬ" =====
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+      console.log('🔄 Устанавливаю обработчик для кнопки "Начать"');
       
-      const targetScreen = document.getElementById(screenId);
-      if (targetScreen) {
-        targetScreen.classList.remove('hidden');
-      }
-      
-      // Управляем таб-баром
-      const tabBar = document.getElementById('tab-bar');
-      if (screenId.includes('screen-')) {
-        const tabName = screenId.replace('screen-', '');
-        updateActiveTab(tabName);
-        if (tabBar) tabBar.classList.remove('hidden');
-      } else {
-        if (tabBar) tabBar.classList.add('hidden');
-      }
-    }
-    
-    // Обновление активного таба
-    function updateActiveTab(tabName) {
-      const tabs = document.querySelectorAll('.tab-btn');
-      tabs.forEach(tab => {
-        const isActive = tab.dataset.tab === tabName;
-        tab.classList.toggle('active', isActive);
-      });
-    }
-    
-    // Анимация сердца
-    function startHeartAnimation() {
-      const heartPath = document.querySelector('.heart-path');
-      if (heartPath) {
-        const length = heartPath.getTotalLength();
-        heartPath.style.strokeDasharray = length;
-        heartPath.style.strokeDashoffset = length;
+      startBtn.addEventListener('click', function() {
+        console.log('🎯 Кнопка "Начать знакомство" нажата!');
         
-        setTimeout(() => {
-          heartPath.style.transition = 'stroke-dashoffset 1.5s ease-in-out';
-          heartPath.style.strokeDashoffset = '0';
-        }, 500);
+        // 1. Скрываем основной welcome экран
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) {
+          welcomeScreen.classList.add('hidden');
+        }
+        
+        // 2. Показываем анимированный экран
+        const animatedScreen = document.getElementById('welcome-animated-screen');
+        if (animatedScreen) {
+          animatedScreen.classList.remove('hidden');
+          
+          // Запускаем анимацию сердца
+          startHeartAnimation();
+          
+          // Через 3 секунды показываем анкету
+          setTimeout(() => {
+            animatedScreen.classList.add('hidden');
+            showOnboardingScreen();
+          }, 3000);
+        } else {
+          // Если нет анимированного экрана, сразу показываем анкету
+          showOnboardingScreen();
+        }
+      });
+    }
+    
+    // ===== ОБРАБОТЧИК СОХРАНЕНИЯ ПРОФИЛЯ =====
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    if (saveProfileBtn) {
+      saveProfileBtn.addEventListener('click', function() {
+        console.log('💾 Сохранение профиля...');
+        
+        const age = document.getElementById('age');
+        const gender = document.getElementById('gender');
+        const city = document.getElementById('city');
+        const bio = document.getElementById('bio');
+        
+        // Простая валидация
+        if (!age.value || !gender.value || !city.value) {
+          alert('Пожалуйста, заполните обязательные поля');
+          return;
+        }
+        
+        if (bio.value && bio.value.length < 10) {
+          alert('Описание должно содержать минимум 10 символов');
+          return;
+        }
+        
+        // Сохраняем профиль
+        const profileData = {
+          tg_id: user?.id || 1,
+          first_name: user?.first_name || 'Пользователь',
+          username: user?.username || '',
+          age: parseInt(age.value),
+          gender: gender.value,
+          city: city.value,
+          bio: bio.value || '',
+          verification_status: 'not_verified'
+        };
+        
+        try {
+          localStorage.setItem('siamatch_profile', JSON.stringify(profileData));
+          console.log('✅ Профиль сохранен:', profileData);
+          
+          // Показываем уведомление
+          showNotification('✅ Профиль сохранен! Добро пожаловать в SiaMatch!');
+          
+          // Через 2 секунды показываем ленту
+          setTimeout(() => {
+            showMainApp();
+          }, 2000);
+          
+        } catch (e) {
+          console.error('❌ Ошибка сохранения:', e);
+          alert('Ошибка сохранения профиля');
+        }
+      });
+    }
+    
+    // ===== ОБРАБОТЧИКИ ТАБОВ =====
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const tabName = this.dataset.tab;
+        console.log('📌 Переключение на таб:', tabName);
+        switchTab(tabName);
+      });
+    });
+    
+    // ===== КНОПКА РЕДАКТИРОВАНИЯ ПРОФИЛЯ =====
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+    if (editProfileBtn) {
+      editProfileBtn.addEventListener('click', function() {
+        console.log('✏️ Редактирование профиля');
+        const profileDisplay = document.getElementById('profile-display');
+        const profileEdit = document.getElementById('profile-edit');
+        
+        if (profileDisplay && profileEdit) {
+          profileDisplay.classList.add('hidden');
+          profileEdit.classList.remove('hidden');
+        }
+      });
+    }
+  });
+  
+  // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+  
+  // Показать экран анкеты
+  function showOnboardingScreen() {
+    console.log('📝 Показываем экран анкеты');
+    
+    const onboardingScreen = document.getElementById('onboarding-screen');
+    const tabBar = document.getElementById('tab-bar');
+    
+    if (onboardingScreen) {
+      onboardingScreen.classList.remove('hidden');
+    }
+    
+    if (tabBar) {
+      tabBar.classList.add('hidden');
+    }
+    
+    // Прокручиваем наверх
+    window.scrollTo(0, 0);
+  }
+  
+  // Показать главное приложение
+  function showMainApp() {
+    console.log('🏠 Показываем главное приложение');
+    
+    // Скрываем все начальные экраны
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const animatedScreen = document.getElementById('welcome-animated-screen');
+    const onboardingScreen = document.getElementById('onboarding-screen');
+    
+    if (welcomeScreen) welcomeScreen.classList.add('hidden');
+    if (animatedScreen) animatedScreen.classList.add('hidden');
+    if (onboardingScreen) onboardingScreen.classList.add('hidden');
+    
+    // Показываем таб-бар и ленту
+    const tabBar = document.getElementById('tab-bar');
+    const feedScreen = document.getElementById('screen-feed');
+    
+    if (tabBar) tabBar.classList.remove('hidden');
+    if (feedScreen) {
+      feedScreen.classList.remove('hidden');
+    }
+    
+    // Активируем таб "лента"
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === 'feed');
+    });
+    
+    // Прокручиваем наверх
+    window.scrollTo(0, 0);
+  }
+  
+  // Переключение табов
+  function switchTab(tabName) {
+    console.log('🔄 Переключаем на таб:', tabName);
+    
+    // Скрываем все экраны
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(screen => {
+      if (screen.id.startsWith('screen-')) {
+        screen.classList.add('hidden');
       }
+    });
+    
+    // Показываем нужный экран
+    const targetScreen = document.getElementById('screen-' + tabName);
+    if (targetScreen) {
+      targetScreen.classList.remove('hidden');
     }
     
-    // iOS фикс для высоты экрана
-    function updateViewHeight() {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    // Обновляем активный таб
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    
+    // Прокручиваем наверх
+    window.scrollTo(0, 0);
+  }
+  
+  // Анимация сердца
+  function startHeartAnimation() {
+    const heartPath = document.querySelector('.heart-path');
+    if (heartPath) {
+      const length = heartPath.getTotalLength();
+      heartPath.style.strokeDasharray = length;
+      heartPath.style.strokeDashoffset = length;
+      
+      setTimeout(() => {
+        heartPath.style.transition = 'stroke-dashoffset 1.5s ease-in-out';
+        heartPath.style.strokeDashoffset = '0';
+      }, 500);
     }
+  }
+  
+  // Простое уведомление
+  function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 20px 25px;
+      border-radius: 15px;
+      z-index: 9999;
+      text-align: center;
+      max-width: 80%;
+      font-size: 16px;
+      animation: fadeIn 0.3s ease;
+    `;
     
-    // Инициализация при загрузке страницы
-    window.addEventListener('DOMContentLoaded', initializeApp);
-    window.addEventListener('resize', updateViewHeight);
-    window.addEventListener('orientationchange', updateViewHeight);
+    notification.textContent = message;
+    document.body.appendChild(notification);
     
-    // Инициализируем высоту сразу
-    updateViewHeight();
+    // Анимация появления
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -60%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; transform: translate(-50%, -50%); }
+        to { opacity: 0; transform: translate(-50%, -40%); }
+      }
+    `;
+    document.head.appendChild(style);
     
-    // Экспортируем функции для модулей
-    window.app = {
-      showScreen,
-      updateActiveTab,
-      startHeartAnimation,
-      getTelegram: () => window.Telegram?.WebApp
-    };
-  </script>
+    setTimeout(() => {
+      notification.style.animation = 'fadeOut 0.3s ease forwards';
+      setTimeout(() => {
+        if (notification.parentNode) notification.parentNode.removeChild(notification);
+        if (style.parentNode) style.parentNode.removeChild(style);
+      }, 300);
+    }, 3000);
+  }
+  
+  // iOS фикс для высоты экрана
+  function updateViewHeight() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+  
+  window.addEventListener('resize', updateViewHeight);
+  window.addEventListener('orientationchange', updateViewHeight);
+  updateViewHeight();
+  
+  console.log('✅ Скрипт инициализации загружен');
+</script>   
 </body>
 </html>
