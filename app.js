@@ -4377,6 +4377,15 @@ function updateProfileScreen() {
       initBonusSystem();
       
       console.log('✅ Все системы инициализированы');
+      // 🔥 ФИКС БЕЛОГО ЭКРАНА - ДОБАВЬТЕ ЭТО
+  document.body.classList.remove('hidden', 'loading');
+  if (Telegram?.WebApp) {
+    Telegram.WebApp.expand();
+  }
+  console.log('🚀 UI forced render - контент видим');
+  
+  showMainScreen(); // ← замените на ваш метод показа основного экрана
+  
     }, 100);
   }
   
