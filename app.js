@@ -1,10 +1,3 @@
-if (window.Telegram?.WebApp) {
-  window.Telegram.WebApp.ready();
-  window.Telegram.WebApp.expand();
-  window.Telegram.WebApp.enableClosingConfirmation();
-  console.log('Telegram Mini App готов на iPhone');
-}
-
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 SiaMatch запускается...');
   
