@@ -12,45 +12,54 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('🎬 Инициализация приложения...');
     
-    // Инициализируем базовые функции
-    AppCore.initTelegram();
-    
-    // Инициализируем системы
-    AppProfile.init();
-    AppSwipe.init();
-    AppChat.init();
-    AppBonus.init();
-    
-    // Настройка кнопок и UI
-    setupStartButton();
-    setupTabButtons();
-    setupProfileEventListeners();
-    
-    // Загрузка профиля
-    const profileData = AppCore.loadLocalStorage("siamatch_profile");
-    
-    if (profileData) {
-      showAnimatedWelcomeScreen();
-    } else {
-      const welcomeScreen = document.getElementById('welcome-screen');
-      if (welcomeScreen) {
-        welcomeScreen.classList.remove("hidden");
+    try {
+      // Инициализируем базовые функции
+      AppCore.initTelegram();
+      
+      // Инициализируем системы (в правильном порядке)
+      AppBonus.init();
+      AppProfile.init();
+      AppChat.init();
+      AppSwipe.init();
+      
+      // Настройка кнопок и UI
+      setupStartButton();
+      setupTabButtons();
+      setupProfileEventListeners();
+      
+      // Загрузка профиля
+      const profileData = AppCore.loadLocalStorage("siamatch_profile");
+      
+      if (profileData) {
+        // Обновляем данные профиля в модуле
+        if (AppProfile && AppProfile.profileData === null) {
+          AppProfile.profileData = profileData;
+        }
+        showAnimatedWelcomeScreen();
+      } else {
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) {
+          welcomeScreen.classList.remove("hidden");
+        }
       }
+      
+      // Скрываем все экраны кроме welcome
+      document.querySelectorAll('.screen').forEach(screen => {
+        if (screen.id !== 'welcome-screen' && 
+            screen.id !== 'screen-interests' && 
+            screen.id !== 'welcome-animated-screen') {
+          screen.classList.add('hidden');
+        }
+      });
+      
+      const tabBar = document.getElementById('tab-bar');
+      if (tabBar) tabBar.classList.add("hidden");
+      
+      console.log('✅ Приложение инициализировано');
+    } catch (error) {
+      console.error('❌ Ошибка инициализации:', error);
+      AppCore.showNotification('Ошибка загрузки приложения. Пожалуйста, обновите страницу.');
     }
-    
-    // Скрываем все экраны кроме welcome
-    document.querySelectorAll('.screen').forEach(screen => {
-      if (screen.id !== 'welcome-screen' && 
-          screen.id !== 'screen-interests' && 
-          screen.id !== 'welcome-animated-screen') {
-        screen.classList.add('hidden');
-      }
-    });
-    
-    const tabBar = document.getElementById('tab-bar');
-    if (tabBar) tabBar.classList.add("hidden");
-    
-    console.log('✅ Приложение инициализировано');
   }
   
   // ===== НАСТРОЙКА КНОПКИ "НАЧАТЬ" =====
