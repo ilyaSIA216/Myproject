@@ -3628,41 +3628,6 @@ function updateEditForm() {
     document.getElementById('profile-edit').classList.add('hidden');
   }
   
-  function handlePhotoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification('Фото слишком большое (максимум 5MB)');
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const isEditMode = !document.getElementById('profile-edit').classList.contains('hidden');
-      
-      if (isEditMode) {
-        const preview = document.getElementById('edit-photo-preview');
-        if (preview) {
-          preview.src = event.target.result;
-          preview.style.display = 'block';
-        }
-        
-        profileData.custom_photo_url = event.target.result;
-      } else {
-        const preview = document.getElementById('profile-photo-preview');
-        if (preview) {
-          preview.src = event.target.result;
-          preview.style.display = 'block';
-        }
-        
-        profileData.custom_photo_url = event.target.result;
-        saveProfile(profileData);
-        showNotification('Фото загружено! 📸');
-      }
-    };
-    reader.readAsDataURL(file);
-  }
   
   // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
   function showNotification(message) {
