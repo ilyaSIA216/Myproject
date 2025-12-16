@@ -700,27 +700,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // ===== КНОПКА ОТЛАДКИ =====
-  function addDebugButton() {
-    const debugBtn = document.createElement('button');
-    debugBtn.textContent = '🐛 Отладка';
-    debugBtn.style.cssText = `
-      position: fixed;
-      bottom: 100px;
-      right: 20px;
-      background: #ff4757;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 20px;
-      z-index: 9999;
-      font-size: 12px;
-      opacity: 0.7;
-    `;
-    debugBtn.addEventListener('click', forceSaveAndReload);
-    document.body.appendChild(debugBtn);
-  }
-  
   // ===== НОВАЯ СИСТЕМА: ОЖИДАЮЩИЕ ПОДТВЕРЖДЕНИЯ БОНУСЫ =====
   function loadPendingBonuses() {
     try {
