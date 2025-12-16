@@ -219,9 +219,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function loadProfile() {
     if (!tg || tg.version < '6.1') {
-    console.log('📱 Telegram <6.1 → только localStorage');
-    return localLoad();
-  }
+      console.log('📱 Telegram <6.1 → только localStorage');
+      return localLoad();
+    }
     
     if (!tg) return localLoad();
     
@@ -2444,7 +2444,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (tg?.HapticFeedback) {
         try {
-        tg.HapticFeedback.impactOccurred('light');
+          tg.HapticFeedback.impactOccurred('light');
         } catch (e) {}
       }
     } catch (e) {
@@ -3019,17 +3019,8 @@ document.addEventListener('DOMContentLoaded', function() {
       welcomeScreen.classList.add("hidden");
     }
     
-    if (animatedWelcomeScreen) {
-      animatedWelcomeScreen.classList.add('hidden');
-    }
-    
-    profileData = loadProfile();
-    
-    if (profileData) {
-      showMainApp();
-    } else {
-      showOnboarding();
-    }
+    // Показываем анимированный экран приветствия
+    showAnimatedWelcomeScreen();
   }
 
   // ===== ПОКАЗАТЬ АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ =====
@@ -3063,32 +3054,22 @@ document.addEventListener('DOMContentLoaded', function() {
       animatedWelcomeScreen.classList.add('hidden');
       animatedWelcomeScreen.style.animation = '';
       
-      showMainApp();
-      
-      initVerification();
-      initLikesSystem();
-      initInterestsSystem();
-      initFiltersSystem();
-      initBoostSystem();
-      initSwipesSystem();
-      initChatsSystem();
-      initBonusSystem();
-      
-      setActiveTab("feed");
-      
-      setTimeout(() => {
-        showNotification("🍀 С возвращением в SiaMatch!\n\nЖелаем вам найти свою идеальную пару! ❤️");
-      }, 500);
+      // После анимации показываем экран создания профиля
+      showOnboarding();
     }, 800);
   }
   
   // ===== ПОКАЗАТЬ АНКЕТУ =====
   function showOnboarding() {
+    console.log('🖥️ Показан экран создания профиля');
     if (onboardingScreen) {
       onboardingScreen.classList.remove("hidden");
     }
     if (tabBar) {
       tabBar.classList.add("hidden");
+    }
+    if (appRoot) {
+      appRoot.classList.add("hidden");
     }
     
     setTimeout(() => {
@@ -4351,32 +4332,34 @@ document.addEventListener('DOMContentLoaded', function() {
     profileData = await loadProfile();
     console.log('Профиль:', profileData ? 'найден' : 'отсутствует');
     
-// ✅ ИСПРАВЛЕННАЯ ЛОГИКА: проверяем только наличие профиля
-if (!profileData || !profileData.first_name) {
-  console.log('Профиль: отсутствует - показываем экран приветствия');
-  showWelcomeScreen();
-} else {
-  console.log('Профиль: найден - показываем основное приложение');
-  hideWelcomeScreen();
-  updateTabBar();
-  setActiveTab("feed");
-  showMainApp();
-}
+    // ✅ ИСПРАВЛЕННАЯ ЛОГИКА:
+    if (!profileData || !profileData.first_name) {
+      console.log('Профиль отсутствует - показываем экран приветствия');
+      showWelcomeScreen();
+    } else {
+      console.log('Профиль найден - показываем основное приложение');
+      hideWelcomeScreen();
+      updateTabBar();
+      setActiveTab("feed");
+      showMainApp();
+    }
     
     // Настраиваем обработчики
     setupStartButton();
     updateTabBar();
     
-    // Инициализируем все системы
+    // Инициализируем все системы (только если есть профиль)
     setTimeout(() => {
-      initVerification();
-      initLikesSystem();
-      initInterestsSystem();
-      initFiltersSystem();
-      initBoostSystem();
-      initSwipesSystem();
-      initChatsSystem();
-      initBonusSystem();
+      if (profileData && profileData.first_name) {
+        initVerification();
+        initLikesSystem();
+        initInterestsSystem();
+        initFiltersSystem();
+        initBoostSystem();
+        initSwipesSystem();
+        initChatsSystem();
+        initBonusSystem();
+      }
       
       console.log('✅ Все системы инициализированы');
     }, 100);
