@@ -163,7 +163,7 @@ html, body {
 
 /* ===== ОБЩИЕ СТИЛИ ДЛЯ ЭКРАНОВ ===== */
 .screen {
-  display: flex;
+  display: none;
   flex-direction: column;
   height: 100%;
   width: 100%;
@@ -172,6 +172,10 @@ html, body {
   top: 0;
   left: 0;
   background: #f4fff7;
+}
+
+.screen.active {
+  display: flex;
 }
 
 .screen-content {
@@ -966,7 +970,7 @@ body.keyboard-open #saveProfileBtn {
 
 /* ===== ЭКРАН ЧАТА ===== */
 #chat-screen {
-  display: flex;
+  display: none;
   flex-direction: column;
   height: 100%;
   width: 100%;
@@ -975,6 +979,10 @@ body.keyboard-open #saveProfileBtn {
   top: 0;
   left: 0;
   z-index: 1000;
+}
+
+#chat-screen.active {
+  display: flex;
 }
 
 .chat-header {
@@ -2290,7 +2298,7 @@ select:focus {
 
 /* ===== ЭКРАН ВЫБОРА ИНТЕРЕСОВ ===== */
 #screen-interests {
-  display: flex;
+  display: none;
   flex-direction: column;
   height: 100%;
   width: 100%;
@@ -2299,6 +2307,10 @@ select:focus {
   top: 0;
   left: 0;
   z-index: 1000;
+}
+
+#screen-interests.active {
+  display: flex;
 }
 
 .interests-header {
@@ -2567,7 +2579,7 @@ select:focus {
 
 /* ===== НОВЫЙ АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ ===== */
 #welcome-animated-screen {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -2579,6 +2591,10 @@ select:focus {
   left: 0;
   z-index: 1001;
   padding: 20px;
+}
+
+#welcome-animated-screen.active {
+  display: flex;
 }
 
 /* Контейнер с колоннами */
@@ -2993,8 +3009,6 @@ select:focus {
   }
 }
 
-/* ===== СТИЛИ ДЛЯ ИНТЕРАКТИВНЫХ ФОТО ===== */
-
 /* Стили для выделенного фото */
 .photo-item.main-photo {
   border-color: var(--siamatch-green) !important;
@@ -3055,24 +3069,4 @@ select:focus {
     width: 100%;
     margin: 5px 0;
   }
-}
-
-/* ДОБАВЬ/ИСПРАВЬ в styles.css */
-.screen {
-  display: none !important;
-}
-
-.screen.active {
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* Для Telegram WebApp */
-#app-root .screen {
-  min-height: 100vh;
 }
