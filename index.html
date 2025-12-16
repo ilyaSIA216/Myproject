@@ -383,7 +383,7 @@
                   <button id="remove-photo-btn" class="remove-photo-btn">🗑️ Удалить текущее</button>
                 </div>
                 
-                <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" />
+                <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" onchange="handlePhotoUploadLogic(event); console.log('🚀 File выбран!');" />
                 <div id="photos-count" class="photos-count">0/3 фото</div>
               </div>
               
