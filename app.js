@@ -3125,6 +3125,7 @@ function initProfilePhotos() {
     removePhotoBtn.addEventListener('click', removeCurrentPhoto);
   }
   
+  // ИСПРАВЛЕННЫЙ ОБРАБОТЧИК С FileReader
   if (photoUpload) {
     photoUpload.addEventListener('change', handleProfilePhotoUpload);
   }
@@ -3136,6 +3137,7 @@ function initProfilePhotos() {
     });
   }
   
+  // ИСПРАВЛЕННЫЙ ОБРАБОТЧИК С FileReader
   if (editPhotoUpload) {
     editPhotoUpload.addEventListener('change', handleEditPhotoUpload);
   }
@@ -3147,28 +3149,28 @@ function initProfilePhotos() {
   }
 }
 
-function initEditProfilePhotos() {
-  updateEditProfilePhotos();
-  initEditPhotoDragAndDrop();
-}
-
+// ДОПОЛНЕННАЯ И ИСПРАВЛЕННАЯ ФУНКЦИЯ
 function updateProfilePhotos() {
-  if (!profileData.photos || profileData.photos.length === 0) return;
-  
   const container = document.querySelector('.profile-photos-container');
   const indicators = document.querySelector('.profile-photo-indicators');
   const photosCount = document.getElementById('photos-count');
   const removeBtn = document.getElementById('remove-photo-btn');
   
-  if (!container || !indicators) return;
+  if (!container || !profileData.photos) return;
+  
+  // Лимит фото (iOS фикс)
+  if (profileData.photos && profileData.photos.length > 6) {
+    profileData.photos = profileData.photos.slice(0, 6); // макс 6 фото
+  }
   
   container.innerHTML = '';
+  indicators.innerHTML = '';
   
-  profileData.photos.forEach((photoUrl, index) => {
+  profileData.photos.forEach((photoData, index) => {
+    // Создаем изображение
     const img = document.createElement('img');
+    img.src = photoData;
     img.className = `profile-main-photo ${index === 0 ? 'active' : ''}`;
-    img.src = photoUrl;
-    img.alt = `Фото ${index + 1}`;
     img.dataset.index = index;
     img.draggable = true;
     
@@ -3178,10 +3180,8 @@ function updateProfilePhotos() {
     img.addEventListener('dragend', handlePhotoDragEnd);
     
     container.appendChild(img);
-  });
-  
-  indicators.innerHTML = '';
-  profileData.photos.forEach((_, index) => {
+    
+    // Создаем индикатор
     const indicator = document.createElement('div');
     indicator.className = `profile-photo-indicator ${index === 0 ? 'active' : ''}`;
     indicator.dataset.index = index;
@@ -3189,12 +3189,175 @@ function updateProfilePhotos() {
   });
   
   if (photosCount) {
-    photosCount.textContent = `${profileData.photos.length}/3 фото`;
+    photosCount.textContent = `${profileData.photos.length}/6 фото`;
   }
   
   if (removeBtn) {
     removeBtn.disabled = profileData.photos.length <= 1;
   }
+}
+
+// НОВЫЙ ОБРАБОТЧИК С FileReader base64
+function handleProfilePhotoUpload(event) {
+  const files = event.target.files;
+  if (!files || !files.length) return;
+  
+  // Лимит фото - проверяем, чтобы не превысить 6 фото
+  const remainingSlots = 6 - (profileData.photos?.length || 0);
+  const filesToProcess = Math.min(files.length, remainingSlots);
+  
+  if (filesToProcess <= 0) {
+    showNotification('Максимальное количество фото: 6');
+    return;
+  }
+  
+  let processedFiles = 0;
+  
+  for (let i = 0; i < filesToProcess; i++) {
+    const file = files[i];
+    
+    // Проверка типа файла
+    if (!file.type.match('image.*')) {
+      console.warn(`Файл ${file.name} не является изображением`);
+      continue;
+    }
+    
+    // Проверка размера файла (макс 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification(`Фото ${file.name} слишком большое (максимум 5MB)`);
+      continue;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(event) {
+      const base64Data = event.target.result;
+      
+      if (!profileData.photos) {
+        profileData.photos = [];
+      }
+      
+      profileData.photos.push(base64Data);
+      processedFiles++;
+      
+      if (processedFiles === filesToProcess) {
+        saveProfile(profileData);
+        updateProfilePhotos();
+        updateEditProfilePhotos();
+        showNotification(`Добавлено ${processedFiles} фото! 📸`);
+      }
+    };
+    
+    reader.onerror = function() {
+      console.error('Ошибка чтения файла:', file.name);
+      showNotification(`Ошибка при загрузке фото ${file.name}`);
+    };
+    
+    reader.readAsDataURL(file);
+  }
+  
+  // Сбрасываем значение input
+  event.target.value = '';
+}
+
+// Аналогичный обработчик для редактора профиля
+function handleEditPhotoUpload(event) {
+  const files = event.target.files;
+  if (!files || !files.length) return;
+  
+  // Лимит фото - проверяем, чтобы не превысить 6 фото
+  const remainingSlots = 6 - (profileData.photos?.length || 0);
+  const filesToProcess = Math.min(files.length, remainingSlots);
+  
+  if (filesToProcess <= 0) {
+    showNotification('Максимальное количество фото: 6');
+    return;
+  }
+  
+  let processedFiles = 0;
+  
+  for (let i = 0; i < filesToProcess; i++) {
+    const file = files[i];
+    
+    if (!file.type.match('image.*')) {
+      console.warn(`Файл ${file.name} не является изображением`);
+      continue;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification(`Фото ${file.name} слишком большое (максимум 5MB)`);
+      continue;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(event) {
+      const base64Data = event.target.result;
+      
+      if (!profileData.photos) {
+        profileData.photos = [];
+      }
+      
+      profileData.photos.push(base64Data);
+      processedFiles++;
+      
+      if (processedFiles === filesToProcess) {
+        saveProfile(profileData);
+        updateProfilePhotos();
+        updateEditProfilePhotos();
+        showNotification(`Добавлено ${processedFiles} фото! 📸`);
+      }
+    };
+    
+    reader.onerror = function() {
+      console.error('Ошибка чтения файла:', file.name);
+      showNotification(`Ошибка при загрузке фото ${file.name}`);
+    };
+    
+    reader.readAsDataURL(file);
+  }
+  
+  // Сбрасываем значение input
+  event.target.value = '';
+}
+
+// Функции перетаскивания для фотографий
+function handlePhotoDragStart(e) {
+  e.dataTransfer.setData('text/plain', e.target.dataset.index);
+  e.target.style.opacity = '0.4';
+}
+
+function handlePhotoDragOver(e) {
+  e.preventDefault();
+}
+
+function handlePhotoDrop(e) {
+  e.preventDefault();
+  
+  const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+  const toIndex = parseInt(e.target.dataset.index);
+  
+  if (fromIndex !== toIndex) {
+    // Меняем фотографии местами
+    const temp = profileData.photos[fromIndex];
+    profileData.photos[fromIndex] = profileData.photos[toIndex];
+    profileData.photos[toIndex] = temp;
+    
+    saveProfile(profileData);
+    updateProfilePhotos();
+    updateEditProfilePhotos();
+    
+    showNotification('Порядок фотографий изменён');
+  }
+}
+
+function handlePhotoDragEnd(e) {
+  e.target.style.opacity = '1';
+}
+
+function initEditProfilePhotos() {
+  updateEditProfilePhotos();
+  initEditPhotoDragAndDrop();
 }
 
 function updateEditProfilePhotos() {
@@ -3276,52 +3439,8 @@ function updateEditProfilePhotos() {
   // Обновляем состояние кнопки добавления
   const editAddPhotoBtn = document.getElementById('edit-add-photo-btn');
   if (editAddPhotoBtn) {
-    editAddPhotoBtn.disabled = profileData.photos.length >= 3;
+    editAddPhotoBtn.disabled = profileData.photos.length >= 6;
   }
-}
-
-// Функции для перетаскивания на основном экране
-function initPhotoDragAndDrop(container) {
-  let draggedItem = null;
-  
-  container.addEventListener('dragstart', (e) => {
-    if (e.target.tagName === 'IMG') {
-      draggedItem = e.target;
-      setTimeout(() => {
-        e.target.style.opacity = '0.4';
-      }, 0);
-    }
-  });
-  
-  container.addEventListener('dragover', (e) => {
-    e.preventDefault();
-  });
-  
-  container.addEventListener('drop', (e) => {
-    e.preventDefault();
-    if (draggedItem && e.target.tagName === 'IMG' && e.target !== draggedItem) {
-      const fromIndex = parseInt(draggedItem.dataset.index);
-      const toIndex = parseInt(e.target.dataset.index);
-      
-      // Меняем фотографии местами
-      const temp = profileData.photos[fromIndex];
-      profileData.photos[fromIndex] = profileData.photos[toIndex];
-      profileData.photos[toIndex] = temp;
-      
-      saveProfile(profileData);
-      updateProfilePhotos();
-      updateEditProfilePhotos();
-      
-      showNotification('Порядок фотографий изменён');
-    }
-  });
-  
-  container.addEventListener('dragend', (e) => {
-    if (e.target.tagName === 'IMG') {
-      e.target.style.opacity = '1';
-    }
-    draggedItem = null;
-  });
 }
 
 // Функции для перетаскивания в редакторе
@@ -3411,80 +3530,6 @@ function removeEditPhoto(index) {
   showNotification('Фото удалено');
 }
 
-// Загрузка фото в основном профиле
-function handleProfilePhotoUpload(e) {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
-  
-  const file = files[0];
-  
-  if (file.size > 5 * 1024 * 1024) {
-    showNotification('Фото слишком большое (максимум 5MB)');
-    return;
-  }
-  
-  if (profileData.photos.length >= 3) {
-    showNotification('Можно добавить не более 3 фото');
-    return;
-  }
-  
-  const reader = new FileReader();
-  reader.onload = function(event) {
-    const photoUrl = event.target.result;
-    
-    if (!profileData.photos) {
-      profileData.photos = [];
-    }
-    
-    profileData.photos.push(photoUrl);
-    saveProfile(profileData);
-    updateProfilePhotos();
-    updateEditProfilePhotos();
-    
-    showNotification('Фото добавлено! 📸');
-  };
-  reader.readAsDataURL(file);
-  
-  e.target.value = '';
-}
-
-// Загрузка фото в редакторе
-function handleEditPhotoUpload(e) {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
-  
-  const file = files[0];
-  
-  if (file.size > 5 * 1024 * 1024) {
-    showNotification('Фото слишком большое (максимум 5MB)');
-    return;
-  }
-  
-  if (profileData.photos.length >= 3) {
-    showNotification('Можно добавить не более 3 фото');
-    return;
-  }
-  
-  const reader = new FileReader();
-  reader.onload = function(event) {
-    const photoUrl = event.target.result;
-    
-    if (!profileData.photos) {
-      profileData.photos = [];
-    }
-    
-    profileData.photos.push(photoUrl);
-    saveProfile(profileData);
-    updateProfilePhotos();
-    updateEditProfilePhotos();
-    
-    showNotification('Фото добавлено! 📸');
-  };
-  reader.readAsDataURL(file);
-  
-  e.target.value = '';
-}
-
 // Удаление текущего фото в основном профиле
 function removeCurrentPhoto() {
   if (!profileData.photos || profileData.photos.length <= 1) {
@@ -3500,7 +3545,7 @@ function removeCurrentPhoto() {
   showNotification('Фото удалено');
 }
 
-// ОБНОВЛЯЕМ ФУНКЦИЮ handleSaveProfileChanges
+// Обновляем функцию handleSaveProfileChanges
 function handleSaveProfileChanges() {
   document.activeElement?.blur();
   document.body.classList.remove('keyboard-open');
@@ -3517,7 +3562,10 @@ function handleSaveProfileChanges() {
     profileData.city = document.getElementById("edit-city").value;
     profileData.bio = document.getElementById("edit-bio").value.trim();
     
-    // Сохраняем фотографии (они уже обновлены в profileData.photos)
+    // Проверяем лимит фото
+    if (profileData.photos && profileData.photos.length > 6) {
+      profileData.photos = profileData.photos.slice(0, 6);
+    }
     
     if (saveProfile(profileData)) {
       updateProfileDisplay();
@@ -3566,8 +3614,6 @@ function updateEditForm() {
   if (editGenderElem) editGenderElem.value = profileData.gender || "";
   if (editCityElem) editCityElem.value = profileData.city || "";
   if (editBioElem) editBioElem.value = profileData.bio || "";
-  
-  // Фотографии теперь обрабатываются отдельно через updateEditProfilePhotos()
 }
   
   function handleEditProfile() {
