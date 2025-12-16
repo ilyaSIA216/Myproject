@@ -3101,199 +3101,481 @@ function updatePhotoIndicators() {
     initInterestsSystem();
     initProfilePhotos();
   }
+// ===== СИСТЕМА УПРАВЛЕНИЯ ФОТОГРАФИЯМИ =====
+function initProfilePhotos() {
+  const addPhotoBtn = document.getElementById('add-photo-btn');
+  const removePhotoBtn = document.getElementById('remove-photo-btn');
+  const photoUpload = document.getElementById('profile-photo-upload');
+  const editAddPhotoBtn = document.getElementById('edit-add-photo-btn');
+  const editPhotoUpload = document.getElementById('edit-photo-upload');
+  
+  // Инициализируем фотографии профиля
+  if (!profileData.photos) {
+    profileData.photos = [];
+    if (profileData.custom_photo_url) {
+      profileData.photos.push(profileData.custom_photo_url);
+    }
+    saveProfile(profileData);
+  }
+  
+  updateProfilePhotos();
+  initEditProfilePhotos();
+  
+  // Обработчики для основного экрана профиля
+  if (addPhotoBtn) {
+    addPhotoBtn.addEventListener('click', () => {
+      photoUpload.click();
+    });
+  }
+  
+  if (removePhotoBtn) {
+    removePhotoBtn.addEventListener('click', removeCurrentPhoto);
+  }
+  
+  if (photoUpload) {
+    photoUpload.addEventListener('change', handleProfilePhotoUpload);
+  }
+  
+  // Обработчики для экрана редактирования
+  if (editAddPhotoBtn) {
+    editAddPhotoBtn.addEventListener('click', () => {
+      editPhotoUpload.click();
+    });
+  }
+  
+  if (editPhotoUpload) {
+    editPhotoUpload.addEventListener('change', handleEditPhotoUpload);
+  }
+  
+  // Инициализируем свайпы для фото в основном профиле
+  const profilePhotosContainer = document.querySelector('.profile-photos-container');
+  if (profilePhotosContainer) {
+    initPhotoDragAndDrop(profilePhotosContainer);
+  }
+}
 
-  function initProfilePhotos() {
-    const addPhotoBtn = document.getElementById('add-photo-btn');
-    const removePhotoBtn = document.getElementById('remove-photo-btn');
-    const photoUpload = document.getElementById('profile-photo-upload');
+function initEditProfilePhotos() {
+  updateEditProfilePhotos();
+  initEditPhotoDragAndDrop();
+}
+
+function updateProfilePhotos() {
+  if (!profileData.photos || profileData.photos.length === 0) return;
+  
+  const container = document.querySelector('.profile-photos-container');
+  const indicators = document.querySelector('.profile-photo-indicators');
+  const photosCount = document.getElementById('photos-count');
+  const removeBtn = document.getElementById('remove-photo-btn');
+  
+  if (!container || !indicators) return;
+  
+  container.innerHTML = '';
+  
+  profileData.photos.forEach((photoUrl, index) => {
+    const img = document.createElement('img');
+    img.className = `profile-main-photo ${index === 0 ? 'active' : ''}`;
+    img.src = photoUrl;
+    img.alt = `Фото ${index + 1}`;
+    img.dataset.index = index;
+    img.draggable = true;
+    
+    img.addEventListener('dragstart', handlePhotoDragStart);
+    img.addEventListener('dragover', handlePhotoDragOver);
+    img.addEventListener('drop', handlePhotoDrop);
+    img.addEventListener('dragend', handlePhotoDragEnd);
+    
+    container.appendChild(img);
+  });
+  
+  indicators.innerHTML = '';
+  profileData.photos.forEach((_, index) => {
+    const indicator = document.createElement('div');
+    indicator.className = `profile-photo-indicator ${index === 0 ? 'active' : ''}`;
+    indicator.dataset.index = index;
+    indicators.appendChild(indicator);
+  });
+  
+  if (photosCount) {
+    photosCount.textContent = `${profileData.photos.length}/3 фото`;
+  }
+  
+  if (removeBtn) {
+    removeBtn.disabled = profileData.photos.length <= 1;
+  }
+}
+
+function updateEditProfilePhotos() {
+  if (!profileData.photos) return;
+  
+  const photosList = document.getElementById('edit-photos-list');
+  const photoControls = document.getElementById('edit-photo-controls');
+  const photosCount = document.getElementById('edit-photos-count');
+  
+  if (!photosList || !photoControls) return;
+  
+  photosList.innerHTML = '';
+  photoControls.innerHTML = '';
+  
+  profileData.photos.forEach((photoUrl, index) => {
+    // Создаем элемент фото в списке
+    const photoItem = document.createElement('div');
+    photoItem.className = 'edit-photo-item';
+    photoItem.dataset.index = index;
+    photoItem.draggable = true;
+    
+    const img = document.createElement('img');
+    img.src = photoUrl;
+    img.alt = `Фото ${index + 1}`;
+    
+    const photoNumber = document.createElement('div');
+    photoNumber.className = 'photo-number';
+    photoNumber.textContent = `Фото ${index + 1}${index === 0 ? ' (Главное)' : ''}`;
+    
+    photoItem.appendChild(img);
+    photoItem.appendChild(photoNumber);
+    
+    // События перетаскивания
+    photoItem.addEventListener('dragstart', handleEditPhotoDragStart);
+    photoItem.addEventListener('dragover', handleEditPhotoDragOver);
+    photoItem.addEventListener('drop', handleEditPhotoDrop);
+    photoItem.addEventListener('dragend', handleEditPhotoDragEnd);
+    
+    photosList.appendChild(photoItem);
+    
+    // Создаем кнопки управления для этого фото
+    const controlItem = document.createElement('div');
+    controlItem.className = 'photo-control-item';
+    
+    const moveUpBtn = document.createElement('button');
+    moveUpBtn.type = 'button';
+    moveUpBtn.className = 'photo-control-btn move-up-btn';
+    moveUpBtn.innerHTML = '⬆️';
+    moveUpBtn.title = 'Переместить выше';
+    moveUpBtn.disabled = index === 0;
+    moveUpBtn.addEventListener('click', () => movePhotoUp(index));
+    
+    const moveDownBtn = document.createElement('button');
+    moveDownBtn.type = 'button';
+    moveDownBtn.className = 'photo-control-btn move-down-btn';
+    moveDownBtn.innerHTML = '⬇️';
+    moveDownBtn.title = 'Переместить ниже';
+    moveDownBtn.disabled = index === profileData.photos.length - 1;
+    moveDownBtn.addEventListener('click', () => movePhotoDown(index));
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'photo-control-btn remove-btn';
+    removeBtn.innerHTML = '🗑️';
+    removeBtn.title = 'Удалить фото';
+    removeBtn.addEventListener('click', () => removeEditPhoto(index));
+    
+    controlItem.appendChild(moveUpBtn);
+    controlItem.appendChild(moveDownBtn);
+    controlItem.appendChild(removeBtn);
+    
+    photoControls.appendChild(controlItem);
+  });
+  
+  if (photosCount) {
+    photosCount.textContent = profileData.photos.length;
+  }
+  
+  // Обновляем состояние кнопки добавления
+  const editAddPhotoBtn = document.getElementById('edit-add-photo-btn');
+  if (editAddPhotoBtn) {
+    editAddPhotoBtn.disabled = profileData.photos.length >= 3;
+  }
+}
+
+// Функции для перетаскивания на основном экране
+function initPhotoDragAndDrop(container) {
+  let draggedItem = null;
+  
+  container.addEventListener('dragstart', (e) => {
+    if (e.target.tagName === 'IMG') {
+      draggedItem = e.target;
+      setTimeout(() => {
+        e.target.style.opacity = '0.4';
+      }, 0);
+    }
+  });
+  
+  container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+  
+  container.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (draggedItem && e.target.tagName === 'IMG' && e.target !== draggedItem) {
+      const fromIndex = parseInt(draggedItem.dataset.index);
+      const toIndex = parseInt(e.target.dataset.index);
+      
+      // Меняем фотографии местами
+      const temp = profileData.photos[fromIndex];
+      profileData.photos[fromIndex] = profileData.photos[toIndex];
+      profileData.photos[toIndex] = temp;
+      
+      saveProfile(profileData);
+      updateProfilePhotos();
+      updateEditProfilePhotos();
+      
+      showNotification('Порядок фотографий изменён');
+    }
+  });
+  
+  container.addEventListener('dragend', (e) => {
+    if (e.target.tagName === 'IMG') {
+      e.target.style.opacity = '1';
+    }
+    draggedItem = null;
+  });
+}
+
+// Функции для перетаскивания в редакторе
+let editDraggedItem = null;
+
+function handleEditPhotoDragStart(e) {
+  if (e.target.closest('.edit-photo-item')) {
+    editDraggedItem = e.target.closest('.edit-photo-item');
+    setTimeout(() => {
+      editDraggedItem.style.opacity = '0.4';
+    }, 0);
+  }
+}
+
+function handleEditPhotoDragOver(e) {
+  e.preventDefault();
+}
+
+function handleEditPhotoDrop(e) {
+  e.preventDefault();
+  const targetItem = e.target.closest('.edit-photo-item');
+  
+  if (editDraggedItem && targetItem && editDraggedItem !== targetItem) {
+    const fromIndex = parseInt(editDraggedItem.dataset.index);
+    const toIndex = parseInt(targetItem.dataset.index);
+    
+    // Меняем фотографии местами
+    const temp = profileData.photos[fromIndex];
+    profileData.photos[fromIndex] = profileData.photos[toIndex];
+    profileData.photos[toIndex] = temp;
+    
+    saveProfile(profileData);
+    updateProfilePhotos();
+    updateEditProfilePhotos();
+    
+    showNotification('Порядок фотографий изменён');
+  }
+}
+
+function handleEditPhotoDragEnd(e) {
+  if (editDraggedItem) {
+    editDraggedItem.style.opacity = '1';
+    editDraggedItem = null;
+  }
+}
+
+// Функции управления фотографиями в редакторе
+function movePhotoUp(index) {
+  if (index <= 0) return;
+  
+  const temp = profileData.photos[index];
+  profileData.photos[index] = profileData.photos[index - 1];
+  profileData.photos[index - 1] = temp;
+  
+  saveProfile(profileData);
+  updateProfilePhotos();
+  updateEditProfilePhotos();
+  
+  showNotification('Фото перемещено выше');
+}
+
+function movePhotoDown(index) {
+  if (index >= profileData.photos.length - 1) return;
+  
+  const temp = profileData.photos[index];
+  profileData.photos[index] = profileData.photos[index + 1];
+  profileData.photos[index + 1] = temp;
+  
+  saveProfile(profileData);
+  updateProfilePhotos();
+  updateEditProfilePhotos();
+  
+  showNotification('Фото перемещено ниже');
+}
+
+function removeEditPhoto(index) {
+  if (profileData.photos.length <= 1) {
+    showNotification('Нельзя удалить последнее фото');
+    return;
+  }
+  
+  profileData.photos.splice(index, 1);
+  saveProfile(profileData);
+  updateProfilePhotos();
+  updateEditProfilePhotos();
+  
+  showNotification('Фото удалено');
+}
+
+// Загрузка фото в основном профиле
+function handleProfilePhotoUpload(e) {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+  
+  const file = files[0];
+  
+  if (file.size > 5 * 1024 * 1024) {
+    showNotification('Фото слишком большое (максимум 5MB)');
+    return;
+  }
+  
+  if (profileData.photos.length >= 3) {
+    showNotification('Можно добавить не более 3 фото');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const photoUrl = event.target.result;
     
     if (!profileData.photos) {
       profileData.photos = [];
-      if (profileData.custom_photo_url) {
-        profileData.photos.push(profileData.custom_photo_url);
-      }
-      saveProfile(profileData);
     }
     
-    updateProfilePhotos();
-    
-    if (addPhotoBtn) {
-      addPhotoBtn.addEventListener('click', () => {
-        photoUpload.click();
-      });
-    }
-    
-    if (removePhotoBtn) {
-      removePhotoBtn.addEventListener('click', removeCurrentPhoto);
-    }
-    
-    if (photoUpload) {
-      photoUpload.addEventListener('change', handleProfilePhotoUpload);
-    }
-    
-    const profilePhotosContainer = document.querySelector('.profile-photos-container');
-    if (profilePhotosContainer) {
-      profilePhotosContainer.addEventListener('touchstart', handleProfilePhotoTouchStart);
-      profilePhotosContainer.addEventListener('touchend', handleProfilePhotoTouchEnd);
-    }
-  }
-
-  function updateProfilePhotos() {
-    if (!profileData.photos || profileData.photos.length === 0) return;
-    
-    const container = document.querySelector('.profile-photos-container');
-    const indicators = document.querySelector('.profile-photo-indicators');
-    const photosCount = document.getElementById('photos-count');
-    const removeBtn = document.getElementById('remove-photo-btn');
-    
-    if (!container || !indicators) return;
-    
-    container.innerHTML = '';
-    
-    profileData.photos.forEach((photoUrl, index) => {
-      const img = document.createElement('img');
-      img.className = `profile-main-photo ${index === 0 ? 'active' : ''}`;
-      img.src = photoUrl;
-      img.alt = `Фото ${index + 1}`;
-      container.appendChild(img);
-    });
-    
-    indicators.innerHTML = '';
-    profileData.photos.forEach((_, index) => {
-      const indicator = document.createElement('div');
-      indicator.className = `profile-photo-indicator ${index === 0 ? 'active' : ''}`;
-      indicator.dataset.index = index;
-      indicators.appendChild(indicator);
-    });
-    
-    if (photosCount) {
-      photosCount.textContent = `${profileData.photos.length}/3 фото`;
-    }
-    
-    if (removeBtn) {
-      removeBtn.disabled = profileData.photos.length <= 1;
-    }
-  }
-
-  function handleProfilePhotoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification('Фото слишком большое (максимум 5MB)');
-      return;
-    }
-    
-    if (profileData.photos.length >= 3) {
-      showNotification('Можно добавить не более 3 фото');
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const photoUrl = event.target.result;
-      
-      if (!profileData.photos) {
-        profileData.photos = [];
-      }
-      
-      profileData.photos.push(photoUrl);
-      saveProfile(profileData);
-      updateProfilePhotos();
-      
-      showNotification('Фото добавлено! 📸');
-    };
-    reader.readAsDataURL(file);
-    
-    e.target.value = '';
-  }
-
-  function removeCurrentPhoto() {
-    if (!profileData.photos || profileData.photos.length <= 1) return;
-    
-    profileData.photos.splice(0, 1);
+    profileData.photos.push(photoUrl);
     saveProfile(profileData);
     updateProfilePhotos();
+    updateEditProfilePhotos();
     
-    showNotification('Фото удалено');
-  }
+    showNotification('Фото добавлено! 📸');
+  };
+  reader.readAsDataURL(file);
+  
+  e.target.value = '';
+}
 
-  function handleProfilePhotoTouchStart(e) {
-    const touch = e.touches[0];
-    swipeStartX = touch.clientX;
-  }
-
-  function handleProfilePhotoTouchEnd(e) {
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - swipeStartX;
-    
-    if (Math.abs(deltaX) > 30 && profileData.photos && profileData.photos.length > 1) {
-      const currentIndex = 0;
-      const nextIndex = deltaX > 0 ? 
-        (currentIndex - 1 + profileData.photos.length) % profileData.photos.length :
-        (currentIndex + 1) % profileData.photos.length;
-      
-      const temp = profileData.photos[currentIndex];
-      profileData.photos[currentIndex] = profileData.photos[nextIndex];
-      profileData.photos[nextIndex] = temp;
-      
-      saveProfile(profileData);
-      updateProfilePhotos();
-      
-      showNotification('Фото изменено местами');
-    }
+// Загрузка фото в редакторе
+function handleEditPhotoUpload(e) {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+  
+  const file = files[0];
+  
+  if (file.size > 5 * 1024 * 1024) {
+    showNotification('Фото слишком большое (максимум 5MB)');
+    return;
   }
   
-  function updateProfileDisplay() {
-    const profileNameElem = document.getElementById('profile-name');
-    const profileAgeElem = document.getElementById('profile-age-display');
-    const profileGenderElem = document.getElementById('profile-gender-display');
-    const profileCityElem = document.getElementById('profile-city-display');
-    const profilePhotoElem = document.getElementById('profile-photo-preview');
-    
-    if (profileNameElem) {
-      profileNameElem.textContent = profileData.first_name || "Пользователь";
-    }
-    
-    if (profileAgeElem) {
-      profileAgeElem.textContent = profileData.age ? `${profileData.age} лет` : "";
-    }
-    
-    if (profileGenderElem) {
-      const genderMap = {
-        'male': 'Мужской',
-        'female': 'Женский'
-      };
-      profileGenderElem.textContent = profileData.gender ? genderMap[profileData.gender] || profileData.gender : "";
-    }
-    
-    if (profileCityElem) {
-      profileCityElem.textContent = profileData.city || "";
-    }
-    
-    if (profilePhotoElem && profileData.custom_photo_url) {
-      profilePhotoElem.src = profileData.custom_photo_url;
-      profilePhotoElem.style.display = 'block';
-    }
+  if (profileData.photos.length >= 3) {
+    showNotification('Можно добавить не более 3 фото');
+    return;
   }
   
-  function updateEditForm() {
-    const editAgeElem = document.getElementById("edit-age");
-    const editGenderElem = document.getElementById("edit-gender");
-    const editCityElem = document.getElementById("edit-city");
-    const editBioElem = document.getElementById("edit-bio");
-    const editPhotoElem = document.getElementById('edit-photo-preview');
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const photoUrl = event.target.result;
     
-    if (editAgeElem) editAgeElem.value = profileData.age || "";
-    if (editGenderElem) editGenderElem.value = profileData.gender || "";
-    if (editCityElem) editCityElem.value = profileData.city || "";
-    if (editBioElem) editBioElem.value = profileData.bio || "";
-    
-    if (editPhotoElem && profileData.custom_photo_url) {
-      editPhotoElem.src = profileData.custom_photo_url;
-      editPhotoElem.style.display = 'block';
+    if (!profileData.photos) {
+      profileData.photos = [];
     }
+    
+    profileData.photos.push(photoUrl);
+    saveProfile(profileData);
+    updateProfilePhotos();
+    updateEditProfilePhotos();
+    
+    showNotification('Фото добавлено! 📸');
+  };
+  reader.readAsDataURL(file);
+  
+  e.target.value = '';
+}
+
+// Удаление текущего фото в основном профиле
+function removeCurrentPhoto() {
+  if (!profileData.photos || profileData.photos.length <= 1) {
+    showNotification('Нельзя удалить последнее фото');
+    return;
   }
+  
+  profileData.photos.splice(0, 1);
+  saveProfile(profileData);
+  updateProfilePhotos();
+  updateEditProfilePhotos();
+  
+  showNotification('Фото удалено');
+}
+
+// ОБНОВЛЯЕМ ФУНКЦИЮ handleSaveProfileChanges
+function handleSaveProfileChanges() {
+  document.activeElement?.blur();
+  document.body.classList.remove('keyboard-open');
+  if (card) card.style.transform = 'translateY(0)';
+  
+  setTimeout(() => {
+    if (!profileData) {
+      showNotification("Сначала создайте профиль!");
+      return;
+    }
+    
+    profileData.age = Number(document.getElementById("edit-age").value);
+    profileData.gender = document.getElementById("edit-gender").value;
+    profileData.city = document.getElementById("edit-city").value;
+    profileData.bio = document.getElementById("edit-bio").value.trim();
+    
+    // Сохраняем фотографии (они уже обновлены в profileData.photos)
+    
+    if (saveProfile(profileData)) {
+      updateProfileDisplay();
+      
+      document.getElementById('profile-display').classList.remove('hidden');
+      document.getElementById('profile-edit').classList.add('hidden');
+      
+      showNotification("✅ Профиль обновлён!");
+      
+      if (tg?.HapticFeedback) {
+        try {
+          tg.HapticFeedback.impactOccurred('light');
+        } catch (e) {}
+      }
+    } else {
+      showNotification("❌ Ошибка при обновлении профиля");
+    }
+  }, 300);
+}
+
+// Обновляем функцию handleEditProfile
+function handleEditProfile() {
+  document.getElementById('profile-display').classList.add('hidden');
+  document.getElementById('profile-edit').classList.remove('hidden');
+  
+  // Обновляем поля формы
+  updateEditForm();
+  // Инициализируем фотографии в редакторе
+  initEditProfilePhotos();
+  
+  if (tg?.HapticFeedback) {
+    try {
+      tg.HapticFeedback.selectionChanged();
+    } catch (e) {}
+  }
+}
+
+// Обновляем функцию updateEditForm
+function updateEditForm() {
+  const editAgeElem = document.getElementById("edit-age");
+  const editGenderElem = document.getElementById("edit-gender");
+  const editCityElem = document.getElementById("edit-city");
+  const editBioElem = document.getElementById("edit-bio");
+  
+  if (editAgeElem) editAgeElem.value = profileData.age || "";
+  if (editGenderElem) editGenderElem.value = profileData.gender || "";
+  if (editCityElem) editCityElem.value = profileData.city || "";
+  if (editBioElem) editBioElem.value = profileData.bio || "";
+  
+  // Фотографии теперь обрабатываются отдельно через updateEditProfilePhotos()
+}
   
   function handleEditProfile() {
     document.getElementById('profile-display').classList.add('hidden');
