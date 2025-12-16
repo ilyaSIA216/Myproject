@@ -1,15 +1,17 @@
+// ===== UI.JS - УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ И DOM =====
+
 // ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ ДОСТУПА =====
-export let welcomeScreen = null;
-export let animatedWelcomeScreen = null;
-export let startBtn = null;
-export let onboardingScreen = null;
-export let saveProfileBtn = null;
-export let tabBar = null;
-export let appRoot = null;
-export let card = null;
+let welcomeScreen = null;
+let animatedWelcomeScreen = null;
+let startBtn = null;
+let onboardingScreen = null;
+let saveProfileBtn = null;
+let tabBar = null;
+let appRoot = null;
+let card = null;
 
 // ===== ИНИЦИАЛИЗАЦИЯ UI =====
-export function initUI() {
+function initUI() {
   console.log('🎨 Инициализация интерфейса...');
   
   // Получаем DOM элементы
@@ -26,13 +28,10 @@ export function initUI() {
   setupStartButton();
   setupTabButtons();
   setupProfileEventHandlers();
-  
-  // Инициализация свайп системы
-  initSwipeSystem();
 }
 
 // ===== ОБРАБОТЧИК КНОПКИ "НАЧАТЬ ЗНАКОМСТВО" =====
-export function setupStartButton() {
+function setupStartButton() {
   if (!startBtn) return;
   
   startBtn.addEventListener('click', handleStartClick, { passive: true });
@@ -42,14 +41,30 @@ export function setupStartButton() {
   }, { passive: false });
 }
 
-export function handleStartClick() {
-  import('./logic.js').then(({ tg, handleStartClickLogic }) => {
-    handleStartClickLogic();
-  });
+function handleStartClick() {
+  if (window.tg?.HapticFeedback) {
+    try {
+      window.tg.HapticFeedback.impactOccurred('light');
+    } catch (e) {}
+  }
+  
+  if (welcomeScreen) {
+    welcomeScreen.classList.add("hidden");
+  }
+  
+  if (animatedWelcomeScreen) {
+    animatedWelcomeScreen.classList.add('hidden');
+  }
+  
+  if (window.profileData.current) {
+    showMainApp();
+  } else {
+    showOnboarding();
+  }
 }
 
 // ===== НАСТРОЙКА КНОПКИ "СОХРАНИТЬ ПРОФИЛЬ" =====
-export function setupSaveButton() {
+function setupSaveButton() {
   if (!saveProfileBtn) return;
   
   saveProfileBtn.addEventListener('click', handleSaveProfile, { passive: true });
@@ -61,109 +76,8 @@ export function setupSaveButton() {
   saveProfileBtn.style.display = 'block';
 }
 
-export function handleSaveProfile() {
-  import('./logic.js').then(({ handleSaveProfileLogic }) => {
-    handleSaveProfileLogic();
-  });
-}
-
-// ===== НАСТРОЙКА ОБРАБОТЧИКОВ ПРОФИЛЯ =====
-function setupProfileEventHandlers() {
-  const editProfileBtn = document.getElementById('edit-profile-btn');
-  const saveChangesBtn = document.getElementById('save-profile-changes');
-  const cancelEditBtn = document.getElementById('cancel-profile-edit');
-  const profilePhotoInput = document.getElementById('profile-photo-upload');
-  const editPhotoInput = document.getElementById('edit-photo-upload');
-  
-  if (editProfileBtn) {
-    editProfileBtn.addEventListener('click', handleEditProfile);
-  }
-  
-  if (saveChangesBtn) {
-    saveChangesBtn.addEventListener('click', handleSaveProfileChanges);
-  }
-  
-  if (cancelEditBtn) {
-    cancelEditBtn.addEventListener('click', handleCancelEdit);
-  }
-  
-  if (profilePhotoInput) {
-    profilePhotoInput.addEventListener('change', handlePhotoUpload);
-  }
-  
-  if (editPhotoInput) {
-    editPhotoInput.addEventListener('change', handlePhotoUpload);
-  }
-}
-
-// ===== УПРАВЛЕНИЕ ТАБАМИ =====
-export function setupTabButtons() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const tab = this.dataset.tab;
-      setActiveTab(tab);
-      
-      import('./logic.js').then(({ tg }) => {
-        if (tg?.HapticFeedback) {
-          try {
-            tg.HapticFeedback.selectionChanged();
-          } catch (e) {}
-        }
-      });
-    });
-  });
-}
-
-export function setActiveTab(tab) {
-  document.querySelectorAll('.screen').forEach(screen => {
-    if (screen.id !== 'welcome-screen' && 
-        screen.id !== 'chat-screen' && 
-        screen.id !== 'screen-interests' &&
-        screen.id !== 'welcome-animated-screen') {
-      screen.classList.add('hidden');
-    }
-  });
-  
-  if (tab !== 'chats' && document.getElementById('chat-screen')) {
-    document.getElementById('chat-screen').classList.add('hidden');
-  }
-  
-  const screenId = 'screen-' + tab;
-  const screen = document.getElementById(screenId);
-  if (screen) {
-    screen.classList.remove('hidden');
-  }
-  
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tab);
-  });
-  
-  import('./logic.js').then(({ initFeed, initProfile, initFiltersTab, updateChatsList }) => {
-    import('./ui.js').then(({ updateLikesUI }) => {
-      if (tab === 'feed') {
-        initFeed();
-      } else if (tab === 'profile') {
-        initProfile();
-      } else if (tab === 'filters') {
-        initFiltersTab();
-      } else if (tab === 'chats') {
-        updateLikesUI();
-        updateChatsList();
-      }
-    });
-  });
-  
-  if (tabBar) {
-    tabBar.classList.remove('hidden');
-  }
-  
-  setTimeout(() => {
-    window.scrollTo(0, 0);
-  }, 50);
-}
-
 // ===== ПОКАЗАТЬ АНИМИРОВАННЫЙ ЭКРАН ПРИВЕТСТВИЯ =====
-export function showAnimatedWelcomeScreen() {
+function showAnimatedWelcomeScreen() {
   if (!animatedWelcomeScreen) return;
   
   if (welcomeScreen) {
@@ -195,6 +109,9 @@ function hideAnimatedWelcomeScreen() {
     
     showMainApp();
     
+    // Инициализация всех систем
+    initAllSystems();
+    
     setTimeout(() => {
       showNotification("🍀 С возвращением в SiaMatch!\n\nЖелаем вам найти свою идеальную пару! ❤️");
     }, 500);
@@ -202,7 +119,7 @@ function hideAnimatedWelcomeScreen() {
 }
 
 // ===== ПОКАЗАТЬ АНКЕТУ =====
-export function showOnboarding() {
+function showOnboarding() {
   if (onboardingScreen) {
     onboardingScreen.classList.remove("hidden");
   }
@@ -218,7 +135,7 @@ export function showOnboarding() {
 }
 
 // ===== ПОКАЗАТЬ ОСНОВНОЕ ПРИЛОЖЕНИЕ =====
-export function showMainApp() {
+function showMainApp() {
   if (welcomeScreen) welcomeScreen.classList.add("hidden");
   if (animatedWelcomeScreen) animatedWelcomeScreen.classList.add("hidden");
   if (onboardingScreen) onboardingScreen.classList.add("hidden");
@@ -230,63 +147,135 @@ export function showMainApp() {
   setActiveTab("feed");
 }
 
-// ===== СИСТЕМА СВАЙПОВ И УПРАВЛЕНИЯ ФОТОГРАФИЯМИ =====
-export function initSwipeSystem() {
-  console.log('🔄 Инициализирую систему свайпов и фотографий');
-  
-  const candidateCard = document.getElementById('candidate-card');
-  const photosContainer = document.querySelector('.candidate-photos-container');
-  
-  if (!candidateCard || !photosContainer) return;
-  
-  const actions = document.querySelector('.actions');
-  if (actions) {
-    actions.style.display = 'none';
-  }
-  
-  initSwipeGestures(candidateCard);
-  initPhotoSwitching(photosContainer);
-}
-
-// ===== УПРАВЛЕНИЕ ПРОФИЛЕМ =====
-export function handleEditProfile() {
-  document.getElementById('profile-display').classList.add('hidden');
-  document.getElementById('profile-edit').classList.remove('hidden');
-  
-  import('./logic.js').then(({ tg }) => {
-    if (tg?.HapticFeedback) {
-      try {
-        tg.HapticFeedback.selectionChanged();
-      } catch (e) {}
-    }
+// ===== УПРАВЛЕНИЕ ТАБАМИ =====
+function setupTabButtons() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const tab = this.dataset.tab;
+      setActiveTab(tab);
+      
+      if (window.tg?.HapticFeedback) {
+        try {
+          window.tg.HapticFeedback.selectionChanged();
+        } catch (e) {}
+      }
+    });
   });
 }
 
-export function handleSaveProfileChanges() {
+function setActiveTab(tab) {
+  // Скрываем все экраны
+  document.querySelectorAll('.screen').forEach(screen => {
+    if (screen.id !== 'welcome-screen' && 
+        screen.id !== 'chat-screen' && 
+        screen.id !== 'screen-interests' &&
+        screen.id !== 'welcome-animated-screen') {
+      screen.classList.add('hidden');
+    }
+  });
+  
+  // Скрываем чат если переключаемся на другую вкладку
+  if (tab !== 'chats' && document.getElementById('chat-screen')) {
+    document.getElementById('chat-screen').classList.add('hidden');
+  }
+  
+  // Показываем выбранный экран
+  const screenId = 'screen-' + tab;
+  const screen = document.getElementById(screenId);
+  if (screen) {
+    screen.classList.remove('hidden');
+  }
+  
+  // Обновляем активную кнопку таба
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  
+  // Инициализация контента вкладки
+  if (tab === 'feed') {
+    initFeed();
+  } else if (tab === 'profile') {
+    initProfile();
+  } else if (tab === 'filters') {
+    initFiltersTab();
+  } else if (tab === 'chats') {
+    updateLikesUI();
+    updateChatsList();
+  }
+  
+  // Показываем панель навигации
+  if (tabBar) {
+    tabBar.classList.remove('hidden');
+  }
+  
+  // Скролл наверх
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 50);
+}
+
+// ===== НАСТРОЙКА ОБРАБОТЧИКОВ ПРОФИЛЯ =====
+function setupProfileEventHandlers() {
+  const editProfileBtn = document.getElementById('edit-profile-btn');
+  const saveChangesBtn = document.getElementById('save-profile-changes');
+  const cancelEditBtn = document.getElementById('cancel-profile-edit');
+  const profilePhotoInput = document.getElementById('profile-photo-upload');
+  const editPhotoInput = document.getElementById('edit-photo-upload');
+  
+  if (editProfileBtn) {
+    editProfileBtn.addEventListener('click', handleEditProfile);
+  }
+  
+  if (saveChangesBtn) {
+    saveChangesBtn.addEventListener('click', handleSaveProfileChanges);
+  }
+  
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', handleCancelEdit);
+  }
+  
+  if (profilePhotoInput) {
+    profilePhotoInput.addEventListener('change', handlePhotoUpload);
+  }
+  
+  if (editPhotoInput) {
+    editPhotoInput.addEventListener('change', handlePhotoUpload);
+  }
+}
+
+// ===== УПРАВЛЕНИЕ ПРОФИЛЕМ =====
+function handleEditProfile() {
+  document.getElementById('profile-display').classList.add('hidden');
+  document.getElementById('profile-edit').classList.remove('hidden');
+  
+  if (window.tg?.HapticFeedback) {
+    try {
+      window.tg.HapticFeedback.selectionChanged();
+    } catch (e) {}
+  }
+}
+
+function handleSaveProfileChanges() {
   document.activeElement?.blur();
   document.body.classList.remove('keyboard-open');
   if (card) card.style.transform = 'translateY(0)';
   
   setTimeout(() => {
-    import('./logic.js').then(({ handleSaveProfileChangesLogic }) => {
-      handleSaveProfileChangesLogic();
-    });
+    handleSaveProfileChangesLogic();
   }, 300);
 }
 
-export function handleCancelEdit() {
+function handleCancelEdit() {
   document.getElementById('profile-display').classList.remove('hidden');
   document.getElementById('profile-edit').classList.add('hidden');
 }
 
-export function handlePhotoUpload(e) {
-  import('./logic.js').then(({ handlePhotoUploadLogic }) => {
-    handlePhotoUploadLogic(e);
-  });
+function handlePhotoUpload(e) {
+  handlePhotoUploadLogic(e);
 }
 
 // ===== УВЕДОМЛЕНИЯ =====
-export function showNotification(message) {
+function showNotification(message) {
   const notification = document.createElement('div');
   notification.className = 'notification';
   notification.innerHTML = `
@@ -367,10 +356,55 @@ export function showNotification(message) {
   });
 }
 
-// Экспорт вспомогательных функций для других модулей
-export function updateLikesUI() {
-  // Экспорт для совместимости
+// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+function updateProfileDisplay() {
+  const profileNameElem = document.getElementById('profile-name');
+  const profileAgeElem = document.getElementById('profile-age-display');
+  const profileGenderElem = document.getElementById('profile-gender-display');
+  const profileCityElem = document.getElementById('profile-city-display');
+  const profilePhotoElem = document.getElementById('profile-photo-preview');
+  
+  if (profileNameElem && window.profileData.current) {
+    profileNameElem.textContent = window.profileData.current.first_name || "Пользователь";
+  }
+  
+  if (profileAgeElem && window.profileData.current) {
+    profileAgeElem.textContent = window.profileData.current.age ? `${window.profileData.current.age} лет` : "";
+  }
+  
+  if (profileGenderElem && window.profileData.current) {
+    const genderMap = {
+      'male': 'Мужской',
+      'female': 'Женский'
+    };
+    profileGenderElem.textContent = window.profileData.current.gender ? 
+      genderMap[window.profileData.current.gender] || window.profileData.current.gender : "";
+  }
+  
+  if (profileCityElem && window.profileData.current) {
+    profileCityElem.textContent = window.profileData.current.city || "";
+  }
+  
+  if (profilePhotoElem && window.profileData.current && window.profileData.current.custom_photo_url) {
+    profilePhotoElem.src = window.profileData.current.custom_photo_url;
+    profilePhotoElem.style.display = 'block';
+  }
 }
-export function updateChatsList() {
-  // Экспорт для совместимости
+
+function updateEditForm() {
+  const editAgeElem = document.getElementById("edit-age");
+  const editGenderElem = document.getElementById("edit-gender");
+  const editCityElem = document.getElementById("edit-city");
+  const editBioElem = document.getElementById("edit-bio");
+  const editPhotoElem = document.getElementById('edit-photo-preview');
+  
+  if (editAgeElem && window.profileData.current) editAgeElem.value = window.profileData.current.age || "";
+  if (editGenderElem && window.profileData.current) editGenderElem.value = window.profileData.current.gender || "";
+  if (editCityElem && window.profileData.current) editCityElem.value = window.profileData.current.city || "";
+  if (editBioElem && window.profileData.current) editBioElem.value = window.profileData.current.bio || "";
+  
+  if (editPhotoElem && window.profileData.current && window.profileData.current.custom_photo_url) {
+    editPhotoElem.src = window.profileData.current.custom_photo_url;
+    editPhotoElem.style.display = 'block';
+  }
 }
