@@ -3668,89 +3668,89 @@ function updateEditForm() {
   }
   
   
-  // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
-  function showNotification(message) {
-    const notification = document.createElement('div');
-    const style = document.createElement('style');
+function showNotification(message) {
+  const notification = document.createElement('div');
+  const style = document.createElement('style'); // ← ОСТАВИТЬ ТОЛЬКО ЭТО
 
-    notification.className = 'notification';
-    notification.innerHTML = `
-      <div class="notification-content">
-        <div class="notification-text">${message.replace(/\n/g, '<br>')}</div>
-      </div>
-    `;
-    
-    notification.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.85);
-      color: white;
-      padding: 20px 25px;
-      border-radius: 15px;
-      z-index: 9999;
-      text-align: center;
-      max-width: 80%;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      animation: fadeIn 0.3s ease;
-    `;
-    
-    const content = notification.querySelector('.notification-content');
-    content.style.cssText = `
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    `;
-    
-    const text = notification.querySelector('.notification-text');
-    text.style.cssText = `
-      font-size: 16px;
-      line-height: 1.5;
-      margin-bottom: 15px;
-    `;
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translate(-50%, -60%); }
-        to { opacity: 1; transform: translate(-50%, -50%); }
-      }
-      @keyframes fadeOut {
-        from { opacity: 1; transform: translate(-50%, -50%); }
-        to { opacity: 0; transform: translate(-50%, -40%); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(notification);
-    
+  notification.className = 'notification';
+  notification.innerHTML = `
+    <div class="notification-content">
+      <div class="notification-text">${message.replace(/\n/g, '<br>')}</div>
+    </div>
+  `;
+  
+  notification.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 20px 25px;
+    border-radius: 15px;
+    z-index: 9999;
+    text-align: center;
+    max-width: 80%;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.3s ease;
+  `;
+  
+  const content = notification.querySelector('.notification-content');
+  content.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  `;
+  
+  const text = notification.querySelector('.notification-text');
+  text.style.cssText = `
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+  `;
+  
+  // УДАЛИТЬ ЭТУ СТРОКУ: const style = document.createElement('style');
+  // И оставить только присваивание:
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translate(-50%, -50%); }
+      to { opacity: 0; transform: translate(-50%, -40%); }
+    }
+  `;
+  
+  document.head.appendChild(style);
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'fadeOut 0.3s ease forwards';
     setTimeout(() => {
-      notification.style.animation = 'fadeOut 0.3s ease forwards';
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-        if (style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-      }, 300);
-    }, 3000);
-    
-    notification.addEventListener('click', () => {
-      notification.style.animation = 'fadeOut 0.3s ease forwards';
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-        if (style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-      }, 300);
-    });
-  }
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    }, 300);
+  }, 3000);
+  
+  notification.addEventListener('click', () => {
+    notification.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    }, 300);
+  });
+}
   
   // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
   function initApp() {
