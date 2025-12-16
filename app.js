@@ -3671,6 +3671,8 @@ function updateEditForm() {
   // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
   function showNotification(message) {
     const notification = document.createElement('div');
+    const style = document.createElement('style');
+
     notification.className = 'notification';
     notification.innerHTML = `
       <div class="notification-content">
