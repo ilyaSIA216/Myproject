@@ -379,8 +379,8 @@
                 <div class="profile-photo-indicators"></div>
                 
                 <div class="profile-photo-controls">
-                  <button id="add-photo-btn" class="add-photo-btn" onclick="document.getElementById('profile-photo-upload').click(); console.log('🔥 КНОПКА РАБОТАЕТ!');">📸 Добавить фото</button>
-                  <button id="remove-photo-btn" class="remove-photo-btn" onclick="if(window.profileData?.current?.photos?.length>1){window.profileData.current.photos.pop(); localStorage.setItem('siamatch_profile', JSON.stringify(window.profileData.current)); document.querySelector('.profile-photos-container').innerHTML=''; document.getElementById('photos-count').textContent='2/3 фото'; console.log('🗑️ Удалено!'); alert('✅ Фото удалено!');} else {alert('❌ Нужно минимум 1 фото');}">🗑️ Удалить последнее</button>
+                <button id="add-photo-btn" class="add-photo-btn" onclick="document.getElementById('profile-photo-upload').click(); console.log('🔥 КНОПКА РАБОТАЕТ!');">📸 Добавить фото</button>
+                <button id="remove-photo-btn" class="remove-photo-btn" onclick="if(window.profileData?.current?.photos?.length>1){window.profileData.current.photos.pop(); localStorage.setItem('siamatch_profile', JSON.stringify(window.profileData.current)); let count=window.profileData.current.photos.length; document.getElementById('photos-count').textContent=count+'/3 фото'; document.querySelector('.profile-photos-container').innerHTML=''; console.log('🗑️ Удалено! '+count+' фото'); alert('✅ '+count+'/3 фото осталось!');} else {alert('❌ Нужно минимум 1 фото');}">🗑️ Удалить последнее</button>
                 </div>
                 
                 <input type="file" id="profile-photo-upload" accept="image/*" class="hidden" onchange="handlePhotoUploadLogic(event); console.log('🚀 File выбран!');" />
