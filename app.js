@@ -4343,10 +4343,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initTelegram();
     if (isIOS) checkIOSStorage();
-    
-    // Добавить кнопку отладки
-    addDebugButton();
-    
+        
     // Отладка
     debugLocalStorage();
     
