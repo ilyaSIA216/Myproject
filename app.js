@@ -3670,8 +3670,17 @@ function updateEditForm() {
   
 function showNotification(message) {
   const notification = document.createElement('div');
-  const style = document.createElement('style'); // ← ОСТАВИТЬ ТОЛЬКО ЭТО
+  const style = document.createElement('style'); // ← ❌ ОШИБКА ЗДЕСЬ!
+  
+  // ... остальной код
+}
+Замените на:
 
+javascript
+function showNotification(message) {
+  const notification = document.createElement('div');
+  const notificationStyle = document.createElement('style'); // ✅ Переименовали!
+  
   notification.className = 'notification';
   notification.innerHTML = `
     <div class="notification-content">
@@ -3696,24 +3705,8 @@ function showNotification(message) {
     animation: fadeIn 0.3s ease;
   `;
   
-  const content = notification.querySelector('.notification-content');
-  content.style.cssText = `
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  `;
-  
-  const text = notification.querySelector('.notification-text');
-  text.style.cssText = `
-    font-size: 16px;
-    line-height: 1.5;
-    margin-bottom: 15px;
-  `;
-  
-  // УДАЛИТЬ ЭТУ СТРОКУ: const style = document.createElement('style');
-  // И оставить только присваивание:
-  style.textContent = `
+  // Замените ВСЕ style на notificationStyle:
+  notificationStyle.textContent = `
     @keyframes fadeIn {
       from { opacity: 0; transform: translate(-50%, -60%); }
       to { opacity: 1; transform: translate(-50%, -50%); }
@@ -3724,18 +3717,15 @@ function showNotification(message) {
     }
   `;
   
-  document.head.appendChild(style);
+  document.head.appendChild(notificationStyle);
   document.body.appendChild(notification);
   
+  // В setTimeout и клике тоже замените style на notificationStyle:
   setTimeout(() => {
     notification.style.animation = 'fadeOut 0.3s ease forwards';
     setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
-      if (style.parentNode) {
-        style.parentNode.removeChild(style);
-      }
+      if (notification.parentNode) notification.parentNode.removeChild(notification);
+      if (notificationStyle.parentNode) notificationStyle.parentNode.removeChild(notificationStyle);
     }, 300);
   }, 3000);
   
