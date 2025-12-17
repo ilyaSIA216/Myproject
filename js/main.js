@@ -17,6 +17,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 1. Инициализация Telegram WebApp
     initTelegram();
+
+      
+    if (window.tg) {
+      window.tg.expand(); // Расширяет на полный экран
+      window.tg.ready();  // Сообщаем что приложение готово
+      
+      // Фикс для iOS Safari (решает проблему с кнопками)
+      if (window.isIOS) {
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100vh';
+        document.documentElement.style.height = '100vh';
+      }
+    }
     
     // 2. Загрузка профиля ИЗ localStorage ДО UI
     window.profileData.current = loadProfile() || null;
