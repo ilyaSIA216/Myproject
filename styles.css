@@ -2931,3 +2931,15 @@ select:focus {
 .photo-prev-btn:active, .photo-next-btn:active {
   transform: scale(0.95);
 }
+
+/* В styles.css добавить стили для drag-and-drop: */
+.profile-main-photo.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  border: 3px dashed var(--siamatch-green);
+}
+
+.profile-main-photo.dragover {
+  border: 3px solid var(--siamatch-green);
+  transform: scale(1.05);
+}
