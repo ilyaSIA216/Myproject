@@ -727,5 +727,25 @@
   <script src="js/logic.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
+
+  <!-- ТЕСТОВАЯ КНОПКА для отладки -->
+<button id="debug-test" style="position: fixed; top: 10px; right: 10px; z-index: 9999; padding: 10px; background: red; color: white;">
+  Тест фото
+</button>
+
+<script>
+// Отладочный скрипт
+document.getElementById('debug-test')?.addEventListener('click', function() {
+  console.log('=== ДЕБАГ ИНФОРМАЦИЯ ===');
+  console.log('Профиль:', window.profileData?.current);
+  console.log('Фото в профиле:', window.profileData?.current?.photos?.length || 0);
+  console.log('Первое фото:', window.profileData?.current?.photos?.[0]?.substring(0, 50) + '...');
+  
+  // Принудительно обновим отображение
+  if (typeof updateEditPhotosDisplay === 'function') {
+    updateEditPhotosDisplay();
+  }
+});
+</script>
 </body>
 </html>
