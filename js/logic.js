@@ -2706,6 +2706,7 @@ function initAllSystems() {
 function initFeed() {
   currentIndex = 0;
   showCurrentCandidate();
+  initSwipeSystem(); 
 }
 
 function initProfile() {
