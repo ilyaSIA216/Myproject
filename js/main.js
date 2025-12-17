@@ -55,6 +55,13 @@ document.addEventListener('DOMContentLoaded', function() {
       initAllSystems();
     }, 100);
     
+    // 6. Очистка старых фотографий
+    setTimeout(() => {
+      if (typeof cleanupOldPhotos === 'function') {
+        cleanupOldPhotos();
+      }
+    }, 1000);
+    
     console.log('✅ Приложение инициализировано');
   }
   
