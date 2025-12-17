@@ -2889,7 +2889,6 @@ select:focus {
   background: rgba(255, 255, 255, 0.8);
 }
 
-/* В styles.css добавить: */
 
 /* Кнопки переключения фото в анкете */
 .photo-nav-buttons {
@@ -2906,30 +2905,39 @@ select:focus {
 }
 
 .photo-prev-btn, .photo-next-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: all 0.2s;
-  opacity: 0.7;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+  border: 2px solid white !important;
+  font-size: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  transition: all 0.2s !important;
+  opacity: 0.9 !important;
+  position: relative !important;
+  z-index: 20 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  font-family: inherit !important;
 }
 
 .photo-prev-btn:hover, .photo-next-btn:hover {
-  background: rgba(0, 0, 0, 0.7);
-  opacity: 1;
-  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.9) !important;
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+  box-shadow: none !important;
 }
 
 .photo-prev-btn:active, .photo-next-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.95) !important;
 }
 
 /* В styles.css добавить стили для drag-and-drop: */
