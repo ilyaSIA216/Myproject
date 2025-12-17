@@ -273,11 +273,17 @@ function setupProfileEventHandlers() {
 
 // ===== УПРАВЛЕНИЕ ПРОФИЛЕМ =====
 function handleEditProfile() {
+  // Показываем экран редактирования
   document.getElementById('profile-display').classList.add('hidden');
   document.getElementById('profile-edit').classList.remove('hidden');
   
-  // Инициализируем редактирование фото
-  initEditProfilePhotos();
+  // Заполняем поля формы текущими данными
+  updateEditForm();
+  
+  // ✅ ИНИЦИАЛИЗИРУЕМ РЕДАКТИРОВАНИЕ ФОТО
+  setTimeout(() => {
+    initEditProfilePhotos();
+  }, 50);
   
   if (window.tg?.HapticFeedback) {
     try {
@@ -316,58 +322,92 @@ function initEditProfilePhotos() {
   const editPhotosContainer = document.getElementById('edit-photos-container');
   const editAddPhotoBtn = document.getElementById('edit-add-photo-btn');
   
-  if (!editPhotosContainer) return;
+  if (!editPhotosContainer) {
+    console.error('❌ edit-photos-container не найден!');
+    return;
+  }
   
+  console.log('🖼️ Инициализирую редактирование фото, фото:', 
+    window.profileData?.current?.photos?.length || 0);
+  
+  // Сначала обновляем отображение
   updateEditPhotosDisplay();
   
   // Кнопка добавления фото в режиме редактирования
   if (editAddPhotoBtn) {
-    editAddPhotoBtn.addEventListener('click', function() {
-      // Используем тот же input, что и в основном профиле
-      const photoUpload = document.getElementById('profile-photo-upload');
-      if (photoUpload) {
-        photoUpload.click();
+    // Удаляем старые обработчики
+    editAddPhotoBtn.replaceWith(editAddPhotoBtn.cloneNode(true));
+    const newBtn = document.getElementById('edit-add-photo-btn');
+    
+    newBtn.addEventListener('click', function() {
+      console.log('➕ Кнопка "Добавить фото" в редакторе нажата');
+      
+      // Создаем временный input
+      const tempInput = document.createElement('input');
+      tempInput.type = 'file';
+      tempInput.accept = 'image/*';
+      tempInput.style.display = 'none';
+      
+      tempInput.addEventListener('change', function(e) {
+        console.log('📁 Файл выбран в редакторе');
+        handlePhotoUpload(e, true); // true = режим редактирования
         
-        // Обновляем обработчик для режима редактирования
-        photoUpload.onchange = function(e) {
-          handlePhotoUpload(e, true); // true = режим редактирования
-        };
-      }
+        // Удаляем временный input
+        document.body.removeChild(tempInput);
+      });
+      
+      document.body.appendChild(tempInput);
+      tempInput.click();
     });
   }
   
   // Инициализируем drag-and-drop для редактирования
-  initEditPhotosDragAndDrop();
+  setTimeout(() => {
+    initEditPhotosDragAndDrop();
+  }, 100);
 }
 
 function updateEditPhotosDisplay() {
   const container = document.getElementById('edit-photos-container');
-  if (!container) return;
+  if (!container) {
+    console.error('❌ edit-photos-container не найден в updateEditPhotosDisplay');
+    return;
+  }
   
   container.innerHTML = '';
   
-  if (!window.profileData.current || 
+  // Проверяем наличие фото
+  if (!window.profileData || !window.profileData.current || 
       !window.profileData.current.photos || 
       window.profileData.current.photos.length === 0) {
+    
+    console.log('📭 Нет фото для отображения в редакторе');
     
     const emptyMsg = document.createElement('div');
     emptyMsg.className = 'hint';
     emptyMsg.textContent = 'Нет фотографий. Добавьте хотя бы одну.';
-    emptyMsg.style.cssText = 'text-align: center; padding: 20px; width: 100%;';
+    emptyMsg.style.cssText = 'text-align: center; padding: 20px; width: 100%; color: #666;';
     container.appendChild(emptyMsg);
     return;
   }
   
   const photos = window.profileData.current.photos;
+  console.log('🖼️ Отображаю', photos.length, 'фото в редакторе');
   
   photos.forEach((photoUrl, index) => {
+    // Проверяем, что photoUrl - валидная строка
+    if (!photoUrl || typeof photoUrl !== 'string') {
+      console.error('❌ Неверный photoUrl для индекса', index, ':', photoUrl);
+      return;
+    }
+    
     const photoItem = document.createElement('div');
     photoItem.className = 'edit-photo-item';
     photoItem.dataset.index = index;
     photoItem.draggable = true;
     
     photoItem.innerHTML = `
-      <img src="${photoUrl}" alt="Фото ${index + 1}" />
+      <img src="${photoUrl}" alt="Фото ${index + 1}" onerror="console.error('❌ Ошибка загрузки фото ${index}')" />
       <div class="edit-photo-number">${index + 1}</div>
       <div class="edit-photo-remove" data-index="${index}">×</div>
     `;
