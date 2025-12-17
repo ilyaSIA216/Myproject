@@ -10,6 +10,8 @@ let tabBar = null;
 let appRoot = null;
 let card = null;
 
+let photoStorageInitialized = false;
+
 // ===== ИНИЦИАЛИЗАЦИЯ UI =====
 function initUI() {
   console.log('🎨 Инициализация интерфейса...');
@@ -45,7 +47,71 @@ function initUI() {
     }
   }, 50);
   
+  // Инициализируем хранилище фото
+  setTimeout(() => {
+    initPhotoStorage();
+  }, 500);
+  
   console.log('✅ Интерфейс инициализирован');
+}
+
+// ===== ИНИЦИАЛИЗАЦИЯ ХРАНИЛИЩА ФОТО =====
+async function initPhotoStorage() {
+  if (!window.photoStorage) {
+    console.warn('⚠️ PhotoStorage не доступен');
+    return;
+  }
+  
+  // Ждем инициализации
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  photoStorageInitialized = true;
+  console.log('✅ PhotoStorage готов');
+  
+  // Загружаем фото при запуске
+  await loadUserPhotosOnStart();
+}
+
+async function loadUserPhotosOnStart() {
+  if (!window.profileData.current || !window.profileData.current.tg_id) {
+    console.log('⏳ Профиль не загружен, фото не загружаем');
+    return;
+  }
+  
+  const userId = window.profileData.current.tg_id;
+  
+  if (window.photoStorage && typeof window.photoStorage.loadUserPhotos === 'function') {
+    try {
+      const savedPhotos = await window.photoStorage.loadUserPhotos(userId);
+      
+      if (savedPhotos.length > 0) {
+        console.log('🔄 Восстанавливаем фото из хранилища:', savedPhotos.length);
+        
+        // Восстанавливаем фото в профиль
+        if (!window.profileData.current.photos) {
+          window.profileData.current.photos = [];
+        }
+        
+        // Объединяем с существующими (если есть)
+        window.profileData.current.photos = [
+          ...window.profileData.current.photos.filter(Boolean),
+          ...savedPhotos.filter(photo => 
+            photo && !window.profileData.current.photos.includes(photo)
+          )
+        ].slice(0, 3); // Максимум 3 фото
+        
+        // Обновляем отображение
+        updateProfilePhotos();
+        
+        // Сохраняем в основной профиль
+        if (typeof saveProfile === 'function') {
+          saveProfile(window.profileData.current);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Ошибка загрузки фото:', error);
+    }
+  }
 }
 
 // ===== ОБРАБОТЧИК КНОПКИ "НАЧАТЬ ЗНАКОМСТВО" =====
@@ -265,8 +331,8 @@ function setupProfileEventHandlers() {
   
   // ✅ ПРАВИЛЬНАЯ обработка удаления фото
   if (removePhotoBtn) {
-    removePhotoBtn.addEventListener('click', function() {
-      removeCurrentPhoto();
+    removePhotoBtn.addEventListener('click', async function() {
+      await removeCurrentPhoto();
     });
   }
 }
@@ -297,10 +363,13 @@ function handleSaveProfileChanges() {
   document.body.classList.remove('keyboard-open');
   if (card) card.style.transform = 'translateY(0)';
   
-  setTimeout(() => {
+  setTimeout(async () => {
     // Всегда считаем сохранение успешным
     document.getElementById('profile-display').classList.remove('hidden');
     document.getElementById('profile-edit').classList.add('hidden');
+    
+    // Сохраняем фото в надежное хранилище
+    await savePhotosToStorage();
     
     // Обновляем отображение
     updateProfileDisplay();
@@ -419,27 +488,27 @@ function updateEditPhotosDisplay() {
   // ✅ ДОБАВЛЯЕМ ОБРАБОТЧИКИ ДЛЯ КНОПОК ПОРЯДКА
   setTimeout(() => {
     document.querySelectorAll('.order-up-btn').forEach(btn => {
-      btn.addEventListener('click', function(e) {
+      btn.addEventListener('click', async function(e) {
         e.stopPropagation();
         const index = parseInt(this.dataset.index);
-        swapPhotos(index, index - 1);
+        await swapPhotos(index, index - 1);
       });
     });
     
     document.querySelectorAll('.order-down-btn').forEach(btn => {
-      btn.addEventListener('click', function(e) {
+      btn.addEventListener('click', async function(e) {
         e.stopPropagation();
         const index = parseInt(this.dataset.index);
-        swapPhotos(index, index + 1);
+        await swapPhotos(index, index + 1);
       });
     });
     
     // Обработчик удаления фото
     document.querySelectorAll('.edit-photo-remove').forEach(btn => {
-      btn.addEventListener('click', function(e) {
+      btn.addEventListener('click', async function(e) {
         e.stopPropagation();
         const index = parseInt(this.dataset.index);
-        removePhotoByIndex(index, true);
+        await removePhotoByIndex(index, true);
       });
     });
   }, 100);
@@ -487,7 +556,7 @@ function initEditPhotosDragAndDrop() {
     }
   });
   
-  container.addEventListener('drop', (e) => {
+  container.addEventListener('drop', async (e) => {
     e.preventDefault();
     const target = e.target.closest('.edit-photo-item');
     
@@ -496,7 +565,7 @@ function initEditPhotosDragAndDrop() {
       const dropIndex = parseInt(target.dataset.index);
       
       if (draggedIndex !== dropIndex) {
-        swapPhotos(draggedIndex, dropIndex);
+        await swapPhotos(draggedIndex, dropIndex);
       }
     }
   });
@@ -534,7 +603,7 @@ function initEditPhotosDragAndDrop() {
     }
   }, { passive: false });
   
-  container.addEventListener('touchend', (e) => {
+  container.addEventListener('touchend', async (e) => {
     if (draggedItem) {
       const touch = e.changedTouches[0];
       const deltaX = touch.clientX - touchStartX;
@@ -557,7 +626,7 @@ function initEditPhotosDragAndDrop() {
         if (targetElement) {
           const dropIndex = parseInt(targetElement.dataset.index);
           if (draggedIndex !== dropIndex) {
-            swapPhotos(draggedIndex, dropIndex);
+            await swapPhotos(draggedIndex, dropIndex);
           }
         }
       }
@@ -568,17 +637,17 @@ function initEditPhotosDragAndDrop() {
   }, { passive: true });
   
   // Обработчик удаления фото
-  container.addEventListener('click', (e) => {
+  container.addEventListener('click', async (e) => {
     if (e.target.classList.contains('edit-photo-remove')) {
       const index = parseInt(e.target.dataset.index);
-      removePhotoByIndex(index, true);
+      await removePhotoByIndex(index, true);
       e.stopPropagation();
     }
   });
 }
 
 // ✅ Функция для обмена фото местами
-function swapPhotos(index1, index2) {
+async function swapPhotos(index1, index2) {
   if (!window.profileData.current || 
       !window.profileData.current.photos ||
       index1 < 0 || index2 < 0 ||
@@ -593,10 +662,8 @@ function swapPhotos(index1, index2) {
   [photosArray[index1], photosArray[index2]] = 
   [photosArray[index2], photosArray[index1]];
   
-  // Сохраняем
-  if (typeof saveProfile === 'function') {
-    saveProfile(window.profileData.current);
-  }
+  // Сохраняем в надежное хранилище
+  await savePhotosToStorage();
   
   // Обновляем отображение
   updateEditPhotosDisplay();
@@ -605,7 +672,7 @@ function swapPhotos(index1, index2) {
   showNotification('✅ Порядок фото изменён!');
 }
 
-function removePhotoByIndex(index, isEditMode = false) {
+async function removePhotoByIndex(index, isEditMode = false) {
   if (!window.profileData.current || 
       !window.profileData.current.photos || 
       window.profileData.current.photos.length <= 1) {
@@ -616,10 +683,8 @@ function removePhotoByIndex(index, isEditMode = false) {
   // Удаляем фото по индексу
   window.profileData.current.photos.splice(index, 1);
   
-  // Сохраняем
-  if (typeof saveProfile === 'function') {
-    saveProfile(window.profileData.current);
-  }
+  // Сохраняем в надежное хранилище
+  await savePhotosToStorage();
   
   // Обновляем отображение
   updateProfilePhotos();
@@ -667,8 +732,44 @@ function compressImage(dataUrl, quality, maxWidth, callback) {
   img.src = dataUrl;
 }
 
-// Обновим handlePhotoUpload для поддержки режима редактирования
-function handlePhotoUpload(e, isEditMode = false) {
+// ===== СОХРАНЕНИЕ ФОТО В НАДЕЖНОЕ ХРАНИЛИЩЕ =====
+async function savePhotosToStorage() {
+  if (!window.profileData.current || !window.profileData.current.photos) {
+    return;
+  }
+  
+  const userId = window.profileData.current.tg_id || 1;
+  
+  // 1. Сохраняем в надежное хранилище
+  if (window.photoStorage && typeof window.photoStorage.saveUserPhotos === 'function') {
+    try {
+      await window.photoStorage.saveUserPhotos(userId, window.profileData.current.photos);
+    } catch (error) {
+      console.error('❌ Ошибка сохранения в PhotoStorage:', error);
+    }
+  }
+  
+  // 2. Сохраняем в localStorage (основной профиль, но без больших фото)
+  if (typeof saveProfile === 'function') {
+    // Создаем копию с обрезанными фото для localStorage
+    const profileForLocalStorage = JSON.parse(JSON.stringify(window.profileData.current));
+    
+    if (profileForLocalStorage.photos) {
+      profileForLocalStorage.photos = profileForLocalStorage.photos.map(photo => {
+        if (photo && photo.length > 30000) {
+          // Сохраняем только миниатюру
+          return photo.substring(0, 30000) + '...';
+        }
+        return photo;
+      });
+    }
+    
+    saveProfile(profileForLocalStorage);
+  }
+}
+
+// ===== ОБРАБОТКА ЗАГРУЗКИ ФОТО =====
+async function handlePhotoUpload(e, isEditMode = false) {
   const file = e.target.files[0];
   if (!file) return;
   
@@ -687,16 +788,13 @@ function handlePhotoUpload(e, isEditMode = false) {
   }
   
   const reader = new FileReader();
-  reader.onload = function(event) {
-    // СЖИМАЕМ ФОТО ПЕРЕД СОХРАНЕНИЕМ
-    compressImage(event.target.result, 0.6, 800, function(compressedPhotoUrl) {
-      // Добавляем сжатое фото в массив
+  reader.onload = async function(event) {
+    compressImage(event.target.result, 0.5, 600, async function(compressedPhotoUrl) {
+      // Добавляем фото в массив
       window.profileData.current.photos.push(compressedPhotoUrl);
       
-      // Сохраняем
-      if (typeof saveProfile === 'function') {
-        saveProfile(window.profileData.current);
-      }
+      // ✅ СОХРАНЯЕМ В НАДЕЖНОЕ ХРАНИЛИЩЕ
+      await savePhotosToStorage();
       
       // Обновляем отображение
       updateProfilePhotos();
@@ -719,7 +817,7 @@ function handlePhotoUpload(e, isEditMode = false) {
 }
 
 // ===== УДАЛЕНИЕ ТЕКУЩЕГО ФОТО =====
-function removeCurrentPhoto() {
+async function removeCurrentPhoto() {
   if (!window.profileData.current || 
       !window.profileData.current.photos || 
       window.profileData.current.photos.length === 0) {
@@ -730,10 +828,8 @@ function removeCurrentPhoto() {
   // Удаляем последнее фото
   window.profileData.current.photos.pop();
   
-  // Сохраняем в localStorage
-  if (typeof saveProfile === 'function') {
-    saveProfile(window.profileData.current);
-  }
+  // Сохраняем в надежное хранилище
+  await savePhotosToStorage();
   
   // Обновляем отображение
   updateProfilePhotos();
@@ -900,7 +996,7 @@ function initProfile() {
         e.preventDefault();
       });
       
-      photo.addEventListener('drop', (e) => {
+      photo.addEventListener('drop', async (e) => {
         e.preventDefault();
         const dragDstIndex = parseInt(e.target.dataset.index);
         
@@ -911,9 +1007,7 @@ function initProfile() {
           [photosArray[dragDstIndex], photosArray[dragSrcIndex]];
           
           // Сохраняем изменения
-          if (typeof saveProfile === 'function') {
-            saveProfile(window.profileData.current);
-          }
+          await savePhotosToStorage();
           
           // Обновляем UI
           updateProfilePhotos();
@@ -1083,3 +1177,6 @@ window.initEditProfilePhotos = initEditProfilePhotos;
 window.updateEditPhotosDisplay = updateEditPhotosDisplay;
 window.swapPhotos = swapPhotos;
 window.compressImage = compressImage;
+window.initPhotoStorage = initPhotoStorage;
+window.loadUserPhotosOnStart = loadUserPhotosOnStart;
+window.savePhotosToStorage = savePhotosToStorage;
