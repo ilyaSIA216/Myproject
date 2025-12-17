@@ -411,53 +411,52 @@ function initProfile() {
   updateProfileDisplay();
   updateProfilePhotos();
   
-  // ✅ Простой тач-драг без Sortable.js
+  // ✅ Улучшенный drag-and-drop для изменения порядка фото
   const container = document.querySelector('.profile-photos-container');
   if (container && window.profileData?.current?.photos?.length > 1) {
-    let dragIndex = -1;
-    let touchStartY = 0;
+    let dragSrcIndex = -1;
     
-    container.addEventListener('touchstart', (e) => {
-      const img = e.target.closest('img');
-      if (!img) return;
+    // Сделать все фото перетаскиваемыми
+    const photos = container.querySelectorAll('.profile-main-photo');
+    photos.forEach((photo, index) => {
+      photo.draggable = true;
+      photo.dataset.index = index;
       
-      dragIndex = parseInt(img.dataset.index);
-      touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-    
-    container.addEventListener('touchmove', (e) => {
-      if (dragIndex >= 0 && window.profileData?.current?.photos?.length > 1) {
-        const touchY = e.touches[0].clientY;
-        const deltaY = touchY - touchStartY;
+      photo.addEventListener('dragstart', (e) => {
+        dragSrcIndex = parseInt(e.target.dataset.index);
+        e.target.classList.add('dragging');
+      });
+      
+      photo.addEventListener('dragend', (e) => {
+        e.target.classList.remove('dragging');
+        dragSrcIndex = -1;
+      });
+      
+      photo.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+      
+      photo.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dragDstIndex = parseInt(e.target.dataset.index);
         
-        // Простая логика перестановки
-        if (Math.abs(deltaY) > 50) {
-          const newIndex = deltaY > 0 ? 
-            Math.min(dragIndex + 1, window.profileData.current.photos.length - 1) : 
-            Math.max(dragIndex - 1, 0);
+        if (dragSrcIndex !== -1 && dragSrcIndex !== dragDstIndex) {
+          // Меняем местами фото в массиве
+          const photosArray = window.profileData.current.photos;
+          [photosArray[dragSrcIndex], photosArray[dragDstIndex]] = 
+          [photosArray[dragDstIndex], photosArray[dragSrcIndex]];
           
-          if (newIndex !== dragIndex) {
-            // Меняем местами в массиве
-            [window.profileData.current.photos[dragIndex], window.profileData.current.photos[newIndex]] = 
-            [window.profileData.current.photos[newIndex], window.profileData.current.photos[dragIndex]];
-            
-            // Сохраняем изменения
-            if (typeof saveProfile === 'function') {
-              saveProfile(window.profileData.current);
-            }
-            
-            // Обновляем UI
-            updateProfilePhotos();
-            showNotification('✅ Порядок изменён!');
+          // Сохраняем изменения
+          if (typeof saveProfile === 'function') {
+            saveProfile(window.profileData.current);
           }
-          dragIndex = -1;
+          
+          // Обновляем UI
+          updateProfilePhotos();
+          showNotification('✅ Порядок фото изменён!');
         }
-      }
-    }, { passive: true });
-    
-    container.addEventListener('touchend', () => {
-      dragIndex = -1;
-    }, { passive: true });
+      });
+    });
   }
   
   // Инициализируем слайдер фото если есть
