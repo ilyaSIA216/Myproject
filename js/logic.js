@@ -2336,7 +2336,7 @@ function initSwipeSystem() {
   }
   
   initSwipeGestures(candidateCard);
- // initPhotoSwitching(photosContainer);
+  initPhotoSwitching(photosContainer);
 }
 
 function initSwipeGestures(cardElement) {
@@ -2357,64 +2357,68 @@ function initPhotoSwitching(photosContainer) {
   photosContainer.addEventListener('touchstart', handlePhotoTouchStart, { passive: true });
   photosContainer.addEventListener('touchend', handlePhotoTouchEnd, { passive: true });
   
- // createPhotoSwipeIndicators(photosContainer);
+  // Создаём кружки-пагинацию вместо стрелок
+  if (candidatePhotos.length > 1) {
+    createPhotoDots(photosContainer, candidatePhotos.length);
+  }
 }
 
-function createPhotoSwipeIndicators(container) {
-  // Удалить все старые индикаторы
-  container.querySelectorAll('.photo-swipe-indicator').forEach(el => el.remove());
+// Функция для создания кружков-пагинации (стандарт Tinder)
+function createPhotoDots(container, totalPhotos) {
+  // Удаляем старые кружки
+  container.querySelectorAll('.photo-dot').forEach(el => el.remove());
   
-  const leftIndicator = document.createElement('div');
-  leftIndicator.className = 'photo-swipe-indicator left';
-  leftIndicator.innerHTML = '◀';
-  leftIndicator.style.cssText = `
+  // Создаём контейнер для кружков
+  const dotsContainer = document.createElement('div');
+  dotsContainer.className = 'photo-dots';
+  dotsContainer.style.cssText = `
     position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 30px;
-    color: white;
-    background: rgba(0,0,0,0.3);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.7;
-    pointer-events: none;
-    z-index: 5;
-    transition: opacity 0.3s ease;
+    gap: 8px;
+    z-index: 10;
   `;
   
-  const rightIndicator = document.createElement('div');
-  rightIndicator.className = 'photo-swipe-indicator right';
-  rightIndicator.innerHTML = '▶';
-  rightIndicator.style.cssText = `
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 30px;
-    color: white;
-    background: rgba(0,0,0,0.3);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.7;
-    pointer-events: none;
-    z-index: 5;
-    transition: opacity 0.3s ease;
-  `;
+  // Создаём кружки
+  for(let i = 0; i < totalPhotos; i++) {
+    const dot = document.createElement('div');
+    dot.className = `photo-dot ${i === currentPhotoIndex ? 'active' : ''}`;
+    dot.style.cssText = `
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: ${i === currentPhotoIndex ? 'white' : 'rgba(255,255,255,0.4)'};
+      transition: all 0.3s ease;
+      cursor: pointer;
+    `;
+    dot.dataset.index = i;
+    
+    // Клик на кружок переключает на соответствующую фото
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = parseInt(dot.dataset.index);
+      if (index !== currentPhotoIndex) {
+        currentPhotoIndex = index;
+        updateCandidatePhoto();
+        updatePhotoDots(container);
+      }
+    });
+    
+    dotsContainer.appendChild(dot);
+  }
   
-  container.appendChild(leftIndicator);
-  container.appendChild(rightIndicator);
-  
-  // Возвращаем элементы для управления видимостью
-  return { leftIndicator, rightIndicator };
+  container.appendChild(dotsContainer);
+}
+
+// Обновление состояния кружков
+function updatePhotoDots(container) {
+  const dots = container.querySelectorAll('.photo-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentPhotoIndex);
+    dot.style.background = i === currentPhotoIndex ? 'white' : 'rgba(255,255,255,0.4)';
+  });
 }
 
 let touchStartTime = 0;
@@ -2438,13 +2442,15 @@ function handlePhotoTouchEnd(e) {
   const deltaY = touch.clientY - photoSwipeStartY;
   const touchDuration = Date.now() - touchStartTime;
   
+  // Если короткое касание - переключение фото
   if (touchDuration < 200 && Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
     handlePhotoClick(e);
   } else if (Math.abs(deltaX) > 30 && Math.abs(deltaY) < 50) {
+    // Свайп для переключения фото
     if (deltaX > 0) {
-      switchPhoto(-1);
+      switchPhoto(-1); // Свайп вправо - предыдущая фото
     } else {
-      switchPhoto(1);
+      switchPhoto(1); // Свайп влево - следующая фото
     }
   }
   
@@ -2452,18 +2458,21 @@ function handlePhotoTouchEnd(e) {
 }
 
 function handlePhotoClick(e) {
-  if (e.target.classList.contains('photo-swipe-indicator')) return;
+  if (e.target.classList.contains('photo-dot')) return;
   
   const photoRect = e.currentTarget.getBoundingClientRect();
   const clickX = e.clientX || (e.touches && e.touches[0].clientX);
   
-  if (clickX) {
+  if (clickX && candidatePhotos.length > 1) {
     const photoWidth = photoRect.width;
     const clickPosition = clickX - photoRect.left;
     
+    // Левая треть фото - предыдущее фото
     if (clickPosition < photoWidth / 3) {
       switchPhoto(-1);
-    } else if (clickPosition > (photoWidth / 3) * 2) {
+    } 
+    // Правая треть фото - следующее фото
+    else if (clickPosition > (photoWidth / 3) * 2) {
       switchPhoto(1);
     }
   }
@@ -2668,7 +2677,12 @@ function switchPhoto(direction) {
   }
   
   updateCandidatePhoto();
-  updatePhotoIndicators();
+  
+  // Обновляем кружки-пагинацию
+  const photosContainer = document.querySelector('.candidate-photos-container');
+  if (photosContainer) {
+    updatePhotoDots(photosContainer);
+  }
   
   const photoElement = document.getElementById('candidate-photo');
   photoElement.style.transition = 'opacity 0.3s ease';
@@ -2690,6 +2704,7 @@ function updateCandidatePhoto() {
     const photoUrl = candidatePhotos[currentPhotoIndex];
     const photoElement = document.getElementById("candidate-photo");
     
+    // Предзагрузка следующей фото для плавности
     if (candidatePhotos.length > 1) {
       const nextIndex = (currentPhotoIndex + 1) % candidatePhotos.length;
       const nextPhotoUrl = candidatePhotos[nextIndex];
@@ -2733,28 +2748,6 @@ function updateCandidateInterests() {
     tag.textContent = interestLabels[interest] || interest;
     interestsContainer.appendChild(tag);
   });
-}
-
-function updatePhotoIndicators() {
-  const indicatorsContainer = document.querySelector('.photo-indicators');
-  if (!indicatorsContainer) return;
-  
-  indicatorsContainer.innerHTML = '';
-  
-  for (let i = 0; i < candidatePhotos.length; i++) {
-    const indicator = document.createElement('div');
-    indicator.className = `photo-indicator ${i === currentPhotoIndex ? 'active' : ''}`;
-    indicator.dataset.index = i;
-    
-    indicator.addEventListener('click', (e) => {
-      e.stopPropagation();
-      currentPhotoIndex = i;
-      updateCandidatePhoto();
-      updatePhotoIndicators();
-    });
-    
-    indicatorsContainer.appendChild(indicator);
-  }
 }
 
 // ===== ОСНОВНЫЕ ОБРАБОТЧИКИ =====
@@ -2938,7 +2931,6 @@ function showCurrentCandidate() {
     candidatePhotos = [];
     candidateInterests = [];
     currentPhotoIndex = 0;
-    updatePhotoIndicators();
     return;
   }
   
@@ -2962,7 +2954,6 @@ function showCurrentCandidate() {
     candidatePhotos = [];
     candidateInterests = [];
     currentPhotoIndex = 0;
-    updatePhotoIndicators();
     return;
   }
   
@@ -2981,7 +2972,6 @@ function showCurrentCandidate() {
   
   updateCandidatePhoto();
   updateCandidateInterests();
-  updatePhotoIndicators();
   
   const verifiedBadge = document.getElementById('candidate-verified');
   if (verifiedBadge) {
@@ -2999,6 +2989,12 @@ function showCurrentCandidate() {
     } else {
       boostBadge.classList.add('hidden');
     }
+  }
+  
+  // Создаём кружки-пагинацию если есть несколько фото
+  const photosContainer = document.querySelector('.candidate-photos-container');
+  if (photosContainer && candidatePhotos.length > 1) {
+    createPhotoDots(photosContainer, candidatePhotos.length);
   }
 }
 
