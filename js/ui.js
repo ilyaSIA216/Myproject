@@ -732,6 +732,38 @@ function compressImage(dataUrl, quality, maxWidth, callback) {
   img.src = dataUrl;
 }
 
+// ===== ДОПОЛНИТЕЛЬНАЯ ФУНКЦИЯ СЖАТИЯ ДЛЯ iOS =====
+function compressPhotoForStorage(dataUrl, targetSizeKB) {
+  const img = new Image();
+  img.src = dataUrl;
+  
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Начальные параметры
+  let quality = 0.3;
+  let width = Math.min(img.width, 300);
+  let height = (img.height * width) / img.width;
+  
+  canvas.width = width;
+  canvas.height = height;
+  ctx.drawImage(img, 0, 0, width, height);
+  
+  // Постепенно уменьшаем качество, пока не достигнем целевого размера
+  let compressedDataUrl;
+  for (let q = quality; q >= 0.1; q -= 0.05) {
+    compressedDataUrl = canvas.toDataURL('image/jpeg', q);
+    const sizeKB = Math.round(compressedDataUrl.length / 1024);
+    
+    if (sizeKB <= targetSizeKB) {
+      console.log(`📊 Дополнительное сжатие: ${q} качество, ${sizeKB}KB`);
+      return compressedDataUrl;
+    }
+  }
+  
+  return compressedDataUrl;
+}
+
 // ===== СОХРАНЕНИЕ ФОТО В НАДЕЖНОЕ ХРАНИЛИЩЕ =====
 async function savePhotosToStorage() {
   if (!window.profileData.current || !window.profileData.current.photos) {
@@ -769,12 +801,13 @@ async function savePhotosToStorage() {
 }
 
 // ===== ОБРАБОТКА ЗАГРУЗКИ ФОТО =====
-async function handlePhotoUpload(e, isEditMode = false) {
+function handlePhotoUpload(e, isEditMode = false) {
   const file = e.target.files[0];
   if (!file) return;
   
-  if (file.size > 3 * 1024 * 1024) { // Уменьшили до 3MB
-    showNotification('❌ Фото слишком большое (максимум 3MB)');
+  // ✅ ЖЕСТКОЕ ОГРАНИЧЕНИЕ РАЗМЕРА ДЛЯ iOS
+  if (file.size > 2 * 1024 * 1024) { // Максимум 2MB
+    showNotification('❌ Фото слишком большое (максимум 2MB)');
     return;
   }
   
@@ -788,13 +821,23 @@ async function handlePhotoUpload(e, isEditMode = false) {
   }
   
   const reader = new FileReader();
-  reader.onload = async function(event) {
-    compressImage(event.target.result, 0.5, 600, async function(compressedPhotoUrl) {
-      // Добавляем фото в массив
+  reader.onload = function(event) {
+    // ✅ СИЛЬНОЕ СЖАТИЕ ДЛЯ iOS
+    compressImage(event.target.result, 0.4, 400, function(compressedPhotoUrl) {
+      // Проверяем размер после сжатия
+      if (compressedPhotoUrl.length > 50000) { // Максимум 50KB после сжатия
+        showNotification('⚠️ Фото слишком большое, качество уменьшено');
+        // Дополнительное сжатие
+        compressedPhotoUrl = compressPhotoForStorage(compressedPhotoUrl, 40000);
+      }
+      
+      // Добавляем фото
       window.profileData.current.photos.push(compressedPhotoUrl);
       
-      // ✅ СОХРАНЯЕМ В НАДЕЖНОЕ ХРАНИЛИЩЕ
-      await savePhotosToStorage();
+      // Сохраняем
+      if (typeof saveProfile === 'function') {
+        saveProfile(window.profileData.current);
+      }
       
       // Обновляем отображение
       updateProfilePhotos();
@@ -804,7 +847,6 @@ async function handlePhotoUpload(e, isEditMode = false) {
       
       showNotification(`✅ Фото добавлено! (${window.profileData.current.photos.length}/3)`);
       
-      // Очищаем input
       e.target.value = '';
     });
   };
@@ -1180,3 +1222,4 @@ window.compressImage = compressImage;
 window.initPhotoStorage = initPhotoStorage;
 window.loadUserPhotosOnStart = loadUserPhotosOnStart;
 window.savePhotosToStorage = savePhotosToStorage;
+window.compressPhotoForStorage = compressPhotoForStorage;
