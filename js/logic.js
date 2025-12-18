@@ -1396,19 +1396,6 @@ function initBonusSystem() {
   }
 }
 
-function handleInviteFriend() {
-  if (window.tg?.HapticFeedback) {
-    try {
-      window.tg.HapticFeedback.impactOccurred('medium');
-    } catch (e) {}
-  }
-  
-  const referralCode = generateReferralCode();
-  const referralLink = `https://t.me/SiaMatchBot?start=${referralCode}`;
-  
-  showInviteVerificationModal(referralLink);
-}
-
 function handleShareStories() {
   if (window.tg?.HapticFeedback) {
     try {
