@@ -3377,3 +3377,25 @@ body.td {
   z-index: 9999;
   pointer-events: none;
 }
+
+/* Хак для скрытия Telegram панели */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, #f4fff7 0%, #f4fff7 80%, transparent 100%);
+  z-index: 9998;
+  pointer-events: none;
+}
+
+/* Поднимаем наше приложение над Telegram панелью */
+#app-root {
+  position: relative;
+  z-index: 9999;
+  background: #f4fff7;
+  margin-top: -60px; /* Поднимаем выше Telegram панели */
+  padding-top: 60px; /* Компенсируем подъем */
+}
