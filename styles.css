@@ -3264,3 +3264,116 @@ body.no-telegram::before {
   z-index: 9999;
   font-weight: bold;
 }
+
+/* Настройка переменных высоты */
+:root {
+  --tg-header-height: 56px; /* По умолчанию для Android */
+}
+
+/* Для iOS - другая высота */
+body.ios {
+  --tg-header-height: 44px;
+}
+
+/* Для десктопа - минимальная высота */
+body.td {
+  --tg-header-height: 0px;
+}
+
+/* ОСНОВНОЙ ФИКС: добавляем отступ сверху для контента */
+#app-root {
+  width: 100vw;
+  height: 100vh;
+  padding-top: var(--tg-header-height) !important; /* ВАЖНО! */
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* ФИКС: карточка с контентом должна учитывать отступ */
+#card {
+  height: calc(100vh - var(--tg-header-height)) !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ФИКС: все экраны должны быть смещены вниз */
+.screen {
+  min-height: calc(100vh - var(--tg-header-height)) !important;
+  position: relative !important;
+  top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* ФИКС: контент экрана */
+.screen-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  height: 100%;
+}
+
+/* ФИКС: таб-бар должен быть выше Telegram панели */
+#tab-bar {
+  position: fixed !important;
+  bottom: env(safe-area-inset-bottom, 0px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1001 !important;
+  height: 70px !important;
+}
+
+/* ФИКС: кнопки которые скрылись */
+.profile-header,
+.filters-header,
+.interests-header {
+  margin-top: 0 !important;
+  padding-top: 10px !important;
+}
+
+/* ФИКС: заголовки экранов */
+.screen-title {
+  margin-top: 5px !important;
+  padding-top: 5px !important;
+}
+
+/* ФИКС: кнопка сохранения профиля */
+#saveProfileBtn {
+  position: fixed !important;
+  bottom: max(90px, calc(env(safe-area-inset-bottom, 0px) + 90px)) !important;
+  left: 16px !important;
+  right: 16px !important;
+  z-index: 1002 !important;
+}
+
+/* ФИКС: кнопка редактирования профиля */
+#edit-profile-btn,
+.settings-btn,
+.save-edit-btn {
+  position: relative !important;
+  z-index: 10 !important;
+  margin-top: 5px !important;
+}
+
+/* ФИКС: верхние элементы профиля */
+.profile-info-card {
+  margin-top: 10px !important;
+}
+
+/* Дебаг стили для визуализации границ */
+.debug-border::before {
+  content: 'Telegram Header Area';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--tg-header-height);
+  background: rgba(255, 0, 0, 0.3);
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+}
