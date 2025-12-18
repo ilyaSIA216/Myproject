@@ -3176,3 +3176,196 @@ select:focus {
     z-index: 1000 !important;
   }
 }
+
+/* Стили для экрана приглашения */
+.invite-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 24px;
+  margin-top: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.invite-icon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.invite-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.invite-description {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.invite-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.invite-step {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  background: var(--bg-color);
+  border-radius: 12px;
+}
+
+.step-number {
+  background: var(--primary-color);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-text {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+/* Стили для ссылки */
+.invite-link-container {
+  background: var(--bg-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.invite-link-label {
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.invite-link-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+}
+
+.invite-link-text {
+  flex: 1;
+  word-break: break-all;
+  font-size: 14px;
+  color: var(--text-color);
+  font-family: monospace;
+}
+
+.copy-link-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.copy-link-btn:hover {
+  background: #4f46e5;
+}
+
+.copy-success {
+  color: #10b981;
+  font-weight: 600;
+  text-align: center;
+  font-size: 14px;
+  animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* QR-код */
+.invite-qr-section {
+  text-align: center;
+  margin-bottom: 25px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.invite-qr-label {
+  margin-bottom: 15px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.invite-qrcode {
+  display: inline-block;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Загрузка скриншота */
+.file-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.file-upload-label {
+  background: var(--primary-color);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.file-upload-label:hover {
+  background: #4f46e5;
+}
+
+.file-upload-filename {
+  color: var(--text-secondary);
+  font-size: 14px;
+  flex: 1;
+}
+
+.screenshot-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 10px;
+  margin: 15px 0;
+  border: 2px solid var(--border-color);
+}
+
+.invite-friend-id-section,
+.invite-screenshot-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
