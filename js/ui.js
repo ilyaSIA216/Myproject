@@ -31,6 +31,9 @@ function initUI() {
   setupTabButtons();
   setupProfileEventHandlers();
   
+  // ✅ ДОБАВЛЕНО: инициализация экрана приглашения друга
+  initInviteScreen();
+  
   // ✅ ДОБАВЛЕНО: обновление UI после загрузки профиля
   setTimeout(() => {
     if (window.profileData && window.profileData.current) {
@@ -53,6 +56,243 @@ function initUI() {
   }, 500);
   
   console.log('✅ Интерфейс инициализирован');
+}
+
+// ===== ОБРАБОТКА ЭКРАНА ПРИГЛАШЕНИЯ ДРУГА =====
+function initInviteScreen() {
+  const backFromInviteBtn = document.getElementById('back-from-invite-btn');
+  const copyInviteLinkBtn = document.getElementById('copy-invite-link');
+  const inviteLinkText = document.getElementById('invite-link-text');
+  const copySuccess = document.getElementById('copy-success');
+  const inviteFriendBtn = document.getElementById('inviteFriendBtn'); // Кнопка в профиле
+  
+  if (!backFromInviteBtn || !copyInviteLinkBtn || !inviteLinkText) {
+    console.log('ℹ️ Элементы экрана приглашения не найдены');
+    return;
+  }
+  
+  // Навигация
+  backFromInviteBtn.addEventListener('click', () => {
+    setActiveTab('profile');
+  });
+  
+  // Кнопка "Пригласить друга" в профиле
+  if (inviteFriendBtn) {
+    inviteFriendBtn.addEventListener('click', () => {
+      showScreen('invite');
+    });
+  }
+  
+  // Копирование ссылки
+  copyInviteLinkBtn.addEventListener('click', async () => {
+    const link = inviteLinkText.textContent;
+    
+    try {
+      // Используем Clipboard API
+      await navigator.clipboard.writeText(link);
+      
+      // Показываем сообщение об успехе
+      copySuccess.classList.remove('hidden');
+      copyInviteLinkBtn.textContent = '✓';
+      copyInviteLinkBtn.style.background = '#10b981';
+      
+      // Тактильная обратная связь
+      if (window.tg?.HapticFeedback) {
+        try {
+          window.tg.HapticFeedback.impactOccurred('light');
+        } catch (e) {}
+      }
+      
+      // Возвращаем кнопку в исходное состояние через 2 секунды
+      setTimeout(() => {
+        copySuccess.classList.add('hidden');
+        copyInviteLinkBtn.textContent = '📋';
+        copyInviteLinkBtn.style.background = '';
+      }, 2000);
+      
+    } catch (err) {
+      // Fallback для старых браузеров
+      const textArea = document.createElement('textarea');
+      textArea.value = link;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      // Все равно показываем успех
+      copySuccess.classList.remove('hidden');
+      copyInviteLinkBtn.textContent = '✓';
+      copyInviteLinkBtn.style.background = '#10b981';
+      
+      setTimeout(() => {
+        copySuccess.classList.add('hidden');
+        copyInviteLinkBtn.textContent = '📋';
+        copyInviteLinkBtn.style.background = '';
+      }, 2000);
+    }
+  });
+  
+  // Генерация QR-кода (опционально)
+  generateQRCode();
+  
+  // Обработка загрузки скриншота
+  initScreenshotUpload();
+}
+
+// ===== ГЕНЕРАЦИЯ QR-КОДА =====
+function generateQRCode() {
+  const qrcodeDiv = document.getElementById('qrcode');
+  if (!qrcodeDiv) return;
+  
+  const link = document.getElementById('invite-link-text').textContent;
+  
+  // Проверяем, доступна ли библиотека QRCode
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(qrcodeDiv, {
+      text: link,
+      width: 150,
+      height: 150,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } else {
+    // Альтернатива: отображение ссылки как текста
+    qrcodeDiv.innerHTML = `
+      <div style="padding: 20px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+        <div style="font-size: 12px; word-break: break-all; font-family: monospace; margin-bottom: 10px;">
+          ${link}
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          (Для отображения QR-кода подключите библиотеку QRCode)
+        </div>
+      </div>
+    `;
+  }
+}
+
+// ===== ЗАГРУЗКА СКРИНШОТА =====
+function initScreenshotUpload() {
+  const screenshotUpload = document.getElementById('screenshot-upload');
+  const screenshotPreview = document.getElementById('screenshot-preview');
+  const screenshotFilename = document.getElementById('screenshot-filename');
+  const submitScreenshotBtn = document.getElementById('submit-screenshot');
+  
+  if (!screenshotUpload || !submitScreenshotBtn) return;
+  
+  screenshotUpload.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Проверяем тип файла
+    if (!file.type.match('image.*')) {
+      showNotification('❌ Пожалуйста, выберите изображение');
+      return;
+    }
+    
+    // Проверяем размер файла
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      showNotification('❌ Файл слишком большой (максимум 5MB)');
+      return;
+    }
+    
+    // Показываем имя файла
+    screenshotFilename.textContent = file.name;
+    screenshotFilename.style.color = 'var(--text-color)';
+    
+    // Показываем превью
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      screenshotPreview.src = event.target.result;
+      screenshotPreview.classList.remove('hidden');
+      submitScreenshotBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  });
+  
+  // Отправка скриншота
+  submitScreenshotBtn.addEventListener('click', async () => {
+    const file = screenshotUpload.files[0];
+    if (!file) {
+      showNotification('❌ Выберите файл для отправки');
+      return;
+    }
+    
+    // Здесь должна быть логика отправки на сервер
+    const formData = new FormData();
+    formData.append('screenshot', file);
+    
+    if (window.profileData?.current?.tg_id) {
+      formData.append('userId', window.profileData.current.tg_id);
+    }
+    
+    try {
+      submitScreenshotBtn.disabled = true;
+      submitScreenshotBtn.textContent = 'Отправка...';
+      
+      // Временная заглушка - имитация отправки
+      setTimeout(() => {
+        showNotification('✅ Скриншот отправлен на проверку! Проверка займет до 24 часов.');
+        
+        // Сбрасываем форму
+        screenshotUpload.value = '';
+        screenshotPreview.src = '';
+        screenshotPreview.classList.add('hidden');
+        screenshotFilename.textContent = 'Файл не выбран';
+        screenshotFilename.style.color = 'var(--text-secondary)';
+        
+        submitScreenshotBtn.disabled = false;
+        submitScreenshotBtn.textContent = 'Отправить на проверку';
+      }, 1000);
+      
+    } catch (error) {
+      showNotification('❌ Ошибка отправки скриншота');
+      submitScreenshotBtn.disabled = false;
+      submitScreenshotBtn.textContent = 'Отправить на проверку';
+    }
+  });
+}
+
+// ===== ПОКАЗ ЭКРАНА =====
+function showScreen(screenName) {
+  // Скрыть все экраны
+  document.querySelectorAll('.screen').forEach(screen => {
+    if (!screen.id.includes('welcome') && 
+        !screen.id.includes('chat') && 
+        !screen.id.includes('screen-interests')) {
+      screen.classList.add('hidden');
+    }
+  });
+  
+  // Показать нужный экран
+  const screen = document.getElementById(`screen-${screenName}`);
+  if (screen) {
+    screen.classList.remove('hidden');
+  }
+  
+  // Обновить активную вкладку (если экран связан с вкладкой)
+  if (['chats', 'feed', 'filters', 'profile'].includes(screenName)) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.tab === screenName) {
+        btn.classList.add('active');
+      }
+    });
+  }
+  
+  // Показать/скрыть таб-бар
+  if (tabBar) {
+    if (['chats', 'feed', 'filters', 'profile'].includes(screenName)) {
+      tabBar.classList.remove('hidden');
+    } else {
+      tabBar.classList.add('hidden');
+    }
+  }
+  
+  // Скролл наверх
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 50);
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ ХРАНИЛИЩА ФОТО =====
@@ -1202,6 +1442,7 @@ window.showAnimatedWelcomeScreen = showAnimatedWelcomeScreen;
 window.showOnboarding = showOnboarding;
 window.showMainApp = showMainApp;
 window.setActiveTab = setActiveTab;
+window.showScreen = showScreen; // ✅ ДОБАВЛЕНО
 window.showNotification = showNotification;
 window.updateProfileDisplay = updateProfileDisplay;
 window.updateEditForm = updateEditForm;
@@ -1223,3 +1464,6 @@ window.initPhotoStorage = initPhotoStorage;
 window.loadUserPhotosOnStart = loadUserPhotosOnStart;
 window.savePhotosToStorage = savePhotosToStorage;
 window.compressPhotoForStorage = compressPhotoForStorage;
+window.initInviteScreen = initInviteScreen; // ✅ ДОБАВЛЕНО
+window.generateQRCode = generateQRCode; // ✅ ДОБАВЛЕНО
+window.initScreenshotUpload = initScreenshotUpload; // ✅ ДОБАВЛЕНО
