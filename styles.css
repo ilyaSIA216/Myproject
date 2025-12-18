@@ -3177,225 +3177,47 @@ select:focus {
   }
 }
 
-/////////ПРАВКАПАНЕЛИ
-/* Скрываем возможные отступы от верхней панели */
-html {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-body {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* Принудительно убираем любые верхние отступы */
-#app-root {
-  margin-top: -env(safe-area-inset-top, 0px) !important;
-  padding-top: 0 !important;
-  position: relative;
+/* Стили для новой структуры профиля */
+.sticky-profile-header {
+  position: sticky;
   top: 0;
-}
-
-/* Скрываем возможные артефакты Telegram */
-.tg-header {
-  display: none !important;
-  height: 0 !important;
-  opacity: 0 !important;
-}
-
-/* Убедитесь, что контент начинается с самого верха */
-.screen-content {
-  padding-top: 0 !important;
-  margin-top: 0 !important;
-}
-
-/* КРИТИЧНО ДЛЯ ПОЛНОЭКРАННОГО РЕЖИМА */
-html, body {
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-}
-
-/* Принудительно убираем верхнюю панель */
-body.telegram-loaded {
-  margin-top: -100px !important;
-  padding-top: 0 !important;
-}
-
-/* Скрываем возможную верхнюю панель Telegram */
-.tg-header,
-[class*="header"],
-[class*="Header"] {
-  display: none !important;
-  height: 0 !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-}
-
-/* Контейнер на весь экран */
-#app-root {
-  width: 100vw !important;
-  height: 100vh !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  overflow: hidden !important;
-}
-
-/* Если WebApp не загружен, показываем сообщение */
-body.no-telegram::before {
-  content: "Запустите приложение через Telegram бота!";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: #ef4444;
-  color: white;
-  padding: 15px;
-  text-align: center;
-  z-index: 9999;
-  font-weight: bold;
-}
-
-/* Настройка переменных высоты */
-:root {
-  --tg-header-height: 56px; /* По умолчанию для Android */
-}
-
-/* Для iOS - другая высота */
-body.ios {
-  --tg-header-height: 44px;
-}
-
-/* Для десктопа - минимальная высота */
-body.td {
-  --tg-header-height: 0px;
-}
-
-/* ОСНОВНОЙ ФИКС: добавляем отступ сверху для контента */
-#app-root {
-  width: 100vw;
-  height: 100vh;
-  padding-top: var(--tg-header-height) !important; /* ВАЖНО! */
-  overflow: hidden;
-  position: relative;
-  box-sizing: border-box;
-}
-
-/* ФИКС: карточка с контентом должна учитывать отступ */
-#card {
-  height: calc(100vh - var(--tg-header-height)) !important;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* ФИКС: все экраны должны быть смещены вниз */
-.screen {
-  min-height: calc(100vh - var(--tg-header-height)) !important;
-  position: relative !important;
-  top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* ФИКС: контент экрана */
-.screen-content {
-  padding-top: 0 !important;
-  margin-top: 0 !important;
-  height: 100%;
-}
-
-/* ФИКС: таб-бар должен быть выше Telegram панели */
-#tab-bar {
-  position: fixed !important;
-  bottom: env(safe-area-inset-bottom, 0px) !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 1001 !important;
-  height: 70px !important;
-}
-
-/* ФИКС: кнопки которые скрылись */
-.profile-header,
-.filters-header,
-.interests-header {
-  margin-top: 0 !important;
-  padding-top: 10px !important;
-}
-
-/* ФИКС: заголовки экранов */
-.screen-title {
-  margin-top: 5px !important;
-  padding-top: 5px !important;
-}
-
-/* ФИКС: кнопка сохранения профиля */
-#saveProfileBtn {
-  position: fixed !important;
-  bottom: max(90px, calc(env(safe-area-inset-bottom, 0px) + 90px)) !important;
-  left: 16px !important;
-  right: 16px !important;
-  z-index: 1002 !important;
-}
-
-/* ФИКС: кнопка редактирования профиля */
-#edit-profile-btn,
-.settings-btn,
-.save-edit-btn {
-  position: relative !important;
-  z-index: 10 !important;
-  margin-top: 5px !important;
-}
-
-/* ФИКС: верхние элементы профиля */
-.profile-info-card {
-  margin-top: 10px !important;
-}
-
-/* Дебаг стили для визуализации границ */
-.debug-border::before {
-  content: 'Telegram Header Area';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--tg-header-height);
-  background: rgba(255, 0, 0, 0.3);
-  color: white;
-  font-size: 12px;
+  background: linear-gradient(to bottom, #f4fff7 90%, transparent 100%);
+  padding: 15px 0 10px 0;
+  margin-bottom: 15px;
+  z-index: 100;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  pointer-events: none;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(187, 247, 208, 0.5);
 }
 
-/* Хак для скрытия Telegram панели */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  background: linear-gradient(to bottom, #f4fff7 0%, #f4fff7 80%, transparent 100%);
-  z-index: 9998;
-  pointer-events: none;
+.profile-scroll-content {
+  padding-bottom: 100px; /* Отступ для таб-бара и кнопок */
 }
 
-/* Поднимаем наше приложение над Telegram панелью */
-#app-root {
-  position: relative;
-  z-index: 9999;
-  background: #f4fff7;
-  margin-top: -60px; /* Поднимаем выше Telegram панели */
-  padding-top: 60px; /* Компенсируем подъем */
+/* Убедитесь, что кнопки всегда видны */
+.settings-btn,
+.save-filters-btn,
+.save-interests-btn,
+#edit-profile-btn {
+  position: relative !important;
+  z-index: 1000 !important;
+  background: white !important;
+  border: 2px solid var(--siamatch-green) !important;
+  color: var(--siamatch-green-dark) !important;
+  padding: 10px 15px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3) !important;
+  font-size: 18px !important;
+}
+
+/* Ховер эффект для кнопок */
+.settings-btn:active,
+.save-filters-btn:active,
+.save-interests-btn:active,
+#edit-profile-btn:active {
+  transform: scale(0.95) !important;
+  background: var(--siamatch-green) !important;
+  color: white !important;
 }
