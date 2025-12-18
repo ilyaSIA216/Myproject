@@ -725,68 +725,61 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-  // АГРЕССИВНАЯ ИНИЦИАЛИЗАЦИЯ TELEGRAM WEB APP
-  (function() {
-    function initTelegramWebApp() {
-      const tg = window.Telegram?.WebApp;
-      
-      if (!tg) {
-        console.error('Telegram WebApp API не найден!');
-        document.body.classList.add('no-telegram');
-        return;
-      }
-      
-      console.log('=== TELEGRAM WEB APP DEBUG ===');
-      console.log('Platform:', tg.platform);
-      console.log('Viewport height:', tg.viewportHeight);
-      console.log('Viewport stable height:', tg.viewportStableHeight);
-      console.log('InitData:', tg.initData ? 'present' : 'empty');
-      
-      // ВАЖНО: Сначала ready()
-      tg.ready();
-      
-      // Затем expand() - РАСШИРЯЕМ НА ВЕСЬ ЭКРАН
+  // КОРРЕКТНАЯ ИНИЦИАЛИЗАЦИЯ TELEGRAM WEB APP
+  document.addEventListener('DOMContentLoaded', function() {
+    const tg = window.Telegram?.WebApp;
+    
+    if (!tg) {
+      console.warn('Telegram WebApp не найден. Запуск в браузере.');
+      // Для браузера добавляем отступ сверху
+      document.documentElement.style.paddingTop = '20px';
+      return;
+    }
+    
+    console.log('=== Telegram WebApp Info ===');
+    console.log('Platform:', tg.platform);
+    console.log('Viewport:', tg.viewportHeight, 'x', tg.viewportWidth);
+    console.log('Theme:', tg.themeParams);
+    
+    // ВАЖНО: Порядок имеет значение!
+    // 1. Сначала говорим Telegram что готовы
+    tg.ready();
+    
+    // 2. Показываем кнопку "Назад" (если нужно)
+    if (tg.BackButton) {
+      tg.BackButton.show();
+      tg.BackButton.onClick(() => {
+        // Ваша логика для кнопки "Назад"
+        console.log('Back button clicked');
+      });
+    }
+    
+    // 3. Устанавливаем цвета НЕПРАВИЛЬНО, чтобы увидеть границы
+    tg.setHeaderColor('secondary_bg_color'); // Используем системный цвет
+    tg.setBackgroundColor('bg_color'); // Используем системный цвет
+    
+    // 4. Раскрываем на весь экран
+    setTimeout(() => {
       tg.expand();
-      
-      // Устанавливаем цвета (совпадающие с вашим фоном)
-      tg.setHeaderColor('#f4fff7');
-      tg.setBackgroundColor('#f4fff7');
-      
-      // Скрываем кнопку "Назад"
-      if (tg.BackButton && tg.BackButton.hide) {
-        tg.BackButton.hide();
-      }
-      
-      // Включаем подтверждение закрытия
-      tg.enableClosingConfirmation();
-      
-      // Фиксируем размеры
-      setTimeout(() => {
-        document.documentElement.style.height = tg.viewportHeight + 'px';
-        document.body.style.height = tg.viewportHeight + 'px';
-        
-        // Еще раз расширяем для надежности
-        tg.expand();
-        
-        console.log('WebApp fully initialized');
-        document.body.classList.add('telegram-loaded');
-      }, 100);
-      
-      // При любом взаимодействии с приложением еще раз расширяем
-      document.addEventListener('click', () => tg.expand());
-      document.addEventListener('touchstart', () => tg.expand());
-    }
+      console.log('WebApp expanded');
+    }, 100);
     
-    // Запускаем инициализацию
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initTelegramWebApp);
-    } else {
-      initTelegramWebApp();
-    }
+    // 5. Сохраняем высоту панели для корректировки CSS
+    const headerHeight = tg.platform === 'ios' ? 44 : 56;
+    document.documentElement.style.setProperty('--tg-header-height', headerHeight + 'px');
     
-    // Также запускаем через 500мс на всякий случай
-    setTimeout(initTelegramWebApp, 500);
-  })();
+    // 6. Добавляем класс для отладки
+    document.body.classList.add('telegram-webapp', tg.platform);
+    
+  });
+  
+  // Расширяем при каждом взаимодействии пользователя
+  document.addEventListener('click', function() {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      setTimeout(() => tg.expand(), 50);
+    }
+  });
 </script>
   <script src="js/logic.js"></script>
   <script src="js/ui.js"></script>
