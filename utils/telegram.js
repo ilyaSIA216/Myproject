@@ -51,8 +51,6 @@ function isIOS() {
 }
 
 // ✅ НАСТРОЙКА КЛАВИАТУРЫ iOS (ТВОЯ ЛОГИКА)
-let keyboardHeight = 0;
-let originalHeight = window.innerHeight;
 
 function setupKeyboardHandlers() {
   console.log('⌨️ Настраиваем обработчики клавиатуры iOS');
