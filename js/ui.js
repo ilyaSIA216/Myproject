@@ -603,19 +603,24 @@ function handleSaveProfileChanges() {
   document.body.classList.remove('keyboard-open');
   if (card) card.style.transform = 'translateY(0)';
   
+  console.log("🔄 Кнопка сохранения профиля нажата");
+  
   setTimeout(async () => {
-    // Всегда считаем сохранение успешным
-    document.getElementById('profile-display').classList.remove('hidden');
-    document.getElementById('profile-edit').classList.add('hidden');
-    
-    // Сохраняем фото в надежное хранилище
-    await savePhotosToStorage();
-    
-    // Обновляем отображение
-    updateProfileDisplay();
-    
-    // Всегда показываем успех
-    showNotification("✅ Профиль обновлён!");
+    // ✅ ВЫЗЫВАЕМ ФУНКЦИЮ ИЗ LOGIC.JS
+    if (typeof window.handleSaveProfileChangesLogic === 'function') {
+      console.log("🔧 Вызываем handleSaveProfileChangesLogic из logic.js");
+      window.handleSaveProfileChangesLogic();
+    } else {
+      console.error("❌ handleSaveProfileChangesLogic не найдена в window");
+      
+      // Fallback - старая логика
+      document.getElementById('profile-display').classList.remove('hidden');
+      document.getElementById('profile-edit').classList.add('hidden');
+      
+      await savePhotosToStorage();
+      updateProfileDisplay();
+      showNotification("✅ Профиль обновлён!");
+    }
   }, 300);
 }
 
