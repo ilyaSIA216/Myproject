@@ -3520,6 +3520,122 @@ function handleProfilePhotoTouchEnd(e) {
 }
 
 // ===== ЭКСПОРТ ФУНКЦИЙ В ГЛОБАЛЬНУЮ ОБЛАСТЬ =====
+window.handleSaveProfileChangesLogic = function() {
+  console.log("🔧 handleSaveProfileChangesLogic вызвана из logic.js");
+  
+  if (!window.profileData || !window.profileData.current) {
+    console.error("❌ Нет данных профиля для сохранения");
+    showNotification("❌ Сначала создайте профиль!");
+    return;
+  }
+  
+  // ПОЛУЧАЕМ ЗНАЧЕНИЯ ИЗ ФОРМЫ РЕДАКТИРОВАНИЯ
+  const editAge = document.getElementById("edit-age");
+  const editGender = document.getElementById("edit-gender");
+  const editCity = document.getElementById("edit-city");
+  const editBio = document.getElementById("edit-bio");
+  
+  console.log("📋 Элементы формы:", {
+    age: editAge?.value,
+    gender: editGender?.value,
+    city: editCity?.value,
+    bio: editBio?.value?.substring(0, 30) + "..."
+  });
+  
+  if (!editAge || !editGender || !editCity || !editBio) {
+    console.error("❌ Не все элементы формы найдены!");
+    showNotification("❌ Ошибка: элементы формы не найдены");
+    return;
+  }
+  
+  const newAge = parseInt(editAge.value);
+  const newGender = editGender.value;
+  const newCity = editCity.value.trim();
+  const newBio = editBio.value.trim();
+  
+  console.log("📝 Новые данные для сохранения:", {
+    age: newAge,
+    gender: newGender,
+    city: newCity,
+    bio: newBio.substring(0, 50) + "..."
+  });
+  
+  // ВАЛИДАЦИЯ
+  if (isNaN(newAge) || newAge < 18 || newAge > 99) {
+    showNotification("❌ Возраст должен быть от 18 до 99 лет");
+    return;
+  }
+  
+  if (!newGender) {
+    showNotification("❌ Выберите пол");
+    return;
+  }
+  
+  if (!newCity) {
+    showNotification("❌ Введите город");
+    return;
+  }
+  
+  if (newBio.length < 10) {
+    showNotification("❌ О себе минимум 10 символов");
+    return;
+  }
+  
+  // ОБНОВЛЯЕМ ДАННЫЕ
+  const oldCity = window.profileData.current.city;
+  window.profileData.current.age = newAge;
+  window.profileData.current.gender = newGender;
+  window.profileData.current.city = newCity;
+  window.profileData.current.bio = newBio;
+  
+  console.log("🔄 Изменение города:", oldCity, "→", newCity);
+  
+  // СОХРАНЯЕМ ПРОФИЛЬ
+  const saved = saveProfile(window.profileData.current);
+  console.log("💾 Результат saveProfile:", saved);
+  
+  if (saved) {
+    // ПРОВЕРЯЕМ СОХРАНЕНИЕ
+    setTimeout(() => {
+      const loaded = loadProfile();
+      console.log("🔍 Проверка загруженного профиля:", {
+        ожидаемыйГород: newCity,
+        загруженныйГород: loaded?.city,
+        совпадают: loaded?.city === newCity
+      });
+    }, 100);
+    
+    // ОБНОВЛЯЕМ ОТОБРАЖЕНИЕ
+    if (typeof window.updateProfileDisplay === 'function') {
+      window.updateProfileDisplay();
+    }
+    
+    // ПЕРЕКЛЮЧАЕМ ЭКРАНЫ
+    const profileDisplay = document.getElementById('profile-display');
+    const profileEdit = document.getElementById('profile-edit');
+    
+    if (profileDisplay && profileEdit) {
+      profileDisplay.classList.remove('hidden');
+      profileEdit.classList.add('hidden');
+      console.log("✅ Переключение экранов выполнено");
+    }
+    
+    showNotification("✅ Профиль обновлён! Город: " + newCity);
+    
+    // ТАКТИЛЬНАЯ ОБРАТНАЯ СВЯЗЬ
+    if (window.tg?.HapticFeedback) {
+      try {
+        window.tg.HapticFeedback.impactOccurred('light');
+      } catch (e) {}
+    }
+    
+  } else {
+    console.error("❌ Ошибка в saveProfile()");
+    showNotification("❌ Ошибка при сохранении профиля");
+  }
+};
+
+// ===== ЭКСПОРТ ФУНКЦИЙ В ГЛОБАЛЬНУЮ ОБЛАСТЬ =====
 window.switchPhoto = switchPhoto;
 window.initSwipeSystem = initSwipeSystem;
 window.initFeed = initFeed;
